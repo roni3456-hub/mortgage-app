@@ -2,89 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Canadian Real Estate Investment Tool</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2FuYWRpYW4gUmVhbCBFc3RhdGUgVG9vbCIsInNob3J0X25hbWUiOiJSRSBUb29sIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxZTMzMmUiLCJ0aGVtZV9jb2xvciI6IiMxMGI5ODEiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNENPZ1BjSEJoZEdnZ1ptbHNiRDBpSXpFd1lqa3dNVkl4UXpaRFFVWmFOQ2NnWkQwaWJURTJMamczTnlBeE1qbDBlUzFoTXpBdUx6UmhNekEyUGctczFSb01XNnpGSWdBQUFBQkpSVTVFcmtKZ2dnPT0iLCJzaXplcyI6IjEyOHgxMjgiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
-    <meta name="theme-color" content="#10b981">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ2FuYWRpYW4gUmVhbCBFc3RhdGUgVG9vbCIsInNob3J0X25hbWUiOiJSRSBUb29sIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxYTFhMWEiLCJ0aGVtZV9jb2xvciI6IiMwMDdBRkYiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeE1qZ2lQanhrWldaelBqeHNhVzVsWVhKSGNtRmthV1Z1ZENCcFpEMGlaekVpSUhneFBTSXdKU0lnZVRFOUlqQWxJaUI0TWowaU1UQXdKU0lnZVRJOUlqRXdNQ1VpUGp4emRHOXdJRzltWm5ObGREMGlNQ1VpSUhOMGIzQXRZMjlzYjNJOUlpTXdNRGRCUmtZaUx6NDhjM1J2Y0NCdlptWnpaWFE5SWpFd01DVWlJSE4wYjNBdFkyOXNiM0k5SWlNd01EVTFRVUlpTHo0OEwyeHBibVZoY2tkeVlXUnBaVzUwUGp3dlpHVm1jejQ4Y21WamRDQjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ1psbHNiRDBpZFhKc0tDTm5NU2tpSUhKNFBTSXlOQ0l2UGp4d1lYUm9JR1E5SWswME9DQXpNa2cyTkNBek1rTTNNaTQ0TXpjZ016SWdPREFnTXprdU1UWXpJRGd3SURRNE5Ea2dPREFnT0RBdU9EUTNJRGN5TGpnek55QTRNQ0EyTkVZME9HTTBMalF4T0NBd0lEZ2dNeTQxT0RJZ09DQTRjakFnTkM0ME1UZ3RPQzQwTVRnZ09DMDRJRGd0T0hZdE1UWmpNQzAwTGpReE9DMHpMalU0TWkwNExUZ3RPQnBOTXpJZ05qUm9NekpqTkM0ME1UZ2dNQ0E0SURNdU5UZ3lJRGdnT0hZeE5tTXdJRFF1TkRFNExUTXVOVGd5SURndE9DQTRTRE15WXkwMExqUXhPQ0F3TFRndE15NDFPREU0TFRndE9GWTBPR013TFRRdU5ERTRJRE11TlRneUxUZ2dPQzA0ZWlJZ1ptbHNiRDBpSTJabVppSWdjM1J5YjJ0bFBTSWpabVptSWlCemRISnZhMlV0ZDJsa2RHZzlJaklpTHo0OGNHRjBhQ0JrUFNKTk5qUWdOekoyTVRob01UWjJMVEU0SWlCbWFXeHNQU0lqWm1abUlpQnpkSEp2YTJVOUlpTm1abVlpSUhOMGNtOXJaUzEzYVdSMGFEMGlNaUl2UGp3dmMzWm5QZz09Iiwic2l6ZXMiOiIxMjh4MTI4IiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+    <meta name="theme-color" content="#007AFF">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
+     crossorigin="anonymous"></script>
+    
+    <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #007AFF;
+            --primary-dark: #0055AB;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --warning: #FF9500;
+            --background: #000000;
+            --surface: #1C1C1E;
+            --surface-light: #2C2C2E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --border: #38383A;
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e332e 0%, #2d5a4a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
             min-height: 100vh;
-            color: white;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: var(--safe-area-top);
         }
 
-        .header {
-            background: rgba(16, 185, 129, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        /* Header */
+        .app-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
-        .header h1 {
-            color: #10b981;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .user-info {
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 15px;
         }
 
-        .nav-tabs {
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 12px;
         }
 
-        .nav-tab {
-            background: rgba(16, 185, 129, 0.2);
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 8px 0;
+            padding-bottom: calc(8px + var(--safe-area-bottom));
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background: none;
             border: none;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 10px;
+            transition: all 0.2s;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
+            text-decoration: none;
         }
 
-        .nav-tab:hover {
-            background: rgba(16, 185, 129, 0.4);
-            transform: translateY(-2px);
+        .nav-item.active {
+            color: var(--primary);
         }
 
-        .nav-tab.active {
-            background: #10b981;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        .nav-item-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: calc(80px + var(--safe-area-bottom));
         }
 
         .page {
             display: none;
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn 0.3s ease;
         }
 
         .page.active {
@@ -92,607 +148,1163 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Cards */
         .card {
-            background: rgba(16, 185, 129, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
         }
 
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        /* Form Elements */
         .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #10b981;
-            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid rgba(16, 185, 129, 0.3);
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            color: white;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: all 0.2s;
+            -webkit-appearance: none;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
         }
 
-        input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+        input[type="number"] {
+            -moz-appearance: textfield;
         }
 
-        button {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 14px 24px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            touch-action: manipulation;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        .btn:active {
+            transform: scale(0.98);
+            background: var(--primary-dark);
         }
 
         .btn-secondary {
-            background: rgba(107, 114, 128, 0.8);
-            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+            background: var(--surface-light);
+            color: var(--text-primary);
         }
 
-        .results {
-            background: rgba(16, 185, 129, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
         }
 
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
         }
 
-        .result-item:last-child {
-            border-bottom: none;
-        }
-
-        .result-value {
-            font-weight: bold;
-            color: #10b981;
-        }
-
-        .property-list {
-            display: grid;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .property-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .property-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.2);
-        }
-
-        .property-card h3 {
-            color: #10b981;
-            margin-bottom: 10px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin: 20px 0;
-        }
-
-        .login-container {
+        /* Login Screen */
+        .login-screen {
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 60vh;
+            align-items: center;
+            min-height: 100vh;
+            padding: 32px;
             text-align: center;
         }
 
-        .google-btn {
-            background: white;
-            color: #333;
-            border: 1px solid #ddd;
-            padding: 12px 20px;
-            border-radius: 8px;
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            justify-content: center;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 40px rgba(0, 122, 255, 0.3);
         }
 
-        .google-btn:hover {
-            background: #f8f9fa;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        .logo-icon {
+            font-size: 48px;
+            color: white;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        /* Results */
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--primary);
+        }
+
+        /* Quick Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--surface-light);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Property List */
+        .property-item {
+            background: var(--surface-light);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .property-item:active {
+            transform: scale(0.98);
+            background: var(--surface);
+        }
+
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .property-address {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .property-type {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .property-metrics {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin: 16px 0;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .content {
+                max-width: 768px;
+                margin: 0 auto;
             }
-            
-            .header h1 {
-                font-size: 2rem;
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
-            
-            .nav-tabs {
-                flex-direction: column;
-            }
-            
-            .user-info {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
+        }
+
+        /* PWA Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: calc(80px + var(--safe-area-bottom));
+            left: 16px;
+            right: 16px;
+            background: var(--surface);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+            z-index: 200;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .install-prompt.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: calc(16px + var(--safe-area-top));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 300;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏠 Canadian Real Estate Investment Tool</h1>
-            <p>Your comprehensive toolkit for mortgage calculations and property underwriting</p>
-        </div>
-
-        <div id="loginPage" class="page active">
-            <div class="login-container">
-                <div class="card" style="max-width: 400px; margin: 0 auto;">
-                    <h2 style="color: #10b981; margin-bottom: 20px;">Welcome Back</h2>
-                    <p style="margin-bottom: 30px; opacity: 0.8;">Sign in with Google to save your work and access it anywhere</p>
-                    <button class="google-btn" onclick="signInWithGoogle()">
-                        <svg width="20" height="20" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        Sign in with Google
-                    </button>
-                    <button class="btn-secondary" onclick="continueAsGuest()" style="margin-top: 15px; width: 100%;">
-                        Continue as Guest
-                    </button>
-                </div>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-screen page active">
+            <div class="logo-container">
+                <span class="logo-icon">🏠</span>
+            </div>
+            <h1 class="login-title">Real Estate Tool</h1>
+            <p class="login-subtitle">Professional mortgage & investment calculator</p>
+            
+            <div style="width: 100%; max-width: 320px;">
+                <button class="btn" onclick="continueAsGuest()">
+                    Continue as Guest
+                </button>
+                <button class="btn btn-outline" style="margin-top: 12px;" onclick="signInWithGoogle()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    </svg>
+                    Sign in with Google
+                </button>
             </div>
         </div>
 
+        <!-- Main App -->
         <div id="mainApp" class="page">
-            <div class="user-info">
-                <div id="userProfile">
-                    <span id="userName">Guest User</span>
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <h1 class="app-title">RE Calculator</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-small" onclick="saveData()">Save</button>
+                    </div>
                 </div>
-                <div>
-                    <button onclick="saveAllData()" class="btn-secondary">💾 Save All</button>
-                    <button onclick="signOut()" class="btn-secondary">Sign Out</button>
-                </div>
-            </div>
+            </header>
 
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
-                <button class="nav-tab" onclick="showPage('mortgage')">🏦 Mortgage Calculator</button>
-                <button class="nav-tab" onclick="showPage('underwriting')">📋 Underwriting</button>
-                <button class="nav-tab" onclick="showPage('cashflow')">💰 Cash Flow Analysis</button>
-                <button class="nav-tab" onclick="showPage('comparison')">⚖️ Property Comparison</button>
-                <button class="nav-tab" onclick="showPage('portfolio')">📈 Portfolio Overview</button>
-            </div>
-
-            <!-- Dashboard Page -->
-            <div id="dashboard" class="page active">
-                <div class="card">
-                    <h2>📊 Investment Dashboard</h2>
-                    <div class="form-row">
-                        <div class="card">
-                            <h3>Quick Stats</h3>
-                            <div id="quickStats">
-                                <div class="result-item">
-                                    <span>Saved Properties:</span>
-                                    <span class="result-value" id="totalProperties">0</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>Total Investment:</span>
-                                    <span class="result-value" id="totalInvestment">$0</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>Monthly Cash Flow:</span>
-                                    <span class="result-value" id="totalCashFlow">$0</span>
-                                </div>
-                            </div>
+            <!-- Content -->
+            <div class="content">
+                <!-- Dashboard Page -->
+                <div id="dashboard" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statProperties">0</div>
+                            <div class="stat-label">Properties</div>
                         </div>
-                        <div class="card">
-                            <h3>Recent Activity</h3>
-                            <div id="recentActivity">
-                                <p style="opacity: 0.7;">No recent activity</p>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statInvestment">$0</div>
+                            <div class="stat-label">Investment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statCashflow">$0</div>
+                            <div class="stat-label">Cash Flow</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statROI">0%</div>
+                            <div class="stat-label">Avg ROI</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Quick Calculator</h2>
+                        <div class="form-group">
+                            <label>Purchase Price</label>
+                            <input type="number" id="quickPrice" placeholder="500000">
+                        </div>
+                        <div class="form-group">
+                            <label>Down Payment (%)</label>
+                            <input type="number" id="quickDown" placeholder="20" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label>Interest Rate (%)</label>
+                            <input type="number" id="quickRate" step="0.01" placeholder="5.25" value="5.25">
+                        </div>
+                        <button class="btn" onclick="quickCalculate()">Calculate Payment</button>
+                        <div id="quickResult" style="margin-top: 16px; display: none;">
+                            <div class="result-row">
+                                <span class="result-label">Monthly Payment</span>
+                                <span class="result-value" id="quickPayment">$0</span>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Mortgage Calculator Page -->
-            <div id="mortgage" class="page">
-                <div class="card">
-                    <h2>🏦 Advanced Mortgage Calculator</h2>
-                    <div class="form-row">
+                    <div class="card">
+                        <h2 class="card-title">Recent Properties</h2>
+                        <div id="recentProperties">
+                            <p style="color: var(--text-secondary); text-align: center; padding: 20px;">No properties saved yet</p>
+                        </div>
+                    </div>
+
+                    <!-- AdSense Ad Unit - Dashboard -->
+                    <div class="card" style="background: transparent; border: none; padding: 8px; text-align: center;">
+                        <ins class="adsbygoogle"
+                             style="display:block"
+                             data-ad-client="ca-pub-6166342215834701"
+                             data-ad-slot="YOUR-AD-SLOT-ID-1"
+                             data-ad-format="auto"
+                             data-full-width-responsive="true"></ins>
+                        <script>
+                             (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
+                </div>
+
+                <!-- Mortgage Calculator Page -->
+                <div id="mortgage" class="page">
+                    <div class="card">
+                        <h2 class="card-title">Mortgage Calculator</h2>
+                        
                         <div class="form-group">
-                            <label for="purchasePrice">Purchase Price ($)</label>
+                            <label>Purchase Price ($)</label>
                             <input type="number" id="purchasePrice" placeholder="500000">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="downPayment">Down Payment (%)</label>
-                            <input type="number" id="downPayment" placeholder="20" min="5" max="100">
+                            <label>Down Payment (%)</label>
+                            <input type="number" id="downPayment" placeholder="20" min="5" max="100" value="20">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="interestRate">Interest Rate (%)</label>
-                            <input type="number" id="interestRate" step="0.01" placeholder="5.25">
+                            <label>Interest Rate (%)</label>
+                            <input type="number" id="interestRate" step="0.01" placeholder="5.25" value="5.25">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="amortization">Amortization (years)</label>
+                            <label>Amortization</label>
                             <select id="amortization">
                                 <option value="25">25 years</option>
                                 <option value="30">30 years</option>
                                 <option value="35">35 years</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
-                            <label for="paymentFreq">Payment Frequency</label>
-                            <select id="paymentFreq">
-                                <option value="monthly">Monthly</option>
-                                <option value="bi-weekly">Bi-weekly</option>
-                                <option value="weekly">Weekly</option>
-                            </select>
+                            <label>Property Tax (Annual)</label>
+                            <input type="number" id="propertyTax" placeholder="6000">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="propertyTax">Annual Property Tax ($)</label>
-                            <input type="number" id="propertyTax" placeholder="8000">
+                            <label>Insurance (Annual)</label>
+                            <input type="number" id="insurance" placeholder="1500">
                         </div>
-                        <div class="form-group">
-                            <label for="insurance">Annual Insurance ($)</label>
-                            <input type="number" id="insurance" placeholder="2000">
-                        </div>
-                        <div class="form-group">
-                            <label for="cmhcPremium">CMHC Premium (%)</label>
-                            <input type="number" id="cmhcPremium" step="0.01" placeholder="2.8" readonly>
-                        </div>
+                        
+                        <button class="btn" onclick="calculateMortgage()">Calculate Mortgage</button>
                     </div>
-                    <button onclick="calculateMortgage()">Calculate Mortgage</button>
                     
-                    <div id="mortgageResults" class="results" style="display: none;">
-                        <h3>Mortgage Results</h3>
+                    <div id="mortgageResults" class="card" style="display: none;">
+                        <h2 class="card-title">Payment Breakdown</h2>
                         <div id="mortgageResultsContent"></div>
                         <div class="chart-container">
                             <canvas id="mortgageChart"></canvas>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Underwriting Page -->
-            <div id="underwriting" class="page">
-                <div class="card">
-                    <h2>📋 Property Underwriting Tool</h2>
-                    <div class="form-row">
+                    <!-- AdSense Ad Unit - Mortgage Calculator -->
+                    <div class="card" style="background: transparent; border: none; padding: 8px; text-align: center; display: none;" id="mortgageAd">
+                        <ins class="adsbygoogle"
+                             style="display:block"
+                             data-ad-client="ca-pub-6166342215834701"
+                             data-ad-slot="YOUR-AD-SLOT-ID-2"
+                             data-ad-format="rectangle"
+                             data-full-width-responsive="true"></ins>
+                        <script>
+                             (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
+                </div>
+
+                <!-- Analysis Page -->
+                <div id="analysis" class="page">
+                    <div class="card">
+                        <h2 class="card-title">Property Analysis</h2>
+                        
                         <div class="form-group">
-                            <label for="propertyAddress">Property Address</label>
-                            <input type="text" id="propertyAddress" placeholder="123 Main St, Toronto, ON">
+                            <label>Property Address</label>
+                            <input type="text" id="propertyAddress" placeholder="123 Main St, Toronto">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="propertyType">Property Type</label>
+                            <label>Property Type</label>
                             <select id="propertyType">
-                                <option value="single-family">Single Family</option>
-                                <option value="duplex">Duplex</option>
-                                <option value="triplex">Triplex</option>
-                                <option value="fourplex">Fourplex</option>
+                                <option value="single">Single Family</option>
                                 <option value="condo">Condominium</option>
                                 <option value="townhouse">Townhouse</option>
+                                <option value="duplex">Duplex</option>
+                                <option value="triplex">Triplex</option>
                             </select>
                         </div>
-                    </div>
-
-                    <h3>Income Analysis</h3>
-                    <div class="form-row">
+                        
                         <div class="form-group">
-                            <label for="monthlyRent">Monthly Rental Income ($)</label>
-                            <input type="number" id="monthlyRent" placeholder="3500">
+                            <label>Purchase Price ($)</label>
+                            <input type="number" id="analysisPrice" placeholder="500000">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="vacancy">Vacancy Rate (%)</label>
-                            <input type="number" id="vacancy" placeholder="5" min="0" max="50">
+                            <label>Monthly Rental Income ($)</label>
+                            <input type="number" id="monthlyRent" placeholder="3000">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="otherIncome">Other Monthly Income ($)</label>
-                            <input type="number" id="otherIncome" placeholder="0">
+                            <label>Monthly Expenses ($)</label>
+                            <input type="number" id="monthlyExpenses" placeholder="500">
                         </div>
-                    </div>
-
-                    <h3>Operating Expenses</h3>
-                    <div class="form-row">
+                        
                         <div class="form-group">
-                            <label for="maintenance">Annual Maintenance ($)</label>
-                            <input type="number" id="maintenance" placeholder="5000">
+                            <label>Vacancy Rate (%)</label>
+                            <input type="number" id="vacancyRate" placeholder="5" value="5">
                         </div>
-                        <div class="form-group">
-                            <label for="management">Property Management (%)</label>
-                            <input type="number" id="management" placeholder="10">
-                        </div>
-                        <div class="form-group">
-                            <label for="utilities">Monthly Utilities ($)</label>
-                            <input type="number" id="utilities" placeholder="200">
-                        </div>
-                        <div class="form-group">
-                            <label for="capEx">Annual CapEx Reserve ($)</label>
-                            <input type="number" id="capEx" placeholder="3000">
-                        </div>
-                    </div>
-
-                    <button onclick="performUnderwriting()">Perform Analysis</button>
-                    <button onclick="saveProperty()" class="btn-secondary">Save Property</button>
-
-                    <div id="underwritingResults" class="results" style="display: none;">
-                        <h3>Underwriting Results</h3>
-                        <div id="underwritingContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cash Flow Analysis Page -->
-            <div id="cashflow" class="page">
-                <div class="card">
-                    <h2>💰 Detailed Cash Flow Analysis</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cfPropertySelect">Select Property</label>
-                            <select id="cfPropertySelect">
-                                <option value="">Choose a saved property...</option>
-                            </select>
-                        </div>
+                        
+                        <button class="btn" onclick="analyzeProperty()">Analyze Property</button>
+                        <button class="btn btn-secondary" style="margin-top: 8px;" onclick="saveProperty()">Save Property</button>
                     </div>
                     
-                    <h3>Additional Cash Flow Factors</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="appreciationRate">Annual Appreciation Rate (%)</label>
-                            <input type="number" id="appreciationRate" step="0.1" placeholder="3.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="rentIncrease">Annual Rent Increase (%)</label>
-                            <input type="number" id="rentIncrease" step="0.1" placeholder="2.5">
-                        </div>
-                        <div class="form-group">
-                            <label for="analysisYears">Analysis Period (years)</label>
-                            <input type="number" id="analysisYears" placeholder="10" min="1" max="30">
+                    <div id="analysisResults" class="card" style="display: none;">
+                        <h2 class="card-title">Analysis Results</h2>
+                        <div id="analysisContent"></div>
+                    </div>
+
+                    <!-- AdSense Ad Unit - Analysis -->
+                    <div class="card" style="background: transparent; border: none; padding: 8px; text-align: center; display: none;" id="analysisAd">
+                        <ins class="adsbygoogle"
+                             style="display:block"
+                             data-ad-client="ca-pub-6166342215834701"
+                             data-ad-slot="YOUR-AD-SLOT-ID-3"
+                             data-ad-format="auto"
+                             data-full-width-responsive="true"></ins>
+                        <script>
+                             (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
+                </div>
+
+                <!-- Portfolio Page -->
+                <div id="portfolio" class="page">
+                    <div class="card">
+                        <h2 class="card-title">My Portfolio</h2>
+                        <div id="portfolioList">
+                            <p style="color: var(--text-secondary); text-align: center; padding: 20px;">No properties in portfolio</p>
                         </div>
                     </div>
 
-                    <button onclick="generateCashFlowAnalysis()">Generate Analysis</button>
+                    <!-- AdSense Ad Unit - Portfolio -->
+                    <div class="card" style="background: transparent; border: none; padding: 8px; text-align: center;">
+                        <ins class="adsbygoogle"
+                             style="display:block"
+                             data-ad-client="ca-pub-6166342215834701"
+                             data-ad-slot="YOUR-AD-SLOT-ID-4"
+                             data-ad-format="auto"
+                             data-full-width-responsive="true"></ins>
+                        <script>
+                             (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
+                </div>
 
-                    <div id="cashflowResults" class="results" style="display: none;">
-                        <div class="chart-container">
-                            <canvas id="cashflowChart"></canvas>
+                <!-- Settings Page -->
+                <div id="settings" class="page">
+                    <div class="card">
+                        <h2 class="card-title">Settings</h2>
+                        
+                        <div class="form-group">
+                            <label>Default Interest Rate (%)</label>
+                            <input type="number" id="defaultRate" step="0.01" value="5.25">
                         </div>
+                        
+                        <div class="form-group">
+                            <label>Default Down Payment (%)</label>
+                            <input type="number" id="defaultDown" value="20">
+                        </div>
+                        
+                        <button class="btn" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">Account</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;" id="userEmail">Guest User</p>
+                        <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">About</h2>
+                        <p style="color: var(--text-secondary); font-size: 14px;">Canadian Real Estate Tool v1.0<br>Professional mortgage and investment calculator</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Property Comparison Page -->
-            <div id="comparison" class="page">
-                <div class="card">
-                    <h2>⚖️ Property Comparison Tool</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="compareProperty1">Property 1</label>
-                            <select id="compareProperty1">
-                                <option value="">Select property...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="compareProperty2">Property 2</label>
-                            <select id="compareProperty2">
-                                <option value="">Select property...</option>
-                            </select>
-                        </div>
-                    </div>
+            <!-- Bottom Navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" onclick="showPage('dashboard')">
+                    <span class="nav-item-icon">🏠</span>
+                    <span>Home</span>
+                </button>
+                <button class="nav-item" onclick="showPage('mortgage')">
+                    <span class="nav-item-icon">💰</span>
+                    <span>Mortgage</span>
+                </button>
+                <button class="nav-item" onclick="showPage('analysis')">
+                    <span class="nav-item-icon">📊</span>
+                    <span>Analysis</span>
+                </button>
+                <button class="nav-item" onclick="showPage('portfolio')">
+                    <span class="nav-item-icon">📁</span>
+                    <span>Portfolio</span>
+                </button>
+                <button class="nav-item" onclick="showPage('settings')">
+                    <span class="nav-item-icon">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </nav>
+        </div>
 
-                    <button onclick="compareProperties()">Compare Properties</button>
-
-                    <div id="comparisonResults" class="results" style="display: none;">
-                        <div id="comparisonContent"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Portfolio Overview Page -->
-            <div id="portfolio" class="page">
-                <div class="card">
-                    <h2>📈 Portfolio Overview</h2>
-                    <div class="property-list" id="portfolioList">
-                        <p style="opacity: 0.7;">No properties in portfolio yet.</p>
-                    </div>
-                </div>
+        <!-- PWA Install Prompt -->
+        <div id="installPrompt" class="install-prompt">
+            <p style="margin-bottom: 12px;">Install this app for quick access!</p>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-small" onclick="installPWA()">Install</button>
+                <button class="btn btn-small btn-secondary" onclick="dismissInstall()">Not Now</button>
             </div>
         </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
     </div>
 
     <script>
-        // Global variables
+        // Global Variables
         let currentUser = null;
         let properties = [];
+        let settings = {
+            defaultRate: 5.25,
+            defaultDown: 20
+        };
+        let deferredPrompt;
         let mortgageChart = null;
-        let cashflowChart = null;
 
-        // Initialize app
+        // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
-            loadSavedData();
-            updateDashboard();
+            initializeApp();
+            registerServiceWorker();
+            setupPWA();
         });
 
-        // Authentication functions
+        function initializeApp() {
+            // Load saved data from localStorage
+            loadData();
+            
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            }
+            
+            // Set default values
+            const savedSettings = localStorage.getItem('settings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+                document.getElementById('defaultRate').value = settings.defaultRate;
+                document.getElementById('defaultDown').value = settings.defaultDown;
+            }
+        }
+
+        // Service Worker Registration
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                    self.addEventListener('install', e => {
+                        e.waitUntil(
+                            caches.open('re-tool-v1').then(cache => {
+                                return cache.addAll(['/']);
+                            })
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(
+                            caches.match(e.request).then(response => {
+                                return response || fetch(e.request);
+                            })
+                        );
+                    });
+                `)).catch(err => console.log('SW registration failed'));
+            }
+        }
+
+        // PWA Setup
+        function setupPWA() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install prompt after 30 seconds
+                setTimeout(() => {
+                    if (deferredPrompt) {
+                        document.getElementById('installPrompt').classList.add('show');
+                    }
+                }, 30000);
+            });
+
+            // Check if app is installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('App is installed');
+            }
+        }
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showToast('App installed successfully!');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+
+        // Authentication
         function signInWithGoogle() {
-            // Simulate Google OAuth
+            // Simulate Google Sign-In
             currentUser = {
-                name: "John Investor",
-                email: "john@example.com",
-                picture: "https://via.placeholder.com/40"
+                name: 'John Doe',
+                email: 'john.doe@gmail.com',
+                picture: 'https://via.placeholder.com/40'
             };
             
-            document.getElementById('userName').textContent = currentUser.name;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showToast('Signed in successfully!');
             showMainApp();
-            loadSavedData();
         }
 
         function continueAsGuest() {
-            currentUser = { name: "Guest User", email: null };
-            document.getElementById('userName').textContent = "Guest User";
+            currentUser = {
+                name: 'Guest',
+                email: 'guest@local',
+                isGuest: true
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
             showMainApp();
         }
 
         function signOut() {
             currentUser = null;
-            document.getElementById('loginPage').className = 'page active';
-            document.getElementById('mainApp').className = 'page';
+            localStorage.removeItem('currentUser');
+            document.getElementById('loginScreen').classList.add('active');
+            document.getElementById('mainApp').classList.remove('active');
+            showToast('Signed out successfully');
         }
 
         function showMainApp() {
-            document.getElementById('loginPage').className = 'page';
-            document.getElementById('mainApp').className = 'page active';
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('mainApp').classList.add('active');
+            document.getElementById('userEmail').textContent = currentUser.email;
+            updateDashboard();
         }
 
-        // Navigation functions
+        // Navigation
         function showPage(pageId) {
             // Hide all pages
-            document.querySelectorAll('.page').forEach(page => {
-                if (page.id !== 'loginPage' && page.id !== 'mainApp') {
-                    page.classList.remove('active');
-                }
+            document.querySelectorAll('#mainApp .page').forEach(page => {
+                page.classList.remove('active');
             });
             
             // Show selected page
             document.getElementById(pageId).classList.add('active');
             
-            // Update active tab
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
             });
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
 
-            // Update dropdowns when showing certain pages
-            if (pageId === 'cashflow' || pageId === 'comparison') {
-                updatePropertyDropdowns();
+            // Update dashboard when shown
+            if (pageId === 'dashboard') {
+                updateDashboard();
+            } else if (pageId === 'portfolio') {
+                displayPortfolio();
             }
         }
 
-        // Mortgage calculation functions
+        // Quick Calculator
+        function quickCalculate() {
+            const price = parseFloat(document.getElementById('quickPrice').value) || 0;
+            const downPercent = parseFloat(document.getElementById('quickDown').value) || 20;
+            const rate = parseFloat(document.getElementById('quickRate').value) || 5.25;
+            
+            if (price === 0) {
+                showToast('Please enter a purchase price');
+                return;
+            }
+            
+            const downPayment = price * (downPercent / 100);
+            const principal = price - downPayment;
+            const monthlyRate = rate / 100 / 12;
+            const numPayments = 25 * 12; // 25 year amortization
+            
+            const payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                           (Math.pow(1 + monthlyRate, numPayments) - 1);
+            
+            document.getElementById('quickPayment').textContent = ' + payment.toFixed(2);
+            document.getElementById('quickResult').style.display = 'block';
+        }
+
+        // Mortgage Calculator
         function calculateMortgage() {
-            const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
-            const downPaymentPercent = parseFloat(document.getElementById('downPayment').value) || 20;
-            const interestRate = parseFloat(document.getElementById('interestRate').value) || 5.25;
-            const amortization = parseInt(document.getElementById('amortization').value) || 25;
-            const paymentFreq = document.getElementById('paymentFreq').value;
+            const price = parseFloat(document.getElementById('purchasePrice').value) || 0;
+            const downPercent = parseFloat(document.getElementById('downPayment').value) || 20;
+            const rate = parseFloat(document.getElementById('interestRate').value) || 5.25;
+            const years = parseInt(document.getElementById('amortization').value) || 25;
             const propertyTax = parseFloat(document.getElementById('propertyTax').value) || 0;
             const insurance = parseFloat(document.getElementById('insurance').value) || 0;
             
-            const downPaymentAmount = purchasePrice * (downPaymentPercent / 100);
-            const loanAmount = purchasePrice - downPaymentAmount;
-            
-            // Calculate CMHC premium if down payment < 20%
-            let cmhcPremium = 0;
-            if (downPaymentPercent < 20) {
-                if (downPaymentPercent >= 15) cmhcPremium = 2.8;
-                else if (downPaymentPercent >= 10) cmhcPremium = 3.1;
-                else cmhcPremium = 4.0;
-            }
-            document.getElementById('cmhcPremium').value = cmhcPremium;
-            
-            const cmhcAmount = loanAmount * (cmhcPremium / 100);
-            const totalLoan = loanAmount + cmhcAmount;
-            
-            // Calculate payment based on frequency
-            let paymentsPerYear, totalPayments;
-            switch (paymentFreq) {
-                case 'weekly': paymentsPerYear = 52; break;
-                case 'bi-weekly': paymentsPerYear = 26; break;
-                default: paymentsPerYear = 12; break;
+            if (price === 0) {
+                showToast('Please enter a purchase price');
+                return;
             }
             
-            totalPayments = amortization * paymentsPerYear;
-            const monthlyRate = interestRate / 100 / 12;
-            const adjustedRate = monthlyRate * (12 / paymentsPerYear);
+            const downPayment = price * (downPercent / 100);
+            const principal = price - downPayment;
             
-            const payment = totalLoan * (adjustedRate * Math.pow(1 + adjustedRate, totalPayments)) / 
-                           (Math.pow(1 + adjustedRate, totalPayments) - 1);
+            // Calculate CMHC if down payment < 20%
+            let cmhcRate = 0;
+            if (downPercent < 20) {
+                if (downPercent >= 15) cmhcRate = 2.8;
+                else if (downPercent >= 10) cmhcRate = 3.1;
+                else cmhcRate = 4.0;
+            }
             
-            const monthlyPayment = payment * (paymentsPerYear / 12);
+            const cmhcAmount = principal * (cmhcRate / 100);
+            const totalLoan = principal + cmhcAmount;
+            
+            const monthlyRate = rate / 100 / 12;
+            const numPayments = years * 12;
+            
+            const payment = totalLoan * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                           (Math.pow(1 + monthlyRate, numPayments) - 1);
+            
             const monthlyTax = propertyTax / 12;
             const monthlyInsurance = insurance / 12;
-            const totalMonthlyPayment = monthlyPayment + monthlyTax + monthlyInsurance;
+            const totalPayment = payment + monthlyTax + monthlyInsurance;
             
             // Display results
-            const resultsHtml = `
-                <div class="result-item">
-                    <span>Loan Amount:</span>
-                    <span class="result-value">$${loanAmount.toLocaleString()}</span>
+            const resultsHTML = `
+                <div class="result-row">
+                    <span class="result-label">Purchase Price</span>
+                    <span class="result-value">${price.toLocaleString()}</span>
                 </div>
-                <div class="result-item">
-                    <span>CMHC Premium:</span>
-                    <span class="result-value">$${cmhcAmount.toLocaleString()}</span>
+                <div class="result-row">
+                    <span class="result-label">Down Payment</span>
+                    <span class="result-value">${downPayment.toLocaleString()}</span>
                 </div>
-                <div class="result-item">
-                    <span>Total Mortgage:</span>
-                    <span class="result-value">$${totalLoan.toLocaleString()}</span>
+                <div class="result-row">
+                    <span class="result-label">CMHC Insurance</span>
+                    <span class="result-value">${cmhcAmount.toLocaleString()}</span>
                 </div>
-                <div class="result-item">
-                    <span>Principal & Interest:</span>
-                    <span class="result-value">$${monthlyPayment.toLocaleString()}/month</span>
+                <div class="result-row">
+                    <span class="result-label">Total Mortgage</span>
+                    <span class="result-value">${totalLoan.toLocaleString()}</span>
                 </div>
-                <div class="result-item">
-                    <span>Property Tax:</span>
-                    <span class="result-value">$${monthlyTax.toLocaleString()}/month</span>
+                <div class="result-row">
+                    <span class="result-label">Monthly P&I</span>
+                    <span class="result-value">${payment.toFixed(2)}</span>
                 </div>
-                <div class="result-item">
-                    <span>Insurance:</span>
-                    <span class="result-value">$${monthlyInsurance.toLocaleString()}/month</span>
+                <div class="result-row">
+                    <span class="result-label">Property Tax</span>
+                    <span class="result-value">${monthlyTax.toFixed(2)}</span>
                 </div>
-                <div class="result-item">
-                    <span
+                <div class="result-row">
+                    <span class="result-label">Insurance</span>
+                    <span class="result-value">${monthlyInsurance.toFixed(2)}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label"><strong>Total Payment</strong></span>
+                    <span class="result-value"><strong>${totalPayment.toFixed(2)}</strong></span>
+                </div>
+            `;
+            
+            document.getElementById('mortgageResultsContent').innerHTML = resultsHTML;
+            document.getElementById('mortgageResults').style.display = 'block';
+            
+            // Show ad after calculation
+            document.getElementById('mortgageAd').style.display = 'block';
+            
+            // Create chart
+            createMortgageChart(payment, monthlyTax, monthlyInsurance);
+        }
+
+        function createMortgageChart(payment, tax, insurance) {
+            const ctx = document.getElementById('mortgageChart').getContext('2d');
+            
+            if (mortgageChart) {
+                mortgageChart.destroy();
+            }
+            
+            mortgageChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Principal & Interest', 'Property Tax', 'Insurance'],
+                    datasets: [{
+                        data: [payment, tax, insurance],
+                        backgroundColor: ['#007AFF', '#34C759', '#FF9500'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#FFFFFF',
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Property Analysis
+        function analyzeProperty() {
+            const address = document.getElementById('propertyAddress').value;
+            const type = document.getElementById('propertyType').value;
+            const price = parseFloat(document.getElementById('analysisPrice').value) || 0;
+            const rent = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const expenses = parseFloat(document.getElementById('monthlyExpenses').value) || 0;
+            const vacancy = parseFloat(document.getElementById('vacancyRate').value) || 5;
+            
+            if (!address || price === 0 || rent === 0) {
+                showToast('Please fill in all required fields');
+                return;
+            }
+            
+            const effectiveRent = rent * (1 - vacancy / 100);
+            const noi = (effectiveRent - expenses) * 12;
+            const capRate = (noi / price) * 100;
+            const cashFlow = effectiveRent - expenses;
+            const roi = (noi / (price * 0.2)) * 100; // Assuming 20% down
+            
+            const resultsHTML = `
+                <div class="result-row">
+                    <span class="result-label">Monthly Cash Flow</span>
+                    <span class="result-value">${cashFlow.toFixed(2)}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Annual NOI</span>
+                    <span class="result-value">${noi.toFixed(2)}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Cap Rate</span>
+                    <span class="result-value">${capRate.toFixed(2)}%</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Cash-on-Cash ROI</span>
+                    <span class="result-value">${roi.toFixed(2)}%</span>
+                </div>
+            `;
+            
+            document.getElementById('analysisContent').innerHTML = resultsHTML;
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Show ad after analysis
+            document.getElementById('analysisAd').style.display = 'block';
+        }
+
+        function saveProperty() {
+            const address = document.getElementById('propertyAddress').value;
+            const type = document.getElementById('propertyType').value;
+            const price = parseFloat(document.getElementById('analysisPrice').value) || 0;
+            const rent = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const expenses = parseFloat(document.getElementById('monthlyExpenses').value) || 0;
+            const vacancy = parseFloat(document.getElementById('vacancyRate').value) || 5;
+            
+            if (!address || price === 0) {
+                showToast('Please fill in property details first');
+                return;
+            }
+            
+            const property = {
+                id: Date.now(),
+                address,
+                type,
+                price,
+                rent,
+                expenses,
+                vacancy,
+                savedDate: new Date().toISOString()
+            };
+            
+            properties.push(property);
+            saveData();
+            showToast('Property saved successfully!');
+            updateDashboard();
+        }
+
+        // Portfolio Management
+        function displayPortfolio() {
+            const portfolioList = document.getElementById('portfolioList');
+            
+            if (properties.length === 0) {
+                portfolioList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No properties in portfolio</p>';
+                return;
+            }
+            
+            let html = '';
+            properties.forEach(property => {
+                const effectiveRent = property.rent * (1 - property.vacancy / 100);
+                const cashFlow = effectiveRent - property.expenses;
+                
+                html += `
+                    <div class="property-item" onclick="viewProperty(${property.id})">
+                        <div class="property-header">
+                            <div>
+                                <div class="property-address">${property.address}</div>
+                                <div class="property-type">${property.type}</div>
+                            </div>
+                        </div>
+                        <div class="property-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Price</span>
+                                <span class="metric-value">${property.price.toLocaleString()}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Rent</span>
+                                <span class="metric-value">${property.rent}/mo</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Cash Flow</span>
+                                <span class="metric-value">${cashFlow.toFixed(0)}/mo</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            portfolioList.innerHTML = html;
+        }
+
+        function viewProperty(id) {
+            const property = properties.find(p => p.id === id);
+            if (property) {
+                showToast(`Viewing ${property.address}`);
+                // You can expand this to show detailed property view
+            }
+        }
+
+        // Dashboard
+        function updateDashboard() {
+            const totalProperties = properties.length;
+            const totalInvestment = properties.reduce((sum, p) => sum + p.price, 0);
+            const totalCashFlow = properties.reduce((sum, p) => {
+                const effectiveRent = p.rent * (1 - p.vacancy / 100);
+                return sum + (effectiveRent - p.expenses);
+            }, 0);
+            
+            const avgROI = totalProperties > 0 ? 
+                (totalCashFlow * 12 / (totalInvestment * 0.2)) * 100 : 0;
+            
+            document.getElementById('statProperties').textContent = totalProperties;
+            document.getElementById('statInvestment').textContent = 
+                totalInvestment > 0 ? ' + (totalInvestment / 1000).toFixed(0) + 'K' : '$0';
+            document.getElementById('statCashflow').textContent = 
+                ' + totalCashFlow.toFixed(0);
+            document.getElementById('statROI').textContent = 
+                avgROI.toFixed(1) + '%';
+            
+            // Recent properties
+            const recentProps = document.getElementById('recentProperties');
+            if (properties.length === 0) {
+                recentProps.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No properties saved yet</p>';
+            } else {
+                let html = '';
+                properties.slice(-3).reverse().forEach(property => {
+                    html += `
+                        <div class="property-item" style="margin-bottom: 8px;">
+                            <div class="property-address">${property.address}</div>
+                            <div class="property-type">${property.type} - ${property.price.toLocaleString()}</div>
+                        </div>
+                    `;
+                });
+                recentProps.innerHTML = html;
+            }
+        }
+
+        // Settings
+        function saveSettings() {
+            settings.defaultRate = parseFloat(document.getElementById('defaultRate').value) || 5.25;
+            settings.defaultDown = parseFloat(document.getElementById('defaultDown').value) || 20;
+            
+            localStorage.setItem('settings', JSON.stringify(settings));
+            
+            // Update default values in calculators
+            document.getElementById('quickRate').value = settings.defaultRate;
+            document.getElementById('quickDown').value = settings.defaultDown;
+            document.getElementById('interestRate').value = settings.defaultRate;
+            document.getElementById('downPayment').value = settings.defaultDown;
+            
+            showToast('Settings saved successfully!');
+        }
+
+        // Data Management
+        function saveData() {
+            localStorage.setItem('properties', JSON.stringify(properties));
+            showToast('Data saved successfully!');
+        }
+
+        function loadData() {
+            const savedProperties = localStorage.getItem('properties');
+            if (savedProperties) {
+                properties = JSON.parse(savedProperties);
+            }
+        }
+
+        // Utilities
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
