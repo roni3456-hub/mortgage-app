@@ -1,0 +1,652 @@
+import { ChangeDetectionStrategy, Component, signal, OnInit, computed } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // Import FormsModule for ngModel (if used, though signals are preferred)
+
+// Firebase imports
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, User } from 'firebase/auth';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where, onSnapshot } from 'firebase/firestore';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, FormsModule, CurrencyPipe], // CurrencyPipe for formatting currency
+  template: `
+    <div class="min-h-screen bg-gradient-to-br from-blue-900 to-gray-900 text-gray-100 flex flex-col">
+      <!-- Header and Navigation -->
+      <header class="bg-gray-800 shadow-lg p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+          <h1 class="text-3xl font-extrabold text-blue-400 mb-4 md:mb-0">Canadian Mortgage Underwriter</h1>
+          <nav class="space-x-4">
+            <button (click)="setCurrentPage('home')" [class.active]="currentPage() === 'home'"
+                    class="py-2 px-4 rounded-lg font-medium transition-colors duration-300"
+                    [ngClass]="{'bg-blue-600 text-white shadow-md': currentPage() === 'home', 'text-gray-300 hover:text-white hover:bg-gray-700': currentPage() !== 'home'}">
+              Home
+            </button>
+            <button (click)="setCurrentPage('underwriting')" [class.active]="currentPage() === 'underwriting'"
+                    class="py-2 px-4 rounded-lg font-medium transition-colors duration-300"
+                    [ngClass]="{'bg-blue-600 text-white shadow-md': currentPage() === 'underwriting', 'text-gray-300 hover:text-white hover:bg-gray-700': currentPage() !== 'underwriting'}">
+              Underwriting Tool
+            </button>
+            <button (click)="setCurrentPage('savedReports')" [class.active]="currentPage() === 'savedReports'"
+                    class="py-2 px-4 rounded-lg font-medium transition-colors duration-300"
+                    [ngClass]="{'bg-blue-600 text-white shadow-md': currentPage() === 'savedReports', 'text-gray-300 hover:text-white hover:bg-gray-700': currentPage() !== 'savedReports'}">
+              Saved Reports
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="flex-grow container mx-auto p-4 md:p-8">
+        <!-- Home Page -->
+        @if (currentPage() === 'home') {
+          <div class="bg-gray-800 rounded-2xl shadow-xl p-8 text-center border border-blue-700">
+            <h2 class="text-4xl font-bold text-blue-300 mb-6">Welcome to Your Investment Property Underwriting Hub!</h2>
+            <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+              This application helps Canadian real estate investors analyze the financial viability of potential properties.
+              Use the Underwriting Tool to calculate income, expenses, and cash flow, and save your reports for future reference.
+            </p>
+            <button (click)="setCurrentPage('underwriting')"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50">
+              Start Underwriting
+            </button>
+          </div>
+        }
+
+        <!-- Underwriting Tool Page -->
+        @if (currentPage() === 'underwriting') {
+          <div class="bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-blue-700">
+            <h2 class="text-3xl font-bold text-blue-300 mb-8 text-center">Property Underwriting Tool</h2>
+
+            <!-- Property Details -->
+            <section class="mb-10 p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-600">
+              <h3 class="text-2xl font-semibold text-blue-200 mb-4">Property Details</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                  <label for="propertyName" class="text-lg font-medium text-gray-300 mb-2">Property Name/Address:</label>
+                  <input id="propertyName" type="text" [(ngModel)]="reportName"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 123 Main St, Toronto" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="purchasePrice" class="text-lg font-medium text-gray-300 mb-2">Purchase Price ($):</label>
+                  <input id="purchasePrice" type="number" [(ngModel)]="purchasePrice" (input)="calculateMortgageDetails()"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 500000" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="downPayment" class="text-lg font-medium text-gray-300 mb-2">Down Payment (%) :</label>
+                  <input id="downPayment" type="number" min="5" max="100" [(ngModel)]="downPaymentPercent" (input)="calculateMortgageDetails()"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 20" />
+                </div>
+                 <div class="flex flex-col">
+                  <label for="interestRate" class="text-lg font-medium text-gray-300 mb-2">Interest Rate (%):</label>
+                  <input id="interestRate" type="number" step="0.01" [(ngModel)]="interestRate" (input)="calculateMortgageDetails()"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 4.5" />
+                </div>
+                 <div class="flex flex-col">
+                  <label for="amortization" class="text-lg font-medium text-gray-300 mb-2">Amortization (Years):</label>
+                  <input id="amortization" type="number" [(ngModel)]="amortizationYears" (input)="calculateMortgageDetails()"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 25" />
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-lg font-medium text-gray-300 mb-2">Loan Amount:</label>
+                    <p class="p-3 rounded-lg bg-gray-600 border border-gray-500 text-white">{{ loanAmount() | currency:'CAD':'symbol':'1.0-2' }}</p>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-lg font-medium text-gray-300 mb-2">Down Payment Amount:</label>
+                    <p class="p-3 rounded-lg bg-gray-600 border border-gray-500 text-white">{{ downPaymentAmount() | currency:'CAD':'symbol':'1.0-2' }}</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Income Sources -->
+            <section class="mb-10 p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-600">
+              <h3 class="text-2xl font-semibold text-blue-200 mb-4">Monthly Income Sources</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                  <label for="monthlyRent" class="text-lg font-medium text-gray-300 mb-2">Monthly Rent ($):</label>
+                  <input id="monthlyRent" type="number" [(ngModel)]="monthlyRent"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 2500" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="otherIncome" class="text-lg font-medium text-gray-300 mb-2">Other Income ($):</label>
+                  <input id="otherIncome" type="number" [(ngModel)]="otherIncome"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 100 (laundry, parking)" />
+                </div>
+              </div>
+            </section>
+
+            <!-- Expense Sources -->
+            <section class="mb-10 p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-600">
+              <h3 class="text-2xl font-semibold text-blue-200 mb-4">Monthly Expenses</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                  <label class="text-lg font-medium text-gray-300 mb-2">Mortgage Payment ($):</label>
+                  <p class="p-3 rounded-lg bg-gray-600 border border-gray-500 text-white">{{ mortgagePayment() | currency:'CAD':'symbol':'1.0-2' }}</p>
+                </div>
+                <div class="flex flex-col">
+                  <label for="propertyTax" class="text-lg font-medium text-gray-300 mb-2">Property Tax (Monthly $):</label>
+                  <input id="propertyTax" type="number" [(ngModel)]="propertyTax"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 300" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="insurance" class="text-lg font-medium text-gray-300 mb-2">Insurance (Monthly $):</label>
+                  <input id="insurance" type="number" [(ngModel)]="insurance"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 100" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="utilities" class="text-lg font-medium text-gray-300 mb-2">Utilities (Monthly $ - Landlord Paid):</label>
+                  <input id="utilities" type="number" [(ngModel)]="utilities"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 150" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="maintenance" class="text-lg font-medium text-gray-300 mb-2">Maintenance & Repairs (Monthly $):</label>
+                  <input id="maintenance" type="number" [(ngModel)]="maintenance"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 100" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="vacancyRate" class="text-lg font-medium text-gray-300 mb-2">Vacancy Rate (% of Rent):</label>
+                  <input id="vacancyRate" type="number" min="0" max="100" [(ngModel)]="vacancyRatePercent"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 5" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="propertyManagement" class="text-lg font-medium text-gray-300 mb-2">Property Management (% of Gross Income):</label>
+                  <input id="propertyManagement" type="number" min="0" max="100" [(ngModel)]="propertyManagementPercent"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 10" />
+                </div>
+                <div class="flex flex-col">
+                  <label for="hoaFees" class="text-lg font-medium text-gray-300 mb-2">HOA/Condo Fees (Monthly $):</label>
+                  <input id="hoaFees" type="number" [(ngModel)]="hoaFees"
+                         class="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-400"
+                         placeholder="e.g., 200" />
+                </div>
+              </div>
+            </section>
+
+            <!-- Summary -->
+            <section class="p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-600">
+              <h3 class="text-2xl font-semibold text-blue-200 mb-4">Financial Summary (Monthly)</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+                <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                  <span>Gross Monthly Income:</span>
+                  <span class="font-bold text-green-400">{{ grossMonthlyIncome() | currency:'CAD':'symbol':'1.0-2' }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-600">
+                  <span>Total Monthly Expenses:</span>
+                  <span class="font-bold text-red-400">{{ totalMonthlyExpenses() | currency:'CAD':'symbol':'1.0-2' }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b-2 border-blue-500">
+                  <span>Net Monthly Cash Flow:</span>
+                  <span class="font-extrabold" [ngClass]="{'text-green-400': netMonthlyCashFlow() >= 0, 'text-red-400': netMonthlyCashFlow() < 0}">
+                    {{ netMonthlyCashFlow() | currency:'CAD':'symbol':'1.0-2' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b-2 border-blue-500">
+                  <span>Annual Cash Flow:</span>
+                  <span class="font-extrabold" [ngClass]="{'text-green-400': annualCashFlow() >= 0, 'text-red-400': annualCashFlow() < 0}">
+                    {{ annualCashFlow() | currency:'CAD':'symbol':'1.0-2' }}
+                  </span>
+                </div>
+                 <div class="flex justify-between items-center py-2 border-b-2 border-blue-500">
+                  <span>Cash-on-Cash Return (Annual):</span>
+                  <span class="font-extrabold" [ngClass]="{'text-green-400': cashOnCashReturn() >= 0, 'text-red-400': cashOnCashReturn() < 0}">
+                    {{ cashOnCashReturn() | number:'1.2-2' }}%
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <div class="mt-10 flex flex-col md:flex-row justify-center gap-4">
+              <button (click)="saveReport()" [disabled]="!reportName"
+                      class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Save Report
+              </button>
+              <button (click)="resetForm()"
+                      class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50">
+                Reset Form
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Saved Reports Page -->
+        @if (currentPage() === 'savedReports') {
+          <div class="bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-blue-700">
+            <h2 class="text-3xl font-bold text-blue-300 mb-8 text-center">Your Saved Underwriting Reports</h2>
+            @if (savedReports().length === 0) {
+              <p class="text-center text-gray-400 text-lg">No reports saved yet. Go to the Underwriting Tool to create one!</p>
+            } @else {
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                @for (report of savedReports(); track report.id) {
+                  <div class="bg-gray-700 rounded-lg p-5 shadow-md border border-gray-600 flex flex-col justify-between">
+                    <div>
+                      <h3 class="text-xl font-semibold text-blue-300 mb-2">{{ report.reportName }}</h3>
+                      <p class="text-sm text-gray-400 mb-3">Saved: {{ report.savedAt | date:'short' }}</p>
+                      <p class="text-md text-gray-300 mb-1">Purchase Price: {{ report.purchasePrice | currency:'CAD':'symbol':'1.0-0' }}</p>
+                      <p class="text-md text-gray-300 mb-1">Monthly Rent: {{ report.monthlyRent | currency:'CAD':'symbol':'1.0-0' }}</p>
+                      <p class="text-md text-gray-300 mb-4">Cash Flow:
+                        <span [ngClass]="{'text-green-400': report.netMonthlyCashFlow >= 0, 'text-red-400': report.netMonthlyCashFlow < 0}">
+                          {{ report.netMonthlyCashFlow | currency:'CAD':'symbol':'1.0-0' }} / month
+                        </span>
+                      </p>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                      <button (click)="loadReport(report)"
+                              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Load
+                      </button>
+                      <button (click)="deleteReport(report.id)"
+                              class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </main>
+
+      <!-- Custom Message/Confirmation Modals -->
+      @if (showModal()) {
+        <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+          <div class="bg-gray-900 rounded-lg shadow-xl p-6 max-w-sm w-full border border-blue-700">
+            <h3 class="text-2xl font-bold mb-4 text-center" [ngClass]="{'text-green-500': modalType() === 'success', 'text-red-500': modalType() === 'error'}">
+              {{ modalType() === 'success' ? 'Success!' : 'Error!' }}
+            </h3>
+            <p class="text-lg text-gray-300 text-center mb-6">{{ modalMessage() }}</p>
+            <button
+              (click)="closeModal()"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Footer -->
+      <footer class="bg-gray-800 shadow-inner p-4 text-center text-gray-400 text-sm">
+        <p>&copy; 2025 Canadian Mortgage Underwriter. All rights reserved.</p>
+        @if (userId()) {
+          <p>Your User ID: {{ userId() }}</p>
+        }
+      </footer>
+    </div>
+  `,
+  styles: `
+    /* No custom styles needed beyond TailwindCSS classes - all styling is utility-first */
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class App implements OnInit {
+  // Navigation State
+  currentPage = signal<'home' | 'underwriting' | 'savedReports'>('home');
+
+  // Property Details
+  reportName = '';
+  purchasePrice: number | null = null;
+  downPaymentPercent: number = 20; // Default 20%
+  interestRate: number = 5; // Default 5%
+  amortizationYears: number = 25; // Default 25 years
+
+  // Income Inputs
+  monthlyRent: number | null = null;
+  otherIncome: number = 0;
+
+  // Expense Inputs
+  propertyTax: number | null = null;
+  insurance: number | null = null;
+  utilities: number = 0; // If landlord pays
+  maintenance: number = 0;
+  vacancyRatePercent: number = 5; // Default 5%
+  propertyManagementPercent: number = 10; // Default 10%
+  hoaFees: number = 0;
+
+  // Calculated Mortgage Details
+  loanAmount = computed(() => {
+    if (this.purchasePrice && this.downPaymentPercent !== null) {
+      return this.purchasePrice - (this.purchasePrice * (this.downPaymentPercent / 100));
+    }
+    return 0;
+  });
+
+  downPaymentAmount = computed(() => {
+    if (this.purchasePrice && this.downPaymentPercent !== null) {
+      return this.purchasePrice * (this.downPaymentPercent / 100);
+    }
+    return 0;
+  });
+
+  mortgagePayment = computed(() => {
+    const P = this.loanAmount();
+    const annualInterestRate = this.interestRate / 100;
+    const i = annualInterestRate / 12; // Monthly interest rate
+    const n = this.amortizationYears * 12; // Total number of payments
+
+    if (P > 0 && i > 0 && n > 0) {
+      return P * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+    } else if (P > 0 && i === 0 && n > 0) { // Handle 0% interest rate
+      return P / n;
+    }
+    return 0;
+  });
+
+  // Calculated Financial Summaries
+  grossMonthlyIncome = computed(() => {
+    return (this.monthlyRent || 0) + (this.otherIncome || 0);
+  });
+
+  totalMonthlyExpenses = computed(() => {
+    const grossIncome = this.grossMonthlyIncome();
+    const mortgage = this.mortgagePayment();
+    const tax = this.propertyTax || 0;
+    const ins = this.insurance || 0;
+    const util = this.utilities || 0;
+    const maint = this.maintenance || 0;
+    const hoa = this.hoaFees || 0;
+
+    const vacancyCost = grossIncome * (this.vacancyRatePercent / 100);
+    const propertyManagementCost = grossIncome * (this.propertyManagementPercent / 100);
+
+    return mortgage + tax + ins + util + maint + vacancyCost + propertyManagementCost + hoa;
+  });
+
+  netMonthlyCashFlow = computed(() => {
+    return this.grossMonthlyIncome() - this.totalMonthlyExpenses();
+  });
+
+  annualCashFlow = computed(() => {
+    return this.netMonthlyCashFlow() * 12;
+  });
+
+  cashOnCashReturn = computed(() => {
+    const annualCF = this.annualCashFlow();
+    const downPayment = this.downPaymentAmount();
+    if (annualCF !== null && downPayment > 0) {
+      return (annualCF / downPayment) * 100;
+    }
+    return 0;
+  });
+
+  // Firestore & Auth State
+  private app: any;
+  private auth: any;
+  private db: any;
+  userId = signal<string | null>(null);
+  isAuthReady = signal<boolean>(false);
+
+  // Saved Reports State
+  savedReports = signal<any[]>([]);
+
+  // Modal State
+  showModal = signal<boolean>(false);
+  modalMessage = signal<string>('');
+  modalType = signal<'success' | 'error'>('success');
+
+  constructor() {
+    // Initialize Firebase in the constructor
+    // Global variables are provided by the Canvas environment
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    this.app = initializeApp(firebaseConfig);
+    this.auth = getAuth(this.app);
+    this.db = getFirestore(this.app);
+
+    // Listen for auth state changes
+    onAuthStateChanged(this.auth, async (user) => {
+      if (user) {
+        this.userId.set(user.uid);
+      } else {
+        // Sign in anonymously if no user is found
+        await signInAnonymously(this.auth);
+        this.userId.set(this.auth.currentUser?.uid || crypto.randomUUID());
+      }
+      this.isAuthReady.set(true);
+      // Once auth is ready, load reports
+      this.loadAllReports();
+    });
+  }
+
+  ngOnInit(): void {
+    // Attempt to sign in with custom token if available
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    if (initialAuthToken) {
+      signInWithCustomToken(this.auth, initialAuthToken).catch(error => {
+        console.error("Error signing in with custom token:", error);
+        // Fallback to anonymous sign-in if custom token fails
+        signInAnonymously(this.auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
+      });
+    } else {
+      // If no initial token, ensure anonymous sign-in is attempted by the onAuthStateChanged listener
+      // No explicit action needed here as onAuthStateChanged handles it
+    }
+  }
+
+
+  /**
+   * Sets the current page to navigate within the single-page application.
+   * @param page The page to navigate to ('home', 'underwriting', 'savedReports').
+   */
+  setCurrentPage(page: 'home' | 'underwriting' | 'savedReports'): void {
+    this.currentPage.set(page);
+    if (page === 'savedReports') {
+      this.loadAllReports(); // Reload reports when navigating to the saved reports page
+    }
+  }
+
+  /**
+   * Calculates mortgage details like loan amount, down payment amount, and monthly mortgage payment.
+   * This is triggered by changes in purchase price, down payment, interest rate, or amortization.
+   */
+  calculateMortgageDetails(): void {
+    // Mortgage payment is a computed signal, so it recalculates automatically
+    // No direct action needed here, but the function exists to be called by input events.
+  }
+
+  /**
+   * Saves the current underwriting report to Firestore.
+   * Includes validation and error handling.
+   */
+  async saveReport(): Promise<void> {
+    if (!this.isAuthReady() || !this.userId()) {
+      this.showModal.set(true);
+      this.modalMessage.set('Authentication not ready. Please wait a moment and try again.');
+      this.modalType.set('error');
+      return;
+    }
+
+    if (!this.reportName || !this.purchasePrice || this.purchasePrice <= 0 ||
+        this.monthlyRent === null || this.monthlyRent < 0 ||
+        this.propertyTax === null || this.propertyTax < 0 ||
+        this.insurance === null || this.insurance < 0) {
+      this.showModal.set(true);
+      this.modalMessage.set('Please fill in all required fields (Property Name, Purchase Price, Monthly Rent, Property Tax, Insurance) with valid positive values.');
+      this.modalType.set('error');
+      return;
+    }
+
+    try {
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      const collectionPath = `artifacts/${appId}/users/${this.userId()}/underwritingReports`;
+      console.log('Attempting to save report to path:', collectionPath, 'for userId:', this.userId());
+      const reportsCollectionRef = collection(this.db, collectionPath);
+
+      // Prepare report data
+      const reportData = {
+        reportName: this.reportName,
+        purchasePrice: this.purchasePrice,
+        downPaymentPercent: this.downPaymentPercent,
+        interestRate: this.interestRate,
+        amortizationYears: this.amortizationYears,
+        monthlyRent: this.monthlyRent,
+        otherIncome: this.otherIncome,
+        propertyTax: this.propertyTax,
+        insurance: this.insurance,
+        utilities: this.utilities,
+        maintenance: this.maintenance,
+        vacancyRatePercent: this.vacancyRatePercent,
+        propertyManagementPercent: this.propertyManagementPercent,
+        hoaFees: this.hoaFees,
+        mortgagePayment: this.mortgagePayment(),
+        grossMonthlyIncome: this.grossMonthlyIncome(),
+        totalMonthlyExpenses: this.totalMonthlyExpenses(),
+        netMonthlyCashFlow: this.netMonthlyCashFlow(),
+        annualCashFlow: this.annualCashFlow(),
+        cashOnCashReturn: this.cashOnCashReturn(),
+        userId: this.userId(),
+        savedAt: new Date().toISOString(),
+      };
+
+      await addDoc(reportsCollectionRef, reportData);
+      this.showModal.set(true);
+      this.modalMessage.set('Report saved successfully!');
+      this.modalType.set('success');
+      this.resetForm(); // Reset form after saving
+      this.loadAllReports(); // Reload the list of reports
+    } catch (error) {
+      console.error("Error saving report:", error);
+      this.showModal.set(true);
+      this.modalMessage.set('Failed to save report. Please try again.');
+      this.modalType.set('error');
+    }
+  }
+
+  /**
+   * Loads all underwriting reports for the current user from Firestore.
+   * Uses onSnapshot for real-time updates.
+   */
+  async loadAllReports(): Promise<void> {
+    if (!this.isAuthReady() || !this.userId()) {
+      console.warn("Authentication not ready, cannot load reports.");
+      return;
+    }
+
+    try {
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      const collectionPath = `artifacts/${appId}/users/${this.userId()}/underwritingReports`;
+      console.log('Attempting to load reports from path:', collectionPath, 'for userId:', this.userId());
+      const reportsCollectionRef = collection(this.db, collectionPath);
+      const q = query(reportsCollectionRef, where('userId', '==', this.userId()));
+
+      // Use onSnapshot for real-time updates
+      onSnapshot(q, (snapshot) => {
+        const reports: any[] = [];
+        snapshot.forEach(doc => {
+          reports.push({ id: doc.id, ...doc.data() });
+        });
+        this.savedReports.set(reports);
+      }, (error) => {
+        console.error("Error fetching real-time reports:", error);
+        this.showModal.set(true);
+        this.modalMessage.set('Failed to load reports in real-time. Please check your connection.');
+        this.modalType.set('error');
+      });
+
+    } catch (error) {
+      console.error("Error loading reports:", error);
+      this.showModal.set(true);
+      this.modalMessage.set('Failed to load reports. Please try again.');
+      this.modalType.set('error');
+    }
+  }
+
+  /**
+   * Loads a selected report's data into the form fields.
+   * @param report The report object to load.
+   */
+  loadReport(report: any): void {
+    this.reportName = report.reportName;
+    this.purchasePrice = report.purchasePrice;
+    this.downPaymentPercent = report.downPaymentPercent;
+    this.interestRate = report.interestRate;
+    this.amortizationYears = report.amortizationYears;
+    this.monthlyRent = report.monthlyRent;
+    this.otherIncome = report.otherIncome;
+    this.propertyTax = report.propertyTax;
+    this.insurance = report.insurance;
+    this.utilities = report.utilities;
+    this.maintenance = report.maintenance;
+    this.vacancyRatePercent = report.vacancyRatePercent;
+    this.propertyManagementPercent = report.propertyManagementPercent;
+    this.hoaFees = report.hoaFees;
+
+    this.setCurrentPage('underwriting'); // Navigate to the underwriting tool
+    this.showModal.set(true);
+    this.modalMessage.set(`Report "${report.reportName}" loaded successfully!`);
+    this.modalType.set('success');
+  }
+
+  /**
+   * Deletes a report from Firestore.
+   * @param reportId The ID of the report to delete.
+   */
+  async deleteReport(reportId: string): Promise<void> {
+    if (!this.isAuthReady() || !this.userId()) {
+      this.showModal.set(true);
+      this.modalMessage.set('Authentication not ready. Cannot delete report.');
+      this.modalType.set('error');
+      return;
+    }
+    const confirmDelete = true; // No window.confirm(), assume true for now. In a real app, use a custom modal.
+
+    if (confirmDelete) {
+      try {
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const docRef = doc(this.db, `artifacts/${appId}/users/${this.userId()}/underwritingReports`, reportId);
+        await deleteDoc(docRef);
+        this.showModal.set(true);
+        this.modalMessage.set('Report deleted successfully!');
+        this.modalType.set('success');
+        // onSnapshot will automatically update savedReports()
+      } catch (error) {
+        console.error("Error deleting report:", error);
+        this.showModal.set(true);
+        this.modalMessage.set('Failed to delete report. Please try again.');
+        this.modalType.set('error');
+      }
+    }
+  }
+
+  /**
+   * Resets all form fields to their initial state.
+   */
+  resetForm(): void {
+    this.reportName = '';
+    this.purchasePrice = null;
+    this.downPaymentPercent = 20;
+    this.interestRate = 5;
+    this.amortizationYears = 25;
+    this.monthlyRent = null;
+    this.otherIncome = 0;
+    this.propertyTax = null;
+    this.insurance = null;
+    this.utilities = 0;
+    this.maintenance = 0;
+    this.vacancyRatePercent = 5;
+    this.propertyManagementPercent = 10;
+    this.hoaFees = 0;
+  }
+
+  /**
+   * Closes the custom modal.
+   */
+  closeModal(): void {
+    this.showModal.set(false);
+    this.modalMessage.set('');
+  }
+}
