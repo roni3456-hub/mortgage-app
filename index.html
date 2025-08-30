@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
 
+  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,13 +14,14 @@
     gtag('config', 'G-PRQW949FW1');
   </script>
 
+  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
      crossorigin="anonymous"></script>
 
+  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  
-  <script src="https://apis.google.com/js/api.js" async defer></script>
 
+  <!-- PWA Manifest -->
   <link rel="manifest" href="site.webmanifest" />
   <meta name="theme-color" content="#2ecc71" />
 
@@ -122,6 +124,7 @@
   </style>
 </head>
 <body>
+  <!-- LOGIN SCREEN -->
   <main id="loginScreen" class="center-screen">
     <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
       <div class="login-card">
@@ -132,8 +135,10 @@
         
         <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
         
+        <!-- Google Sign-In Button Container -->
         <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
         
+        <!-- Hidden elements for Google Sign-In -->
         <div id="g_id_onload"
              data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
@@ -141,6 +146,7 @@
              style="display:none;"></div>
       </div>
       
+      <!-- PWA Install Button Below White Box -->
       <div style="margin-top:32px;text-align:center;">
         <button id="homeInstallBtn" class="btn btn-primary" style="font-size:18px;padding:16px 32px;background:var(--brand);border:none;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
           📱 Download App
@@ -152,7 +158,9 @@
     </div>
   </main>
 
+  <!-- MAIN APP -->
   <div id="mainApp" style="display:none;">
+    <!-- Navigation -->
     <nav class="nav">
       <div class="nav-container">
         <a href="#" class="logo">🏠 PropCheck</a>
@@ -177,8 +185,10 @@
       </div>
     </nav>
 
+    <!-- Main Content Area -->
     <div class="main">
       
+      <!-- CALCULATOR PAGE -->
       <div id="calculatorPage" class="page active">
         <div class="card">
           <h3>🏠 Property Calculator</h3>
@@ -280,12 +290,10 @@
             <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
               💾 Save Property
             </button>
-            <button id="saveToDriveBtn" class="btn btn-secondary" style="margin-top:16px;">
-              ☁️ Save to Google Drive
-            </button>
           </div>
         </div>
 
+        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -296,6 +304,7 @@
         </div>
       </div>
 
+      <!-- ANALYSIS PAGE -->
       <div id="analysisPage" class="page">
         <div class="card">
           <h3>📊 Stress Testing & Scenarios</h3>
@@ -306,6 +315,7 @@
             <div class="tab" data-tab="expenses">Expense Impact</div>
           </div>
           
+          <!-- Interest Rate Analysis -->
           <div id="ratesTab" class="tab-content">
             <p>Analyze how interest rate changes affect your investment:</p>
             <div class="grid grid-3">
@@ -331,6 +341,7 @@
             <div id="stressResults" style="display:none;margin-top:20px;"></div>
           </div>
           
+          <!-- Rent Analysis -->
           <div id="rentTab" class="tab-content" style="display:none;">
             <p>Model different rental scenarios:</p>
             <div class="grid grid-2">
@@ -347,12 +358,14 @@
             <div id="rentResults" style="display:none;margin-top:20px;"></div>
           </div>
           
+          <!-- Expense Analysis -->
           <div id="expenseTab" class="tab-content" style="display:none;">
             <p>Break down and optimize your expenses:</p>
             <div id="expenseBreakdown" style="margin-top:20px;"></div>
           </div>
         </div>
 
+        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -362,6 +375,7 @@
         </div>
       </div>
 
+      <!-- COMPARE PAGE -->
       <div id="comparePage" class="page">
         <div class="card">
           <h3>⚖️ Property Comparison</h3>
@@ -378,6 +392,7 @@
         </div>
       </div>
 
+      <!-- REPORTS PAGE -->
       <div id="reportsPage" class="page">
         <div class="card">
           <h3>📋 Investment Reports</h3>
@@ -403,6 +418,7 @@
           </div>
         </div>
 
+        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -412,6 +428,7 @@
         </div>
       </div>
 
+      <!-- MARKET DATA PAGE -->
       <div id="marketPage" class="page">
         <div class="card">
           <h3>🏙️ Market Intelligence</h3>
@@ -464,6 +481,7 @@
           </div>
         </div>
 
+        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -474,6 +492,7 @@
       </div>
     </div>
 
+    <!-- Mobile Navigation -->
     <div class="mobile-menu">
       <div class="mobile-nav">
         <div class="mobile-nav-item active" data-page="calculator">
@@ -502,18 +521,12 @@
 
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
-    const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Google API Key
-    const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
+    
     // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
-    let tokenClient;
-    let gapiInited = false;
-    let gisInited = false;
-    
+
     // Login functionality
     guestButton.onclick = () => { 
       loginScreen.style.display='none'; 
@@ -561,35 +574,6 @@
 
     // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
-    
-    // Google API/Picker Functions
-    function gapiLoaded() {
-      gapi.load('client:picker', initializeGapiClient);
-    }
-    
-    function initializeGapiClient() {
-      gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: DISCOVERY_DOCS,
-      }).then(() => {
-        gapiInited = true;
-        maybeEnableButtons();
-      }).catch(err => console.error("Error initializing GAPI client", err));
-    }
-    
-    function gisLoaded() {
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: '', // defined at call time
-      });
-      gisInited = true;
-      maybeEnableButtons();
-    }
-    
-    function maybeEnableButtons() {
-      // This is a placeholder for future logic if buttons need to be disabled
-    }
 
     window.onload = function(){
       // Wait a bit for Google library to load, then initialize
@@ -610,11 +594,6 @@
               shape: 'rectangular'
             }
           );
-          
-          // Initialize Google Identity Services for Drive functionality
-          gisLoaded();
-          gapiLoaded();
-          
         } else {
           console.log('Google Sign-In library not loaded');
           // Fallback - show a manual button
@@ -777,88 +756,6 @@
         gtag('event', 'save_property');
       }
     };
-    
-    // Save to Google Drive functionality
-    document.getElementById('saveToDriveBtn').onclick = () => {
-        if (!currentProperty.price) {
-            alert('Please calculate a property first to save to Drive.');
-            return;
-        }
-        if (!currentUser) {
-            alert('You must be signed in with Google to use this feature.');
-            return;
-        }
-
-        tokenClient.callback = (resp) => {
-            if (resp.error) {
-                console.error('Error getting access token:', resp.error);
-                alert('Authorization failed. Please try signing in again.');
-                return;
-            }
-            createPicker();
-        };
-
-        if (gapi.client.getToken() === null) {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-            createPicker();
-        }
-    };
-    
-    function createPicker() {
-      if (!gapiInited || !gisInited) {
-        alert('Google APIs are not ready. Please try again in a moment.');
-        return;
-      }
-
-      const view = new google.picker.View(google.picker.ViewId.FOLDERS);
-      view.setMimeTypes('application/vnd.google-apps.folder');
-
-      const picker = new google.picker.PickerBuilder()
-        .addView(view)
-        .setOAuthToken(gapi.client.getToken().access_token)
-        .setDeveloperKey(API_KEY)
-        .setCallback(pickerCallback)
-        .build();
-      picker.setVisible(true);
-    }
-    
-    function pickerCallback(data) {
-        if (data.action === google.picker.Action.PICKED) {
-            const folderId = data.docs[0].id;
-            const propertyName = currentProperty.name || 'Untitled Property';
-            const fileName = `PropCheck Report - ${propertyName} (${new Date().toLocaleDateString()}).json`;
-            const fileContent = JSON.stringify(currentProperty, null, 2);
-            const metadata = {
-                'name': fileName,
-                'mimeType': 'application/json',
-                'parents': [folderId]
-            };
-            
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', new Blob([fileContent], { type: 'application/json' }));
-
-            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }),
-                body: form
-            })
-            .then(res => res.json())
-            .then(file => {
-                if(file.id) {
-                    alert(`Report saved to Google Drive as "${fileName}"!`);
-                    gtag('event', 'save_to_drive', { file_id: file.id });
-                } else {
-                    alert('Failed to save to Google Drive.');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving to Drive:', error);
-                alert('An error occurred while saving the file.');
-            });
-        }
-    }
 
     function updateSavedPropertiesList() {
       const container = document.getElementById('propertiesList');
