@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PropCheck – RE Calculator & Underwriting Tool</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PRQW949FW1');
+  </script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
+     crossorigin="anonymous"></script>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="theme-color" content="#2ecc71" />
+
+  <style>
+    :root{
+      --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
+      --page-bg-1:#667eea;--page-bg-2:#764ba2;--text:#333;--shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);
+      --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      font-family: var(--font-family);
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, var(--page-bg-1), var(--page-bg-2));
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 95%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    header {
+      background: #ffffff;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      margin: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      width: 95%;
+      max-width: 900px;
+    }
+    h1 {
+      color: var(--brand-dark);
+      font-size: 2em;
+      margin: 0;
+    }
+    nav {
+      display: flex;
+      gap: 10px;
+    }
+    .page-btn {
+      background-color: var(--brand);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .page-btn:hover {
+      background-color: var(--brand-dark);
+      transform: translateY(-2px);
+    }
+    .page-btn.active {
+      background-color: var(--brand-dark);
+    }
+    .content {
+      padding: 20px;
+      border-radius: 8px;
+      background-color: var(--card-bg);
+    }
+    .hidden {
+      display: none;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input[type="number"], input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn-primary {
+      background-color: var(--brand);
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: var(--brand-dark);
+      transform: translateY(-2px);
+    }
+    .result-box {
+      background-color: #f1f1f1;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .result-box h3 {
+      margin-top: 0;
+    }
+    .result-box p {
+      margin: 5px 0;
+    }
+    .comparison-table, .saved-properties-list {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .comparison-table th, .comparison-table td, .saved-properties-list th, .saved-properties-list td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    .comparison-table th, .saved-properties-list th {
+      background-color: #f8f8f8;
+      font-weight: bold;
+    }
+    .comparison-table tr:nth-child(even), .saved-properties-list tr:nth-child(even) {
+      background-color: #f1f1f1;
+    }
+    .sign-in-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .profile-pic {
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    #install-btn {
+      display: none;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    #google-sign-in-button {
+      /* This div is for GSI, we'll hide it on sign-in */
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PropCheck</h1>
+    <div class="header-right">
+        <!-- Google Sign-In Button -->
+        <div id="google-sign-in-button">
+            <div id="g_id_onload"
+                data-client_id="29156327660-3v1447jph92b67f185r4638l0g1d0h55.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleCredentialResponse"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="pill"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+            </div>
+        </div>
+        <!-- User Profile Info (initially hidden) -->
+        <div id="user-info" class="hidden sign-in-section">
+            <span id="user-name"></span>
+            <img id="user-profile-pic" class="profile-pic" alt="Profile Picture" />
+            <button id="sign-out-btn" class="btn btn-primary">Sign Out</button>
+        </div>
+        <nav>
+            <button class="page-btn active" data-page="calculator">Calculator</button>
+            <button class="page-btn" data-page="reports">Reports</button>
+            <button class="page-btn" data-page="analysis">Analysis</button>
+            <button class="page-btn" data-page="compare">Compare</button>
+        </nav>
+        <button id="install-btn" class="btn btn-primary">Install PWA</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Calculator Page -->
+    <div id="page-calculator" class="content">
+      <h2>Rental Property Calculator</h2>
+      <div class="form-group">
+        <label for="purchasePrice">Purchase Price:</label>
+        <input type="number" id="purchasePrice" value="500000" />
+      </div>
+      <div class="form-group">
+        <label for="downPayment">Down Payment (%):</label>
+        <input type="number" id="downPayment" value="20" />
+      </div>
+      <div class="form-group">
+        <label for="interestRate">Interest Rate (%):</label>
+        <input type="number" id="interestRate" value="5" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label for="amortization">Amortization (Years):</label>
+        <input type="number" id="amortization" value="25" />
+      </div>
+      <div class="form-group">
+        <label for="monthlyRent">Monthly Rent:</label>
+        <input type="number" id="monthlyRent" value="2500" />
+      </div>
+      <div class="form-group">
+        <label for="vacancyRate">Vacancy Rate (%):</label>
+        <input type="number" id="vacancyRate" value="5" />
+      </div>
+      <div class="form-group">
+        <label for="propertyTax">Property Tax (Annual):</label>
+        <input type="number" id="propertyTax" value="3600" />
+      </div>
+      <div class="form-group">
+        <label for="insurance">Insurance (Annual):</label>
+        <input type="number" id="insurance" value="1200" />
+      </div>
+      <div class="form-group">
+        <label for="maintenance">Maintenance (% of Rent):</label>
+        <input type="number" id="maintenance" value="10" />
+      </div>
+      <div class="form-group">
+        <label for="hoaFees">HOA/Condo Fees (Monthly):</label>
+        <input type="number" id="hoaFees" value="0" />
+      </div>
+      <div class="form-group">
+        <label for="utilities">Utilities (Monthly, Landlord Paid):</label>
+        <input type="number" id="utilities" value="0" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" id="calculate-btn">Calculate</button>
+        <button class="btn" id="save-btn">Save Property</button>
+        <button class="btn" id="add-to-compare-btn">Add to Compare</button>
+      </div>
+
+      <div class="result-box" id="results">
+        <h3>Financial Summary</h3>
+        <p>Monthly Mortgage Payment: $<span id="monthlyMortgage">0.00</span></p>
+        <p>Total Monthly Expenses: $<span id="totalExpenses">0.00</span></p>
+        <p>Monthly Cash Flow: $<span id="cashFlow">0.00</span></p>
+        <p>Cap Rate: <span id="capRate">0.00</span>%</p>
+        <p>Cash on Cash Return: <span id="cocReturn">0.00</span>%</p>
+        <p>Gross Rent Multiplier (GRM): <span id="grm">0.00</span></p>
+      </div>
+    </div>
+
+    <!-- Reports Page -->
+    <div id="page-reports" class="content hidden">
+      <h2>Saved Properties</h2>
+      <div id="saved-properties-container">
+        <p>No properties saved yet.</p>
+      </div>
+    </div>
+
+    <!-- Analysis Page -->
+    <div id="page-analysis" class="content hidden">
+      <h2>Expense Breakdown</h2>
+      <div id="expense-breakdown-container">
+        <!-- Expense breakdown content will be dynamically generated here -->
+      </div>
+    </div>
+
+    <!-- Compare Page -->
+    <div id="page-compare" class="content hidden">
+      <h2>Property Comparison</h2>
+      <table class="comparison-table" id="comparison-table">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Purchase Price</th>
+            <th>Monthly Cash Flow</th>
+            <th>Cap Rate</th>
+            <th>CoC Return</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Comparison rows will be dynamically generated here -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Custom Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button class="btn btn-primary" id="modal-close-btn">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // Constants and state
+    const pages = ['calculator', 'reports', 'analysis', 'compare'];
+    const pageButtons = document.querySelectorAll('.page-btn');
+    const modal = document.getElementById('modal');
+    const modalMessage = document.getElementById('modal-message');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const installBtn = document.getElementById('install-btn');
+
+    let savedProperties = JSON.parse(localStorage.getItem('savedProperties')) || [];
+    let propertiesToCompare = [];
+    
+    let currentUser = null;
+    const userInfoDiv = document.getElementById('user-info');
+    const userNameSpan = document.getElementById('user-name');
+    const userProfilePic = document.getElementById('user-profile-pic');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const googleSignInButtonDiv = document.getElementById('google-sign-in-button');
+
+    // Helper functions
+    function showModal(message) {
+      modalMessage.textContent = message;
+      modal.classList.remove('hidden');
+    }
+    
+    function hideModal() {
+      modal.classList.add('hidden');
+    }
+
+    // Navigation and rendering
+    function changePage(pageId) {
+      pages.forEach(id => {
+        document.getElementById(`page-${id}`).classList.add('hidden');
+      });
+      document.getElementById(`page-${pageId}`).classList.remove('hidden');
+      pageButtons.forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+    }
+
+    // Google Sign-In Functions
+    function handleCredentialResponse(response) {
+      const decodedToken = parseJwt(response.credential);
+      currentUser = {
+        name: decodedToken.name,
+        email: decodedToken.email,
+        picture: decodedToken.picture
+      };
+      
+      userNameSpan.textContent = `Hello, ${currentUser.name}!`;
+      userProfilePic.src = currentUser.picture;
+      
+      userInfoDiv.classList.remove('hidden');
+      googleSignInButtonDiv.classList.add('hidden');
+      
+      showModal("You have successfully signed in with Google.");
+    }
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (error) {
+        console.error("Error decoding JWT:", error);
+        return null;
+      }
+    }
+
+    function signOut() {
+        currentUser = null;
+        userInfoDiv.classList.add('hidden');
+        googleSignInButtonDiv.classList.remove('hidden');
+        showModal("You have been signed out.");
+    }
+    
+    signOutBtn.addEventListener('click', signOut);
+
+    // Core calculation logic
+    function calculate(purchasePrice, downPayment, interestRate, amortization, monthlyRent, vacancyRate, propertyTax, insurance, maintenance, hoaFees, utilities) {
+      const loanAmount = purchasePrice - (purchasePrice * (downPayment / 100));
+      const monthlyInterestRate = (interestRate / 100) / 12;
+      const numberOfPayments = amortization * 12;
+      const monthlyMortgage = monthlyInterestRate > 0 ? loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1) : loanAmount / numberOfPayments;
+
+      const monthlyPropertyTax = propertyTax / 12;
+      const monthlyInsurance = insurance / 12;
+      const monthlyMaintenance = monthlyRent * (maintenance / 100);
+      const monthlyVacancy = monthlyRent * (vacancyRate / 100);
+      const totalExpenses = monthlyMortgage + monthlyPropertyTax + monthlyInsurance + monthlyMaintenance + monthlyVacancy + hoaFees + utilities;
+      
+      const monthlyCashFlow = monthlyRent - totalExpenses;
+      const annualGrossIncome = monthlyRent * 12;
+      const capRate = ((annualGrossIncome - (totalExpenses - monthlyMortgage)) / purchasePrice) * 100;
+      const totalInvestment = purchasePrice * (downPayment / 100);
+      const cocReturn = (monthlyCashFlow * 12) / totalInvestment * 100;
+      const grm = purchasePrice / annualGrossIncome;
+      
+      return { monthlyMortgage, totalExpenses, monthlyCashFlow, capRate, cocReturn, grm, totalInvestment, monthlyPropertyTax, monthlyInsurance, monthlyMaintenance, monthlyVacancy, monthlyRent, utilities, hoaFees };
+    }
+
+    function updateResults(results) {
+      document.getElementById('monthlyMortgage').textContent = results.monthlyMortgage.toFixed(2);
+      document.getElementById('totalExpenses').textContent = results.totalExpenses.toFixed(2);
+      document.getElementById('cashFlow').textContent = results.monthlyCashFlow.toFixed(2);
+      document.getElementById('capRate').textContent = results.capRate.toFixed(2);
+      document.getElementById('cocReturn').textContent = results.cocReturn.toFixed(2);
+      document.getElementById('grm').textContent = results.grm.toFixed(2);
+    }
+
+    function saveProperty() {
+      const inputs = getFormInputs();
+      if (!inputs) return;
+      
+      const results = calculate(
+        inputs.purchasePrice, inputs.downPayment, inputs.interestRate, inputs.amortization,
+        inputs.monthlyRent, inputs.vacancyRate, inputs.propertyTax, inputs.insurance,
+        inputs.maintenance, inputs.hoaFees, inputs.utilities
+      );
+      
+      const propertyName = prompt("Enter a name for this property:");
+      if (!propertyName) return;
+
+      const newProperty = {
+        name: propertyName,
+        purchasePrice: inputs.purchasePrice,
+        monthlyCashFlow: results.monthlyCashFlow,
+        capRate: results.capRate,
+        cocReturn: results.cocReturn,
+        grm: results.grm,
+        results: results
+      };
+      
+      savedProperties.push(newProperty);
+      localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
+      showModal(`'${propertyName}' has been saved!`);
+    }
+
+    function getFormInputs() {
+        try {
+            const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
+            const downPayment = parseFloat(document.getElementById('downPayment').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value);
+            const amortization = parseFloat(document.getElementById('amortization').value);
+            const monthlyRent = parseFloat(document.getElementById('monthlyRent').value);
+            const vacancyRate = parseFloat(document.getElementById('vacancyRate').value);
+            const propertyTax = parseFloat(document.getElementById('propertyTax').value);
+            const insurance = parseFloat(document.getElementById('insurance').value);
+            const maintenance = parseFloat(document.getElementById('maintenance').value);
+            const hoaFees = parseFloat(document.getElementById('hoaFees').value);
+            const utilities = parseFloat(document.getElementById('utilities').value);
+            
+            if (isNaN(purchasePrice) || isNaN(downPayment) || isNaN(interestRate) || isNaN(amortization) || isNaN(monthlyRent) || isNaN(vacancyRate) || isNaN(propertyTax) || isNaN(insurance) || isNaN(maintenance) || isNaN(hoaFees) || isNaN(utilities)) {
+                showModal('Please enter valid numbers for all fields.');
+                return null;
+            }
+            
+            return {
+                purchasePrice, downPayment, interestRate, amortization, monthlyRent,
+                vacancyRate, propertyTax, insurance, maintenance, hoaFees, utilities
+            };
+        } catch (e) {
+            showModal('An error occurred while reading input values.');
+            return null;
+        }
+    }
+
+    function updateSavedPropertiesList() {
+        const container = document.getElementById('saved-properties-container');
+        container.innerHTML = '';
+        if (savedProperties.length === 0) {
+            container.innerHTML = '<p>No properties saved yet.</p>';
+            return;
+        }
+        
+        const list = document.createElement('ul');
+        list.style.listStyle = 'none';
+        list.style.padding = '0';
+        
+        savedProperties.forEach((property, index) => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '15px';
+            li.style.padding = '10px';
+            li.style.border = '1px solid #ddd';
+            li.style.borderRadius = '8px';
+            li.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0; color: var(--brand-dark);">${property.name}</h4>
+                        <p style="margin: 5px 0;">Cash Flow: $${property.monthlyCashFlow.toFixed(2)}</p>
+                    </div>
+                    <div class="btn-group" style="margin-top: 0;">
+                        <button class="btn btn-primary" onclick="loadProperty(${index})">Load</button>
+                        <button class="btn" onclick="deleteProperty(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+        container.appendChild(list);
+    }
+    
+    function loadProperty(index) {
+        if (index >= 0 && index < savedProperties.length) {
+            const property = savedProperties[index];
+            document.getElementById('purchasePrice').value = property.purchasePrice;
+            document.getElementById('downPayment').value = 20; // Assuming 20% for consistency
+            document.getElementById('interestRate').value = 5; // Assuming 5% for consistency
+            document.getElementById('amortization').value = 25; // Assuming 25 years for consistency
+            document.getElementById('monthlyRent').value = property.results.monthlyRent;
+            document.getElementById('vacancyRate').value = property.results.vacancyRate;
+            document.getElementById('propertyTax').value = property.results.monthlyPropertyTax * 12;
+            document.getElementById('insurance').value = property.results.monthlyInsurance * 12;
+            document.getElementById('maintenance').value = property.results.maintenance / property.results.monthlyRent * 100;
+            document.getElementById('hoaFees').value = property.results.hoaFees;
+            document.getElementById('utilities').value = property.results.utilities;
+            
+            const results = calculate(
+                property.purchasePrice, 20, 5, 25,
+                property.results.monthlyRent, property.results.vacancyRate,
+                property.results.monthlyPropertyTax * 12, property.results.monthlyInsurance * 12,
+                property.results.maintenance / property.results.monthlyRent * 100,
+                property.results.hoaFees, property.results.utilities
+            );
+            updateResults(results);
+            changePage('calculator');
+        }
+    }
+    
+    function deleteProperty(index) {
+        if (confirm('Are you sure you want to delete this property?')) {
+            savedProperties.splice(index, 1);
+            localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
+            updateSavedPropertiesList();
+            showModal('Property deleted.');
+        }
+    }
+
+    function addToCompare() {
+        const inputs = getFormInputs();
+        if (!inputs) return;
+        
+        const results = calculate(
+            inputs.purchasePrice, inputs.downPayment, inputs.interestRate, inputs.amortization,
+            inputs.monthlyRent, inputs.vacancyRate, inputs.propertyTax, inputs.insurance,
+            inputs.maintenance, inputs.hoaFees, inputs.utilities
+        );
+        
+        const propertyName = prompt("Enter a name for this property:");
+        if (!propertyName) return;
+
+        const newProperty = {
+            name: propertyName,
+            purchasePrice: inputs.purchasePrice,
+            monthlyCashFlow: results.monthlyCashFlow,
+            capRate: results.capRate,
+            cocReturn: results.cocReturn
+        };
+        
+        propertiesToCompare.push(newProperty);
+        showModal(`'${propertyName}' has been added for comparison.`);
+        updateComparisonTable();
+    }
+    
+    function updateComparisonTable() {
+      const tableBody = document.querySelector('#comparison-table tbody');
+      tableBody.innerHTML = '';
+      
+      if (propertiesToCompare.length === 0) {
+          const row = tableBody.insertRow();
+          const cell = row.insertCell(0);
+          cell.colSpan = 5;
+          cell.textContent = 'No properties to compare. Add a property from the calculator page.';
+          return;
+      }
+      
+      propertiesToCompare.forEach((property, index) => {
+          const row = tableBody.insertRow();
+          row.innerHTML = `
+              <td>${property.name}</td>
+              <td>$${property.purchasePrice.toFixed(2)}</td>
+              <td>$${property.monthlyCashFlow.toFixed(2)}</td>
+              <td>${property.capRate.toFixed(2)}%</td>
+              <td>${property.cocReturn.toFixed(2)}%</td>
+              <td><button class="btn" onclick="removeComparisonProperty(${index})">Remove</button></td>
+          `;
+      });
+    }
+
+    function removeComparisonProperty(index) {
+      propertiesToCompare.splice(index, 1);
+      updateComparisonTable();
+    }
+    
+    function updateExpenseBreakdown() {
+        const inputs = getFormInputs();
+        const container = document.getElementById('expense-breakdown-container');
+        container.innerHTML = '';
+        
+        if (!inputs) {
+            container.innerHTML = '<p>Please enter property details on the Calculator page to see a breakdown.</p>';
+            return;
+        }
+        
+        const results = calculate(
+            inputs.purchasePrice, inputs.downPayment, inputs.interestRate, inputs.amortization,
+            inputs.monthlyRent, inputs.vacancyRate, inputs.propertyTax, inputs.insurance,
+            inputs.maintenance, inputs.hoaFees, inputs.utilities
+        );
+
+        container.innerHTML = `
+            <h3>Monthly Expenses Breakdown</h3>
+            <p><strong>Mortgage Payment:</strong> $${results.monthlyMortgage.toFixed(2)}</p>
+            <p><strong>Property Tax:</strong> $${results.monthlyPropertyTax.toFixed(2)}</p>
+            <p><strong>Insurance:</strong> $${results.monthlyInsurance.toFixed(2)}</p>
+            <p><strong>Maintenance:</strong> $${results.monthlyMaintenance.toFixed(2)}</p>
+            <p><strong>Vacancy Allowance:</strong> $${results.monthlyVacancy.toFixed(2)}</p>
+            <p><strong>HOA/Condo Fees:</strong> $${results.hoaFees.toFixed(2)}</p>
+            <p><strong>Utilities:</strong> $${results.utilities.toFixed(2)}</p>
+            <hr style="margin: 15px 0;">
+            <p><strong>Total Monthly Expenses:</strong> $${results.totalExpenses.toFixed(2)}</p>
+            <hr style="margin: 15px 0;">
+            <p style="font-weight: bold; color: ${results.monthlyCashFlow >= 0 ? 'var(--brand-dark)' : 'red'};">
+              Net Cash Flow: $${results.monthlyCashFlow.toFixed(2)}
+            </p>
+        `;
+    }
+
+    // Event listeners
+    document.getElementById('calculate-btn').addEventListener('click', () => {
+      const inputs = getFormInputs();
+      if (inputs) {
+        const results = calculate(
+          inputs.purchasePrice, inputs.downPayment, inputs.interestRate, inputs.amortization,
+          inputs.monthlyRent, inputs.vacancyRate, inputs.propertyTax, inputs.insurance,
+          inputs.maintenance, inputs.hoaFees, inputs.utilities
+        );
+        updateResults(results);
+      }
+    });
+
+    document.getElementById('save-btn').addEventListener('click', saveProperty);
+    document.getElementById('add-to-compare-btn').addEventListener('click', addToCompare);
+    modalCloseBtn.addEventListener('click', hideModal);
+
+    pageButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const pageId = button.getAttribute('data-page');
+        changePage(pageId);
+      });
+    });
+
+    // Initial setup
+    changePage('calculator');
+
+    // Update expense breakdown when switching to analysis page
+    document.querySelector('[data-page="analysis"]').addEventListener('click', () => {
+      setTimeout(updateExpenseBreakdown, 100);
+    });
+
+    // Update comparison table when switching to compare page
+    document.querySelector('[data-page="compare"]').addEventListener('click', () => {
+      setTimeout(updateComparisonTable, 100);
+    });
+
+    // Update saved properties when switching to reports page
+    document.querySelector('[data-page="reports"]').addEventListener('click', () => {
+      setTimeout(updateSavedPropertiesList, 100);
+    });
+
+    // PWA functionality
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+    
+    installBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display='none';
+          gtag('event', 'pwa_install');
+        }
+        deferredPrompt = null;
+      }
+    };
+
+    // Initialize AdSense ads on page load
+    window.addEventListener('load', () => {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    });
+  </script>
+</body>
+</html>
