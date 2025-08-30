@@ -337,8 +337,7 @@
               <div class="form-group">
                 <label>Projection Period (years)</label>
                 <input id="projectionYears" type="number" value="10" min="1" max="30">
-              </d
-
+              </div>
             </div>
             <button id="runRentAnalysis" class="btn btn-primary">Analyze Rent Growth</button>
             <div id="rentResults" style="display:none;margin-top:20px;"></div>
@@ -397,6 +396,9 @@
             <div id="propertiesList">
               <div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>
             </div>
+            <button id="loadProperties" class="btn btn-secondary" style="margin-top:16px;">
+              🔄 Load from Google Drive
+            </button>
           </div>
         </div>
 
@@ -499,13 +501,15 @@
 
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
+    const FOLDER_NAME = 'PropCheck';
 
     // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
     let googleAccessToken = null;
-    
+    let driveFolderId = null; // Store the ID of the PropCheck folder
+
     // Login functionality
     guestButton.onclick = () => { 
       loginScreen.style.display='none'; 
@@ -725,38 +729,119 @@
       document.getElementById('cmhcRequired').checked = downPercent < 20;
     };
 
-    // Function to create a file in Google Drive
-    function savePropertyToDrive(propertyData) {
+    // New Google Drive functions
+    // Find the PropCheck folder, or create it if it doesn't exist
+    async function getDriveFolderId() {
+        if (driveFolderId) {
+            return driveFolderId;
+        }
+
+        const query = "mimeType='application/vnd.google-apps.folder' and name='" + FOLDER_NAME + "' and trashed=false";
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+        });
+
+        const data = await response.json();
+        if (data.files.length > 0) {
+            driveFolderId = data.files[0].id;
+            return driveFolderId;
+        } else {
+            // Folder not found, create it
+            const metadata = {
+                'name': FOLDER_NAME,
+                'mimeType': 'application/vnd.google-apps.folder'
+            };
+            const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + googleAccessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(metadata)
+            });
+            const createdFile = await createResponse.json();
+            driveFolderId = createdFile.id;
+            return driveFolderId;
+        }
+    }
+
+    // Function to save a file in the dedicated Google Drive folder
+    async function savePropertyToDrive(propertyData) {
       if (!googleAccessToken) {
         alert("Please sign in with Google to save to Drive.");
         return;
       }
 
-      const fileMetadata = {
-        'name': `PropCheck - ${propertyData.name}.json`,
-        'mimeType': 'application/json'
-      };
+      try {
+          const folderId = await getDriveFolderId();
+          const fileMetadata = {
+              'name': `${propertyData.name}.json`,
+              'mimeType': 'application/json',
+              'parents': [folderId]
+          };
 
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
-      form.append('file', new Blob([JSON.stringify(propertyData)], {type: 'application/json'}));
+          const form = new FormData();
+          form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
+          form.append('file', new Blob([JSON.stringify(propertyData)], {type: 'application/json'}));
 
-      fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + googleAccessToken
-        },
-        body: form
-      })
-      .then(response => response.json())
-      .then(file => {
-        console.log('File created successfully:', file);
-        alert('Property saved to Google Drive!');
-      })
-      .catch(error => {
-        console.error('Error saving to Drive:', error);
-        alert('Failed to save property to Google Drive.');
-      });
+          const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: {
+                  'Authorization': 'Bearer ' + googleAccessToken
+              },
+              body: form
+          });
+
+          const file = await response.json();
+          console.log('File created successfully:', file);
+          alert('Property saved to Google Drive!');
+      } catch (error) {
+          console.error('Error saving to Drive:', error);
+          alert('Failed to save property to Google Drive.');
+      }
+    }
+
+    // Function to load all properties from the Google Drive folder
+    async function loadPropertiesFromDrive() {
+        if (!googleAccessToken) {
+            alert("Please sign in with Google to load saved properties.");
+            return;
+        }
+
+        try {
+            updateSavedPropertiesList(true); // Show loading state
+            const folderId = await getDriveFolderId();
+            const query = `'${folderId}' in parents and mimeType='application/json' and trashed=false`;
+            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name,modifiedTime)`, {
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+            });
+
+            const data = await response.json();
+            const files = data.files;
+            savedProperties = []; // Clear local storage
+
+            if (files.length === 0) {
+                updateSavedPropertiesList();
+                return;
+            }
+
+            for (const file of files) {
+                const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+                    method: 'GET',
+                    headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+                });
+                const propertyData = await fileResponse.json();
+                savedProperties.push(propertyData);
+            }
+
+            updateSavedPropertiesList();
+        } catch (error) {
+            console.error('Error loading from Drive:', error);
+            alert('Failed to load properties from Google Drive.');
+            updateSavedPropertiesList(); // Clear list on error
+        }
     }
 
     // Save property functionality
@@ -769,19 +854,18 @@
       const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
       if (name) {
         currentProperty.name = name;
-        savedProperties.push({...currentProperty});
-        updateSavedPropertiesList();
-        alert('Property saved successfully!');
-        gtag('event', 'save_property');
-
-        // Call the new function to save to Drive
-        savePropertyToDrive(currentProperty);
+        savePropertyToDrive(currentProperty); // Save to Drive
       }
     };
     
-
-    function updateSavedPropertiesList() {
+    // Updated function to display saved properties
+    function updateSavedPropertiesList(loading = false) {
       const container = document.getElementById('propertiesList');
+      if (loading) {
+          container.innerHTML = '<div class="alert alert-info">Loading saved properties...</div>';
+          return;
+      }
+      
       if (savedProperties.length === 0) {
         container.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
         return;
@@ -800,6 +884,9 @@
         </div>
       `).join('');
     }
+
+    // Event listener for the new Load button
+    document.getElementById('loadProperties').onclick = loadPropertiesFromDrive;
 
     function loadProperty(index) {
       const prop = savedProperties[index];
@@ -1145,7 +1232,12 @@
 
     // Update saved properties when switching to reports page
     document.querySelector('[data-page="reports"]').addEventListener('click', () => {
-      setTimeout(updateSavedPropertiesList, 100);
+      // Automatically load properties from Drive when this page is visited
+      if(googleAccessToken) {
+          loadPropertiesFromDrive();
+      } else {
+          updateSavedPropertiesList();
+      }
     });
 
     // PWA functionality
@@ -1179,75 +1271,3 @@
   </script>
 </body>
 </html>
-
-                <div>
-                  <strong>Initial Investment:</strong><br>
-                  Down Payment: <span id="downPaymentAmount">$0</span><br>
-                  CMHC Insurance: <span id="cmhcAmount">$0</span><br>
-                  <strong>Total: <span id="totalInitial">$0</span></strong>
-                </div>
-                <div>
-                  <strong>Annual Numbers:</strong><br>
-                  Gross Rent: <span id="grossRent">$0</span><br>
-                  Total Expenses: <span id="totalExpenses">$0</span><br>
-                  Net Operating Income: <span id="noi">$0</span>
-                </div>
-              </div>
-            </div>
-            
-            <button id="saveProperty" class="btn btn-primary" style="margin-top:16px;">
-              💾 Save Property
-            </button>
-          </div>
-        </div>
-
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-        </div>
-      </div>
-
-      <div id="analysisPage" class="page">
-        <div class="card">
-          <h3>📊 Stress Testing & Scenarios</h3>
-          
-          <div class="tabs">
-            <div class="tab active" data-tab="rates">Interest Rates</div>
-            <div class="tab" data-tab="rent">Rent Changes</div>
-            <div class="tab" data-tab="expenses">Expense Impact</div>
-          </div>
-          
-          <div id="ratesTab" class="tab-content">
-            <p>Analyze how interest rate changes affect your investment:</p>
-            <div class="grid grid-3">
-              <div class="form-group">
-                <label>Current Rate (%)</label>
-                <input id="currentRate" type="number" value="5.5" step="0.1">
-              </div>
-              <div class="form-group">
-                <label>Stress Test Rate (%)</label>
-                <input id="stressRate" type="number" value="7.5" step="0.1">
-              </div>
-              <div class="form-group">
-                <label>Renewal Period (years)</label>
-                <select id="renewalPeriod">
-                  <option value="1">1 year</option>
-                  <option value="2">2 years</option>
-                  <option value="3">3 years</option>
-                  <option value="5" selected>5 years</option>
-                </select>
-              </div>
-            </div>
-            <button id="runStressTest" class="btn btn-primary">Run Stress Test</button>
-            <div id="stressResults" style="display:none;margin-top:20px;"></div>
-          </div>
-          
-          <div id="rentTab" class="tab-content" style="display:none;">
-            <p>Model different rental scenarios:</p>
-            <div class="grid grid-2">
-              <div class="form-group">
-                <label>Annual Rent
