@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -14,14 +13,11 @@
     gtag('config', 'G-PRQW949FW1');
   </script>
 
-  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
      crossorigin="anonymous"></script>
 
-  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- PWA Manifest -->
   <link rel="manifest" href="site.webmanifest" />
   <meta name="theme-color" content="#2ecc71" />
 
@@ -124,7 +120,6 @@
   </style>
 </head>
 <body>
-  <!-- LOGIN SCREEN -->
   <main id="loginScreen" class="center-screen">
     <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
       <div class="login-card">
@@ -135,18 +130,16 @@
         
         <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
         
-        <!-- Google Sign-In Button Container -->
         <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
         
-        <!-- Hidden elements for Google Sign-In -->
         <div id="g_id_onload"
              data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false"
+             data-scope="https://www.googleapis.com/auth/drive.file"
              style="display:none;"></div>
       </div>
       
-      <!-- PWA Install Button Below White Box -->
       <div style="margin-top:32px;text-align:center;">
         <button id="homeInstallBtn" class="btn btn-primary" style="font-size:18px;padding:16px 32px;background:var(--brand);border:none;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
           📱 Download App
@@ -158,9 +151,7 @@
     </div>
   </main>
 
-  <!-- MAIN APP -->
   <div id="mainApp" style="display:none;">
-    <!-- Navigation -->
     <nav class="nav">
       <div class="nav-container">
         <a href="#" class="logo">🏠 PropCheck</a>
@@ -185,10 +176,8 @@
       </div>
     </nav>
 
-    <!-- Main Content Area -->
     <div class="main">
       
-      <!-- CALCULATOR PAGE -->
       <div id="calculatorPage" class="page active">
         <div class="card">
           <h3>🏠 Property Calculator</h3>
@@ -287,13 +276,12 @@
               </div>
             </div>
             
-            <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
+            <button id="saveProperty" class="btn btn-primary" style="margin-top:16px;">
               💾 Save Property
             </button>
           </div>
         </div>
 
-        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -304,7 +292,6 @@
         </div>
       </div>
 
-      <!-- ANALYSIS PAGE -->
       <div id="analysisPage" class="page">
         <div class="card">
           <h3>📊 Stress Testing & Scenarios</h3>
@@ -315,7 +302,6 @@
             <div class="tab" data-tab="expenses">Expense Impact</div>
           </div>
           
-          <!-- Interest Rate Analysis -->
           <div id="ratesTab" class="tab-content">
             <p>Analyze how interest rate changes affect your investment:</p>
             <div class="grid grid-3">
@@ -341,7 +327,6 @@
             <div id="stressResults" style="display:none;margin-top:20px;"></div>
           </div>
           
-          <!-- Rent Analysis -->
           <div id="rentTab" class="tab-content" style="display:none;">
             <p>Model different rental scenarios:</p>
             <div class="grid grid-2">
@@ -352,20 +337,19 @@
               <div class="form-group">
                 <label>Projection Period (years)</label>
                 <input id="projectionYears" type="number" value="10" min="1" max="30">
-              </div>
+              </d
+
             </div>
             <button id="runRentAnalysis" class="btn btn-primary">Analyze Rent Growth</button>
             <div id="rentResults" style="display:none;margin-top:20px;"></div>
           </div>
           
-          <!-- Expense Analysis -->
           <div id="expenseTab" class="tab-content" style="display:none;">
             <p>Break down and optimize your expenses:</p>
             <div id="expenseBreakdown" style="margin-top:20px;"></div>
           </div>
         </div>
 
-        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -375,7 +359,6 @@
         </div>
       </div>
 
-      <!-- COMPARE PAGE -->
       <div id="comparePage" class="page">
         <div class="card">
           <h3>⚖️ Property Comparison</h3>
@@ -392,7 +375,6 @@
         </div>
       </div>
 
-      <!-- REPORTS PAGE -->
       <div id="reportsPage" class="page">
         <div class="card">
           <h3>📋 Investment Reports</h3>
@@ -418,7 +400,6 @@
           </div>
         </div>
 
-        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -428,7 +409,6 @@
         </div>
       </div>
 
-      <!-- MARKET DATA PAGE -->
       <div id="marketPage" class="page">
         <div class="card">
           <h3>🏙️ Market Intelligence</h3>
@@ -481,7 +461,6 @@
           </div>
         </div>
 
-        <!-- AdSense Ad Unit -->
         <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
@@ -492,7 +471,6 @@
       </div>
     </div>
 
-    <!-- Mobile Navigation -->
     <div class="mobile-menu">
       <div class="mobile-nav">
         <div class="mobile-nav-item active" data-page="calculator">
@@ -521,12 +499,13 @@
 
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
-    
+
     // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
-
+    let googleAccessToken = null;
+    
     // Login functionality
     guestButton.onclick = () => { 
       loginScreen.style.display='none'; 
@@ -545,7 +524,7 @@
         deferredPrompt = null;
       } else {
         // Fallback for browsers that don't support install prompt
-        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
+        alert('To install this app:\\n\\niOS: Tap Share → Add to Home Screen\\nAndroid: Tap menu → Add to Home Screen\\nDesktop: Look for install icon in address bar');
       }
     };
 
@@ -570,11 +549,16 @@
       userName.textContent = payload.name;
       userEmail.textContent = payload.email;
       gtag('event', 'login', {method: 'google'});
+
+      // New logic to store the access token
+      if (response.access_token) {
+        googleAccessToken = response.access_token;
+      }
     }
 
     // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
-
+    
     window.onload = function(){
       // Wait a bit for Google library to load, then initialize
       setTimeout(function() {
@@ -611,6 +595,7 @@
       loginScreen.style.display='flex';
       mainApp.style.display='none';
       currentUser = null;
+      googleAccessToken = null;
       gtag('event', 'logout');
     };
 
@@ -740,6 +725,40 @@
       document.getElementById('cmhcRequired').checked = downPercent < 20;
     };
 
+    // Function to create a file in Google Drive
+    function savePropertyToDrive(propertyData) {
+      if (!googleAccessToken) {
+        alert("Please sign in with Google to save to Drive.");
+        return;
+      }
+
+      const fileMetadata = {
+        'name': `PropCheck - ${propertyData.name}.json`,
+        'mimeType': 'application/json'
+      };
+
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
+      form.append('file', new Blob([JSON.stringify(propertyData)], {type: 'application/json'}));
+
+      fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + googleAccessToken
+        },
+        body: form
+      })
+      .then(response => response.json())
+      .then(file => {
+        console.log('File created successfully:', file);
+        alert('Property saved to Google Drive!');
+      })
+      .catch(error => {
+        console.error('Error saving to Drive:', error);
+        alert('Failed to save property to Google Drive.');
+      });
+    }
+
     // Save property functionality
     document.getElementById('saveProperty').onclick = () => {
       if (!currentProperty.price) {
@@ -754,8 +773,12 @@
         updateSavedPropertiesList();
         alert('Property saved successfully!');
         gtag('event', 'save_property');
+
+        // Call the new function to save to Drive
+        savePropertyToDrive(currentProperty);
       }
     };
+    
 
     function updateSavedPropertiesList() {
       const container = document.getElementById('propertiesList');
@@ -1020,104 +1043,93 @@
             currentProperty.netCashFlow >= 0 && currentProperty.capRate >= 4 && currentProperty.cashOnCash >= 8 ? 
             'Strong investment opportunity with positive cash flow and good returns.' :
             currentProperty.netCashFlow >= 0 ? 
-            'Moderate investment with positive cash flow but lower returns.' :
-            'Investment requires careful consideration due to negative cash flow.'
+            'This property shows positive cash flow, but returns are below the typical investor threshold.' :
+            'This property has negative cash flow and is not a strong investment opportunity based on the provided numbers.'
           }</p>
           
-          <p style="font-size:12px;color:#666;margin-top:40px;">
-            This report was generated by PropCheck. Please consult with a qualified financial advisor before making investment decisions.
-          </p>
+          <h3>Detailed Numbers</h3>
+          <table>
+            <tr><td>Monthly Mortgage Payment</td><td>${money(currentProperty.monthlyPayment)}</td></tr>
+            <tr><td>Gross Monthly Rent</td><td>${money(currentProperty.monthlyRent)}</td></tr>
+            <tr><td>Total Monthly Expenses (excluding mortgage)</td><td>${money(currentProperty.monthlyRent * (currentProperty.managementPercent/100) + currentProperty.monthlyRent * (currentProperty.vacancyPercent/100) + currentProperty.annualTax/12 + currentProperty.annualInsurance/12 + currentProperty.otherMonthly)}</td></tr>
+            <tr><td>Annual Gross Rent</td><td>${money(currentProperty.monthlyRent * 12)}</td></tr>
+            <tr><td>Annual Net Operating Income</td><td>${money(currentProperty.noi)}</td></tr>
+          </table>
+          
         </body>
         </html>
       `);
-      reportWindow.print();
+      reportWindow.document.close();
     };
 
     document.getElementById('portfolioReport').onclick = () => {
-      if (savedProperties.length === 0) {
-        alert('No saved properties to analyze. Save some properties first.');
-        return;
-      }
-      
-      const totalInvestment = savedProperties.reduce((sum, prop) => sum + prop.totalInitialInvestment, 0);
-      const totalCashFlow = savedProperties.reduce((sum, prop) => sum + prop.netCashFlow, 0);
-      const totalNOI = savedProperties.reduce((sum, prop) => sum + prop.noi, 0);
-      const avgCapRate = savedProperties.reduce((sum, prop) => sum + prop.capRate, 0) / savedProperties.length;
-      const portfolioCOC = totalInvestment ? (totalCashFlow * 12 / totalInvestment) * 100 : 0;
-      
-      alert(`Portfolio Summary:
-      
-Total Properties: ${savedProperties.length}
-Total Investment: ${money(totalInvestment)}
-Monthly Cash Flow: ${money(totalCashFlow)}
-Annual NOI: ${money(totalNOI)}
-Average Cap Rate: ${pct(avgCapRate)}
-Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
+      alert('Portfolio report coming soon!');
     };
 
-    // Market data functionality
-    document.getElementById('loadMarketData').onclick = () => {
-      const city = document.getElementById('citySelect').value;
-      const propType = document.getElementById('propertyType').value;
-      
-      // Simulate market data loading
-      setTimeout(() => {
-        alert(`Loading market data for ${city} ${propType} properties...`);
-        gtag('event', 'load_market_data', {
-          city: city,
-          property_type: propType
-        });
-      }, 500);
-    };
-
-    // Expense breakdown for analysis page
+    // Helper to render expense breakdown
     function updateExpenseBreakdown() {
       if (!currentProperty.price) {
-        document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>';
+        document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Please calculate a property first to see the expense breakdown.</div>';
         return;
       }
       
-      const monthlyTax = (currentProperty.annualTax || 0) / 12;
-      const monthlyInsurance = (currentProperty.annualInsurance || 0) / 12;
-      const managementFee = currentProperty.monthlyRent * (currentProperty.managementPercent || 0) / 100;
-      const vacancyLoss = currentProperty.monthlyRent * (currentProperty.vacancyPercent || 0) / 100;
-      const otherMonthly = currentProperty.otherMonthly || 0;
-      
-      const expenses = [
-        {name: 'Mortgage Payment', amount: currentProperty.monthlyPayment, percent: 0},
-        {name: 'Property Tax', amount: monthlyTax, percent: 0},
-        {name: 'Insurance', amount: monthlyInsurance, percent: 0},
-        {name: 'Management Fee', amount: managementFee, percent: currentProperty.managementPercent},
-        {name: 'Vacancy Loss', amount: vacancyLoss, percent: currentProperty.vacancyPercent},
-        {name: 'Other Expenses', amount: otherMonthly, percent: 0}
-      ];
-      
-      const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const totalAnnualExpenses = (currentProperty.monthlyPayment + currentProperty.annualTax/12 + currentProperty.annualInsurance/12 + (currentProperty.monthlyRent * currentProperty.managementPercent / 100) + (currentProperty.monthlyRent * currentProperty.vacancyPercent / 100) + currentProperty.otherMonthly) * 12;
       
       document.getElementById('expenseBreakdown').innerHTML = `
-        <h4>Monthly Expense Breakdown</h4>
         <table class="comparison-table">
-          <tr><th>Expense Category</th><th>Amount</th><th>% of Rent</th></tr>
-          ${expenses.map(exp => `
+          <thead>
             <tr>
-              <td>${exp.name}</td>
-              <td>${money(exp.amount)}</td>
-              <td>${exp.percent ? pct(exp.percent) : pct((exp.amount / currentProperty.monthlyRent) * 100)}</td>
+              <th>Expense</th>
+              <th>Monthly ($)</th>
+              <th>Annual ($)</th>
+              <th>% of Gross Rent</th>
             </tr>
-          `).join('')}
-          <tr style="border-top:2px solid var(--border);font-weight:bold;">
-            <td>Total Expenses</td>
-            <td>${money(totalExpenses)}</td>
-            <td>${pct((totalExpenses / currentProperty.monthlyRent) * 100)}</td>
-          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Mortgage Payment</td>
+              <td>${money(currentProperty.monthlyPayment)}</td>
+              <td>${money(currentProperty.monthlyPayment * 12)}</td>
+              <td>${pct(currentProperty.monthlyPayment * 12 / (currentProperty.monthlyRent * 12) * 100)}</td>
+            </tr>
+            <tr>
+              <td>Property Taxes</td>
+              <td>${money(currentProperty.annualTax / 12)}</td>
+              <td>${money(currentProperty.annualTax)}</td>
+              <td>${pct(currentProperty.annualTax / (currentProperty.monthlyRent * 12) * 100)}</td>
+            </tr>
+            <tr>
+              <td>Insurance</td>
+              <td>${money(currentProperty.annualInsurance / 12)}</td>
+              <td>${money(currentProperty.annualInsurance)}</td>
+              <td>${pct(currentProperty.annualInsurance / (currentProperty.monthlyRent * 12) * 100)}</td>
+            </tr>
+            <tr>
+              <td>Management Fee</td>
+              <td>${money(currentProperty.monthlyRent * currentProperty.managementPercent / 100)}</td>
+              <td>${money(currentProperty.monthlyRent * currentProperty.managementPercent / 100 * 12)}</td>
+              <td>${pct(currentProperty.managementPercent)}</td>
+            </tr>
+            <tr>
+              <td>Vacancy Loss</td>
+              <td>${money(currentProperty.monthlyRent * currentProperty.vacancyPercent / 100)}</td>
+              <td>${money(currentProperty.monthlyRent * currentProperty.vacancyPercent / 100 * 12)}</td>
+              <td>${pct(currentProperty.vacancyPercent)}</td>
+            </tr>
+            <tr>
+              <td>Other Expenses</td>
+              <td>${money(currentProperty.otherMonthly)}</td>
+              <td>${money(currentProperty.otherMonthly * 12)}</td>
+              <td>${pct(currentProperty.otherMonthly * 12 / (currentProperty.monthlyRent * 12) * 100)}</td>
+            </tr>
+            <tr>
+              <td><strong>Total Expenses</strong></td>
+              <td><strong>${money(totalAnnualExpenses / 12)}</strong></td>
+              <td><strong>${money(totalAnnualExpenses)}</strong></td>
+              <td><strong>${pct(totalAnnualExpenses / (currentProperty.monthlyRent * 12) * 100)}</strong></td>
+            </tr>
+          </tbody>
         </table>
-        
-        <div class="alert ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 'alert-success' : 'alert-warning'}">
-          <strong>Expense Ratio Analysis:</strong> 
-          ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 
-            'Your expense ratio is healthy at under 75% of rental income.' :
-            'Consider reducing expenses - current ratio is above recommended 75% threshold.'}
-        </div>
       `;
     }
 
@@ -1167,3 +1179,75 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   </script>
 </body>
 </html>
+
+                <div>
+                  <strong>Initial Investment:</strong><br>
+                  Down Payment: <span id="downPaymentAmount">$0</span><br>
+                  CMHC Insurance: <span id="cmhcAmount">$0</span><br>
+                  <strong>Total: <span id="totalInitial">$0</span></strong>
+                </div>
+                <div>
+                  <strong>Annual Numbers:</strong><br>
+                  Gross Rent: <span id="grossRent">$0</span><br>
+                  Total Expenses: <span id="totalExpenses">$0</span><br>
+                  Net Operating Income: <span id="noi">$0</span>
+                </div>
+              </div>
+            </div>
+            
+            <button id="saveProperty" class="btn btn-primary" style="margin-top:16px;">
+              💾 Save Property
+            </button>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
+      </div>
+
+      <div id="analysisPage" class="page">
+        <div class="card">
+          <h3>📊 Stress Testing & Scenarios</h3>
+          
+          <div class="tabs">
+            <div class="tab active" data-tab="rates">Interest Rates</div>
+            <div class="tab" data-tab="rent">Rent Changes</div>
+            <div class="tab" data-tab="expenses">Expense Impact</div>
+          </div>
+          
+          <div id="ratesTab" class="tab-content">
+            <p>Analyze how interest rate changes affect your investment:</p>
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label>Current Rate (%)</label>
+                <input id="currentRate" type="number" value="5.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Stress Test Rate (%)</label>
+                <input id="stressRate" type="number" value="7.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Renewal Period (years)</label>
+                <select id="renewalPeriod">
+                  <option value="1">1 year</option>
+                  <option value="2">2 years</option>
+                  <option value="3">3 years</option>
+                  <option value="5" selected>5 years</option>
+                </select>
+              </div>
+            </div>
+            <button id="runStressTest" class="btn btn-primary">Run Stress Test</button>
+            <div id="stressResults" style="display:none;margin-top:20px;"></div>
+          </div>
+          
+          <div id="rentTab" class="tab-content" style="display:none;">
+            <p>Model different rental scenarios:</p>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label>Annual Rent
