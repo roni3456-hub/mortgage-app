@@ -569,7 +569,8 @@
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
           google.accounts.id.initialize({
             client_id: CLIENT_ID,
-            callback: handleCredentialResponse
+            callback: handleCredentialResponse,
+            scope: 'https://www.googleapis.com/auth/drive.file' // This line was added/corrected
           });
           
           google.accounts.id.renderButton(
