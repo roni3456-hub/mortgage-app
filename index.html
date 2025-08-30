@@ -17,6 +17,8 @@
      crossorigin="anonymous"></script>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <script src="https://apis.google.com/js/api.js" async defer></script>
 
   <link rel="manifest" href="site.webmanifest" />
   <meta name="theme-color" content="#2ecc71" />
@@ -278,6 +280,9 @@
             <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
               💾 Save Property
             </button>
+            <button id="saveToDriveBtn" class="btn btn-secondary" style="margin-top:16px;">
+              ☁️ Save to Google Drive
+            </button>
           </div>
         </div>
 
@@ -396,9 +401,6 @@
               <div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>
             </div>
           </div>
-          <div style="margin-top: 24px;">
-            <button id="saveToDriveBtn" class="btn btn-primary">Save to Drive</button>
-          </div>
         </div>
 
         <div style="text-align:center;margin:24px 0;">
@@ -498,18 +500,20 @@
     </div>
   </div>
 
-  <script src="https://apis.google.com/js/api.js" async defer></script>
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
-    
+    const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Google API Key
+    const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
     // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
     let tokenClient;
-    let driveApiLoaded = false;
-    let driveFolderId;
-
+    let gapiInited = false;
+    let gisInited = false;
+    
     // Login functionality
     guestButton.onclick = () => { 
       loginScreen.style.display='none'; 
@@ -553,130 +557,39 @@
       userName.textContent = payload.name;
       userEmail.textContent = payload.email;
       gtag('event', 'login', {method: 'google'});
-      
-      // Initialize Google Drive API when user signs in
-      initializeGapi();
-      initializeGis();
-    }
-    
-    // Google Drive API Functions
-    function initializeGis() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile',
-            callback: (resp) => {
-              if (resp.error !== undefined) {
-                console.error('Error with token client: ' + resp.error);
-                return;
-              }
-              gapi.client.setToken(resp);
-            },
-        });
     }
 
-    function initializeGapi() {
-      gapi.load('client', loadDriveApi);
-    }
-
-    function loadDriveApi() {
-      gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest')
-        .then(() => {
-          driveApiLoaded = true;
-        })
-        .catch(err => console.error('Error loading Drive API:', err));
-    }
-    
-    async function savePropertyToDrive() {
-      if (!driveApiLoaded) {
-        alert('Google Drive API not loaded. Please try again after signing in.');
-        return;
-      }
-
-      if (!gapi.client.getToken() || gapi.client.getToken().access_token === '') {
-        tokenClient.requestAccessToken({prompt: ''});
-        return;
-      }
-
-      const savedProperties = JSON.parse(localStorage.getItem('savedProperties')) || [];
-      if (savedProperties.length === 0) {
-        alert('No properties to save. Please save a property first.');
-        return;
-      }
-
-      const content = JSON.stringify(savedProperties, null, 2);
-      const fileName = 'PropCheck_Saved_Properties.json';
-
-      if (!driveFolderId) {
-        const folderName = 'PropCheck Properties';
-        try {
-          const listResponse = await gapi.client.drive.files.list({
-            q: `name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false`,
-            fields: 'files(id)',
-          });
-          
-          if (listResponse.result.files.length > 0) {
-            driveFolderId = listResponse.result.files[0].id;
-          } else {
-            const folderMetadata = {
-              name: folderName,
-              mimeType: 'application/vnd.google-apps.folder',
-            };
-            const createResponse = await gapi.client.drive.files.create({
-              resource: folderMetadata,
-              fields: 'id',
-            });
-            driveFolderId = createResponse.result.id;
-          }
-        } catch (error) {
-          console.error('Error managing Google Drive folder:', error);
-          alert('Error managing Google Drive folder. Please try again.');
-          return;
-        }
-      }
-
-      const fileMetadata = {
-        name: fileName,
-        parents: [driveFolderId],
-      };
-
-      try {
-        const fileListResponse = await gapi.client.drive.files.list({
-          q: `name = '${fileName}' and '${driveFolderId}' in parents and trashed = false`,
-          fields: 'files(id)',
-        });
-        
-        const fileId = fileListResponse.result.files[0]?.id;
-
-        const boundary = 'propcheck_boundary';
-        const multipartRequestBody =
-          `--${boundary}\n` +
-          'Content-Type: application/json; charset=UTF-8\n\n' +
-          JSON.stringify(fileMetadata) + '\n\n' +
-          `--${boundary}\n` +
-          'Content-Type: application/json; charset=UTF-8\n\n' +
-          content + '\n' +
-          `--${boundary}--`;
-
-        const request = gapi.client.request({
-          path: `https://www.googleapis.com/upload/drive/v3/files/${fileId || ''}?uploadType=multipart`,
-          method: fileId ? 'PATCH' : 'POST',
-          params: { 'uploadType': 'multipart' },
-          headers: {
-            'Content-Type': `multipart/related; boundary="${boundary}"`,
-          },
-          body: multipartRequestBody,
-        });
-
-        await request;
-        alert('Properties saved successfully to Google Drive!');
-      } catch (error) {
-        console.error('Error saving to Google Drive:', error);
-        alert('Error saving properties to Google Drive. Please check your permissions.');
-      }
-    }
-    
     // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
+    
+    // Google API/Picker Functions
+    function gapiLoaded() {
+      gapi.load('client:picker', initializeGapiClient);
+    }
+    
+    function initializeGapiClient() {
+      gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: DISCOVERY_DOCS,
+      }).then(() => {
+        gapiInited = true;
+        maybeEnableButtons();
+      }).catch(err => console.error("Error initializing GAPI client", err));
+    }
+    
+    function gisLoaded() {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined at call time
+      });
+      gisInited = true;
+      maybeEnableButtons();
+    }
+    
+    function maybeEnableButtons() {
+      // This is a placeholder for future logic if buttons need to be disabled
+    }
 
     window.onload = function(){
       // Wait a bit for Google library to load, then initialize
@@ -697,6 +610,11 @@
               shape: 'rectangular'
             }
           );
+          
+          // Initialize Google Identity Services for Drive functionality
+          gisLoaded();
+          gapiLoaded();
+          
         } else {
           console.log('Google Sign-In library not loaded');
           // Fallback - show a manual button
@@ -857,14 +775,90 @@
         updateSavedPropertiesList();
         alert('Property saved successfully!');
         gtag('event', 'save_property');
-        
-        localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
       }
     };
-
+    
+    // Save to Google Drive functionality
     document.getElementById('saveToDriveBtn').onclick = () => {
-        savePropertyToDrive();
+        if (!currentProperty.price) {
+            alert('Please calculate a property first to save to Drive.');
+            return;
+        }
+        if (!currentUser) {
+            alert('You must be signed in with Google to use this feature.');
+            return;
+        }
+
+        tokenClient.callback = (resp) => {
+            if (resp.error) {
+                console.error('Error getting access token:', resp.error);
+                alert('Authorization failed. Please try signing in again.');
+                return;
+            }
+            createPicker();
+        };
+
+        if (gapi.client.getToken() === null) {
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+            createPicker();
+        }
     };
+    
+    function createPicker() {
+      if (!gapiInited || !gisInited) {
+        alert('Google APIs are not ready. Please try again in a moment.');
+        return;
+      }
+
+      const view = new google.picker.View(google.picker.ViewId.FOLDERS);
+      view.setMimeTypes('application/vnd.google-apps.folder');
+
+      const picker = new google.picker.PickerBuilder()
+        .addView(view)
+        .setOAuthToken(gapi.client.getToken().access_token)
+        .setDeveloperKey(API_KEY)
+        .setCallback(pickerCallback)
+        .build();
+      picker.setVisible(true);
+    }
+    
+    function pickerCallback(data) {
+        if (data.action === google.picker.Action.PICKED) {
+            const folderId = data.docs[0].id;
+            const propertyName = currentProperty.name || 'Untitled Property';
+            const fileName = `PropCheck Report - ${propertyName} (${new Date().toLocaleDateString()}).json`;
+            const fileContent = JSON.stringify(currentProperty, null, 2);
+            const metadata = {
+                'name': fileName,
+                'mimeType': 'application/json',
+                'parents': [folderId]
+            };
+            
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', new Blob([fileContent], { type: 'application/json' }));
+
+            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }),
+                body: form
+            })
+            .then(res => res.json())
+            .then(file => {
+                if(file.id) {
+                    alert(`Report saved to Google Drive as "${fileName}"!`);
+                    gtag('event', 'save_to_drive', { file_id: file.id });
+                } else {
+                    alert('Failed to save to Google Drive.');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving to Drive:', error);
+                alert('An error occurred while saving the file.');
+            });
+        }
+    }
 
     function updateSavedPropertiesList() {
       const container = document.getElementById('propertiesList');
@@ -909,7 +903,6 @@
         savedProperties.splice(index, 1);
         updateSavedPropertiesList();
         updateComparisonTable();
-        localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
       }
     }
 
@@ -1012,20 +1005,12 @@
         alert('Please calculate a property first, then come back to add it to comparison.');
         return;
       }
-      const name = prompt('Enter a name for this property to add to comparison:', `Property ${savedProperties.length + 1}`);
-      if (name) {
-        const propertyToAdd = {...currentProperty, name: name};
-        savedProperties.push(propertyToAdd);
-        localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
-        updateComparisonTable();
-        alert('Property added to comparison!');
-      }
+      showPage('calculator');
     };
 
     function updateComparisonTable() {
       const container = document.getElementById('comparisonContainer');
-      const savedProps = JSON.parse(localStorage.getItem('savedProperties')) || [];
-      if (savedProps.length === 0) {
+      if (savedProperties.length === 0) {
         container.innerHTML = '<div class="alert alert-warning">Add properties from the calculator to compare them side-by-side.</div>';
         return;
       }
@@ -1045,7 +1030,7 @@
             </tr>
           </thead>
           <tbody>
-            ${savedProps.map((prop, i) => `
+            ${savedProperties.map((prop, i) => `
               <tr>
                 <td><strong>${prop.name}</strong></td>
                 <td>${money(prop.price)}</td>
@@ -1068,7 +1053,6 @@
     document.getElementById('clearComparison').onclick = () => {
       if (confirm('Clear all saved properties?')) {
         savedProperties = [];
-        localStorage.removeItem('savedProperties');
         updateComparisonTable();
         updateSavedPropertiesList();
       }
@@ -1153,7 +1137,6 @@
     };
 
     document.getElementById('portfolioReport').onclick = () => {
-      savedProperties = JSON.parse(localStorage.getItem('savedProperties')) || [];
       if (savedProperties.length === 0) {
         alert('No saved properties to analyze. Save some properties first.');
         return;
@@ -1236,4 +1219,54 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
           <strong>Expense Ratio Analysis:</strong> 
           ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 
             'Your expense ratio is healthy at under 75% of rental income.' :
-            'Consider reducing expenses - current ratio is above
+            'Consider reducing expenses - current ratio is above recommended 75% threshold.'}
+        </div>
+      `;
+    }
+
+    // Update expense breakdown when switching to analysis page
+    document.querySelector('[data-page="analysis"]').addEventListener('click', () => {
+      setTimeout(updateExpenseBreakdown, 100);
+    });
+
+    // Update comparison table when switching to compare page  
+    document.querySelector('[data-page="compare"]').addEventListener('click', () => {
+      setTimeout(updateComparisonTable, 100);
+    });
+
+    // Update saved properties when switching to reports page
+    document.querySelector('[data-page="reports"]').addEventListener('click', () => {
+      setTimeout(updateSavedPropertiesList, 100);
+    });
+
+    // PWA functionality
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+    
+    installBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display='none';
+          gtag('event', 'pwa_install');
+        }
+        deferredPrompt = null;
+      }
+    };
+
+    // Initialize AdSense ads on page load
+    window.addEventListener('load', () => {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    });
+  </script>
+</body>
+</html>
