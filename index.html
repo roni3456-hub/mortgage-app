@@ -136,7 +136,6 @@
              data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false"
-             data-scope="https://www.googleapis.com/auth/drive.file"
              style="display:none;"></div>
       </div>
       
@@ -553,15 +552,36 @@
       userName.textContent = payload.name;
       userEmail.textContent = payload.email;
       gtag('event', 'login', {method: 'google'});
+    }
 
-      // New logic to store the access token
-      if (response.access_token) {
-        googleAccessToken = response.access_token;
+    // New function to handle the token response from the API client
+    function handleTokenResponse(tokenResponse) {
+      if (tokenResponse && tokenResponse.access_token) {
+        googleAccessToken = tokenResponse.access_token;
+        console.log("Access Token acquired: ", googleAccessToken);
+        alert("Signed in and ready to save to Google Drive!");
       }
     }
 
     // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
+    window.handleTokenResponse = handleTokenResponse;
+    
+    // New function to initiate the token request
+    function signInToDrive() {
+      if (!currentUser) {
+        alert("Please sign in with your Google account first.");
+        return;
+      }
+      
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: handleTokenResponse
+      });
+      
+      client.requestAccessToken();
+    }
     
     window.onload = function(){
       // Wait a bit for Google library to load, then initialize
@@ -570,7 +590,6 @@
           google.accounts.id.initialize({
             client_id: CLIENT_ID,
             callback: handleCredentialResponse,
-            scope: 'https://www.googleapis.com/auth/drive.file' // This line was added/corrected
           });
           
           google.accounts.id.renderButton(
@@ -770,7 +789,8 @@
     // Function to save a file in the dedicated Google Drive folder
     async function savePropertyToDrive(propertyData) {
       if (!googleAccessToken) {
-        alert("Please sign in with Google to save to Drive.");
+        // If no access token, initiate the sign-in flow
+        signInToDrive();
         return;
       }
 
@@ -799,14 +819,15 @@
           alert('Property saved to Google Drive!');
       } catch (error) {
           console.error('Error saving to Drive:', error);
-          alert('Failed to save property to Google Drive.');
+          alert('Failed to save property to Google Drive. Please try signing in again.');
       }
     }
 
     // Function to load all properties from the Google Drive folder
     async function loadPropertiesFromDrive() {
         if (!googleAccessToken) {
-            alert("Please sign in with Google to load saved properties.");
+            // If no access token, initiate the sign-in flow
+            signInToDrive();
             return;
         }
 
@@ -840,7 +861,7 @@
             updateSavedPropertiesList();
         } catch (error) {
             console.error('Error loading from Drive:', error);
-            alert('Failed to load properties from Google Drive.');
+            alert('Failed to load properties from Google Drive. Please try signing in again.');
             updateSavedPropertiesList(); // Clear list on error
         }
     }
