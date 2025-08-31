@@ -1,771 +1,45 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PropCheck – RE Calculator & Underwriting Tool</title>
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-PRQW949FW1');
-  </script>
-
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
-     crossorigin="anonymous"></script>
-
-  <!-- Google Identity Services -->
+  <title>Drive Test</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  
-  <!-- Google Drive API -->
-  <script async defer src="https://apis.google.com/js/api.js"></script>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="site.webmanifest" />
-  <meta name="theme-color" content="#2ecc71" />
-
-  <style>
-    :root{
-      --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
-      --page-bg-1:#667eea;--page-bg-2:#764ba2;--max-w:1200px;--danger:#e74c3c;
-      --warning:#f39c12;--info:#3498db;--success:#2ecc71;--text:#2c3e50;
-      --border:#e1e8ed;--shadow:0 6px 20px rgba(2,6,23,0.06);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-         background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
-         color:var(--text);min-height:100vh;}
-    
-    /* Login Styles */
-    .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .login-card{width:100%;max-width:420px;background:var(--card-bg);border-radius:16px;padding:32px;
-                box-shadow:0 18px 40px rgba(2,6,23,0.25);text-align:center}
-    .login-card h1{color:var(--brand);margin:0 0 8px 0;font-size:2.2rem}
-    .subtitle{color:var(--muted);margin-bottom:24px;font-size:1.1rem}
-    
-    /* Navigation */
-    .nav{background:#fff;padding:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
-    .nav-container{max-width:var(--max-w);margin:0 auto;padding:0 20px;display:flex;
-                   justify-content:space-between;align-items:center;height:70px}
-    .logo{color:var(--brand);font-size:1.8rem;font-weight:700;text-decoration:none}
-    .nav-links{display:flex;gap:0;align-items:center}
-    .nav-link{padding:12px 20px;text-decoration:none;color:var(--text);font-weight:500;
-              border-radius:8px;transition:all 0.2s}
-    .nav-link:hover,.nav-link.active{background:var(--brand);color:#fff}
-    .user-menu{display:flex;gap:12px;align-items:center}
-    .avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
-    
-    /* Main Content */
-    .main{max-width:var(--max-w);margin:0 auto;padding:24px 20px;min-height:calc(100vh - 70px)}
-    .page{display:none}.page.active{display:block}
-    
-    /* Components */
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;
-         border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.2s}
-    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
-    .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
-    .btn-danger{background:var(--danger);color:#fff}
-    .btn-small{padding:8px 16px;font-size:14px}
-    
-    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
-    .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
-    
-    .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
-    .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
-    .full{grid-column:1/-1}
-    
-    .form-group{margin-bottom:16px}
-    .form-group label{display:block;font-weight:600;margin-bottom:6px;color:var(--text)}
-    .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
-                                        border:1px solid var(--border);font-size:15px}
-    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
-    
-    .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
-                 padding:20px;border-radius:12px;margin-top:20px}
-    .metric{text-align:center;padding:16px}
-    .metric-value{font-size:1.8rem;font-weight:700;color:var(--brand)}
-    .metric-label{color:var(--muted);font-size:0.9rem;margin-top:4px}
-    
-    .alert{padding:16px;border-radius:8px;margin-bottom:20px}
-    .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
-    .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
-    .alert-danger{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
-    
-    .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px}
-    .tab{padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;
-         font-weight:500;color:var(--muted)}
-    .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
-    
-    .comparison-table{width:100%;border-collapse:collapse;margin-top:20px}
-    .comparison-table th,.comparison-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
-    .comparison-table th{background:#f8f9fa;font-weight:600}
-    
-    .sync-indicator{position:fixed;top:80px;right:20px;background:#fff;padding:8px 16px;
-                    border-radius:20px;box-shadow:var(--shadow);display:none;align-items:center;gap:8px;z-index:200}
-    .sync-indicator.show{display:flex}
-    
-    @media(max-width:768px){
-      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
-      .nav-links{display:none}
-      .nav-container{padding:0 16px}
-      .main{padding:16px}
-      .card{padding:20px}
-    }
-    
-    /* Mobile Menu */
-    .mobile-menu{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;
-                 box-shadow:0 -2px 10px rgba(0,0,0,0.1);padding:12px;z-index:1000}
-    .mobile-nav{display:flex;justify-content:space-around}
-    .mobile-nav-item{text-align:center;padding:8px;border-radius:8px;cursor:pointer;
-                     color:var(--muted);font-size:12px;min-width:60px}
-    .mobile-nav-item.active{color:var(--brand);background:#f0f9ff}
-    
-    @media(max-width:768px){
-      .mobile-menu{display:block}
-      .main{padding-bottom:80px}
-    }
-  </style>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
-  <!-- LOGIN SCREEN -->
-  <main id="loginScreen" class="center-screen">
-    <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
-      <div class="login-card">
-        <h1>🏠 PropCheck</h1>
-        <div class="subtitle">Fast Canadian property underwriting for real estate investors</div>
-        
-        <button id="guestButton" class="btn btn-primary">Continue as Guest</button>
-        
-        <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
-        
-        <!-- Google Sign-In Button Container -->
-        <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
-        
-        <!-- Hidden elements for Google Sign-In -->
-        <div id="g_id_onload"
-             data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false"
-             style="display:none;"></div>
-      </div>
-      
-      <!-- PWA Install Button Below White Box -->
-      <div style="margin-top:32px;text-align:center;">
-        <button id="homeInstallBtn" class="btn btn-primary" style="font-size:18px;padding:16px 32px;background:var(--brand);border:none;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
-          📱 Download App
-        </button>
-        <div style="color:rgba(255,255,255,0.8);margin-top:8px;font-size:14px;">
-          Install PropCheck for offline access
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- MAIN APP -->
-  <div id="mainApp" style="display:none;">
-    <!-- Sync Indicator -->
-    <div id="syncIndicator" class="sync-indicator">
-      <span>📁 Saving to Drive...</span>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="nav">
-      <div class="nav-container">
-        <a href="#" class="logo">🏠 PropCheck</a>
-        <div class="nav-links">
-          <a href="#" class="nav-link active" data-page="calculator">Calculator</a>
-          <a href="#" class="nav-link" data-page="analysis">Analysis</a>
-          <a href="#" class="nav-link" data-page="compare">Compare</a>
-          <a href="#" class="nav-link" data-page="reports">Reports</a>
-          <a href="#" class="nav-link" data-page="market">Market Data</a>
-        </div>
-        <div class="user-menu">
-          <button id="installBtn" class="btn-secondary btn-small" style="display:none;">➕ Install</button>
-          <div id="userArea" class="user-menu" style="display:none;">
-            <img id="userAvatar" class="avatar" alt="">
-            <div style="margin-right:12px;">
-              <div id="userName" style="font-weight:600;font-size:14px;"></div>
-              <div id="userEmail" style="color:var(--muted);font-size:12px;"></div>
-            </div>
-            <button id="signOut" class="btn-secondary btn-small">Sign out</button>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <div class="main">
-      
-      <!-- CALCULATOR PAGE -->
-      <div id="calculatorPage" class="page active">
-        <div class="card">
-          <h3>🏠 Property Calculator</h3>
-          <div class="grid grid-2">
-            <div class="form-group">
-              <label>Purchase Price ($)</label>
-              <input id="price" type="number" placeholder="e.g. 750000">
-            </div>
-            <div class="form-group">
-              <label>Down Payment (%)</label>
-              <input id="down" type="number" value="20" min="5" max="100">
-            </div>
-            <div class="form-group">
-              <label>Interest Rate (%)</label>
-              <input id="rate" type="number" value="5.5" step="0.1">
-            </div>
-            <div class="form-group">
-              <label>Amortization (years)</label>
-              <select id="term">
-                <option value="25">25 years</option>
-                <option value="30">30 years</option>
-                <option value="20">20 years</option>
-                <option value="15">15 years</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Monthly Rent ($)</label>
-              <input id="rent" type="number" placeholder="e.g. 3200">
-            </div>
-            <div class="form-group">
-              <label>Property Taxes (annual $)</label>
-              <input id="propertyTax" type="number" placeholder="e.g. 8500">
-            </div>
-            <div class="form-group">
-              <label>Insurance (annual $)</label>
-              <input id="insurance" type="number" placeholder="e.g. 1200">
-            </div>
-            <div class="form-group">
-              <label>Management Fee (%)</label>
-              <input id="management" type="number" value="8" step="0.1">
-            </div>
-            <div class="form-group">
-              <label>Vacancy Rate (%)</label>
-              <input id="vacancy" type="number" value="5" step="0.1">
-            </div>
-            <div class="form-group">
-              <label>Other Monthly Expenses ($)</label>
-              <input id="otherExpenses" type="number" placeholder="e.g. 200">
-            </div>
-          </div>
-          
-          <div class="form-group" style="margin-top:20px;">
-            <label>
-              <input type="checkbox" id="cmhcRequired" style="width:auto;margin-right:8px;">
-              CMHC Insurance Required (down payment < 20%)
-            </label>
-          </div>
-          
-          <button id="calcButton" class="btn btn-primary">Calculate Investment</button>
-          
-          <div id="results" class="result-card" style="display:none;">
-            <div class="grid grid-4">
-              <div class="metric">
-                <div class="metric-value" id="payment">$0</div>
-                <div class="metric-label">Monthly Payment</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value" id="cashflow">$0</div>
-                <div class="metric-label">Net Cash Flow</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value" id="caprate">0%</div>
-                <div class="metric-label">Cap Rate</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value" id="coc">0%</div>
-                <div class="metric-label">Cash-on-Cash</div>
-              </div>
-            </div>
-            
-            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-              <h4>Investment Summary</h4>
-              <div class="grid grid-2">
-                <div>
-                  <strong>Initial Investment:</strong><br>
-                  Down Payment: <span id="downPaymentAmount">$0</span><br>
-                  CMHC Insurance: <span id="cmhcAmount">$0</span><br>
-                  <strong>Total: <span id="totalInitial">$0</span></strong>
-                </div>
-                <div>
-                  <strong>Annual Numbers:</strong><br>
-                  Gross Rent: <span id="grossRent">$0</span><br>
-                  Total Expenses: <span id="totalExpenses">$0</span><br>
-                  Net Operating Income: <span id="noi">$0</span>
-                </div>
-              </div>
-            </div>
-            
-            <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
-              💾 Save Property
-            </button>
-          </div>
-        </div>
-
-        <!-- AdSense Ad Unit -->
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-        </div>
-      </div>
-
-      <!-- ANALYSIS PAGE -->
-      <div id="analysisPage" class="page">
-        <div class="card">
-          <h3>📊 Stress Testing & Scenarios</h3>
-          
-          <div class="tabs">
-            <div class="tab active" data-tab="rates">Interest Rates</div>
-            <div class="tab" data-tab="rent">Rent Changes</div>
-            <div class="tab" data-tab="expenses">Expense Impact</div>
-          </div>
-          
-          <!-- Interest Rate Analysis -->
-          <div id="ratesTab" class="tab-content">
-            <p>Analyze how interest rate changes affect your investment:</p>
-            <div class="grid grid-3">
-              <div class="form-group">
-                <label>Current Rate (%)</label>
-                <input id="currentRate" type="number" value="5.5" step="0.1">
-              </div>
-              <div class="form-group">
-                <label>Stress Test Rate (%)</label>
-                <input id="stressRate" type="number" value="7.5" step="0.1">
-              </div>
-              <div class="form-group">
-                <label>Renewal Period (years)</label>
-                <select id="renewalPeriod">
-                  <option value="1">1 year</option>
-                  <option value="2">2 years</option>
-                  <option value="3">3 years</option>
-                  <option value="5" selected>5 years</option>
-                </select>
-              </div>
-            </div>
-            <button id="runStressTest" class="btn btn-primary">Run Stress Test</button>
-            <div id="stressResults" style="display:none;margin-top:20px;"></div>
-          </div>
-          
-          <!-- Rent Analysis -->
-          <div id="rentTab" class="tab-content" style="display:none;">
-            <p>Model different rental scenarios:</p>
-            <div class="grid grid-2">
-              <div class="form-group">
-                <label>Annual Rent Increase (%)</label>
-                <input id="rentIncrease" type="number" value="3" step="0.1">
-              </div>
-              <div class="form-group">
-                <label>Projection Period (years)</label>
-                <input id="projectionYears" type="number" value="10" min="1" max="30">
-              </div>
-            </div>
-            <button id="runRentAnalysis" class="btn btn-primary">Analyze Rent Growth</button>
-            <div id="rentResults" style="display:none;margin-top:20px;"></div>
-          </div>
-          
-          <!-- Expense Analysis -->
-          <div id="expenseTab" class="tab-content" style="display:none;">
-            <p>Break down and optimize your expenses:</p>
-            <div id="expenseBreakdown" style="margin-top:20px;"></div>
-          </div>
-        </div>
-
-        <!-- AdSense Ad Unit -->
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"></ins>
-        </div>
-      </div>
-
-      <!-- COMPARE PAGE -->
-      <div id="comparePage" class="page">
-        <div class="card">
-          <h3>⚖️ Property Comparison</h3>
-          <div style="margin-bottom:20px;">
-            <button id="addProperty" class="btn btn-primary">+ Add Property</button>
-            <button id="clearComparison" class="btn btn-secondary">Clear All</button>
-          </div>
-          
-          <div id="comparisonContainer">
-            <div class="alert alert-warning">
-              Add properties from the calculator to compare them side-by-side.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- REPORTS PAGE -->
-      <div id="reportsPage" class="page">
-        <div class="card">
-          <h3>📋 Investment Reports</h3>
-          
-          <div class="grid grid-2">
-            <div class="card" style="margin:0;">
-              <h4>Property Summary Report</h4>
-              <p class="muted">Generate a comprehensive analysis report for lenders or partners.</p>
-              <button id="generateSummary" class="btn btn-primary">Generate PDF</button>
-            </div>
-            <div class="card" style="margin:0;">
-              <h4>Portfolio Analysis</h4>
-              <p class="muted">Analyze all your saved properties together.</p>
-              <button id="portfolioReport" class="btn btn-primary">View Portfolio</button>
-            </div>
-          </div>
-          
-          <div id="savedProperties" class="card">
-            <h4>Saved Properties</h4>
-            <div id="propertiesList">
-              <div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AdSense Ad Unit -->
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"></ins>
-        </div>
-      </div>
-
-      <!-- MARKET DATA PAGE -->
-      <div id="marketPage" class="page">
-        <div class="card">
-          <h3>🏙️ Market Intelligence</h3>
-          
-          <div class="grid grid-2">
-            <div class="form-group">
-              <label>City/Region</label>
-              <select id="citySelect">
-                <option value="toronto">Toronto, ON</option>
-                <option value="vancouver">Vancouver, BC</option>
-                <option value="montreal">Montreal, QC</option>
-                <option value="calgary">Calgary, AB</option>
-                <option value="ottawa">Ottawa, ON</option>
-                <option value="mississauga">Mississauga, ON</option>
-                <option value="hamilton">Hamilton, ON</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Property Type</label>
-              <select id="propertyType">
-                <option value="condo">Condominium</option>
-                <option value="detached">Detached House</option>
-                <option value="townhouse">Townhouse</option>
-                <option value="duplex">Duplex</option>
-              </select>
-            </div>
-          </div>
-          
-          <button id="loadMarketData" class="btn btn-primary">Load Market Data</button>
-          
-          <div id="marketResults" style="margin-top:24px;">
-            <div class="grid grid-3">
-              <div class="metric">
-                <div class="metric-value">$750K</div>
-                <div class="metric-label">Avg. Sale Price</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value">$2,800</div>
-                <div class="metric-label">Avg. Rent/Month</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value">4.5%</div>
-                <div class="metric-label">Market Cap Rate</div>
-              </div>
-            </div>
-            
-            <div class="alert alert-success" style="margin-top:20px;">
-              <strong>Market Insight:</strong> Current market conditions in Mississauga show strong rental demand with average cap rates around 4.5%. Consider properties priced below $700K for better cash flow potential.
-            </div>
-          </div>
-        </div>
-
-        <!-- AdSense Ad Unit -->
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"></ins>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Navigation -->
-    <div class="mobile-menu">
-      <div class="mobile-nav">
-        <div class="mobile-nav-item active" data-page="calculator">
-          <div>🏠</div>
-          <div>Calc</div>
-        </div>
-        <div class="mobile-nav-item" data-page="analysis">
-          <div>📊</div>
-          <div>Analysis</div>
-        </div>
-        <div class="mobile-nav-item" data-page="compare">
-          <div>⚖️</div>
-          <div>Compare</div>
-        </div>
-        <div class="mobile-nav-item" data-page="reports">
-          <div>📋</div>
-          <div>Reports</div>
-        </div>
-        <div class="mobile-nav-item" data-page="market">
-          <div>🏙️</div>
-          <div>Market</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <h1>Google Drive Integration Test</h1>
+  
+  <div id="g_button_target"></div>
+  
+  <div id="g_id_onload"
+       data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false"
+       style="display:none;"></div>
+  
+  <div id="status" style="margin:20px 0;padding:10px;background:#f0f0f0;"></div>
+  
+  <button id="testDrive" style="display:none;padding:10px;">Test Drive Access</button>
 
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
+    let accessToken = null;
     
-    // Global state from v23
-    let currentProperty = {};
-    let savedProperties = [];
-    let currentUser = null;
+    function log(msg) {
+      document.getElementById('status').innerHTML += msg + '<br>';
+      console.log(msg);
+    }
     
-    // Drive-specific variables
-    let driveAccessToken = null;
-    let driveFolderId = null;
-    let driveFileId = null;
-
-    // Login functionality (from v23)
-    guestButton.onclick = () => { 
-      loginScreen.style.display='none'; 
-      mainApp.style.display='block';
-      gtag('event', 'login', {method: 'guest'});
-    };
-
-    // Homepage PWA install button
-    document.getElementById('homeInstallBtn').onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          gtag('event', 'pwa_install', {source: 'homepage'});
-        }
-        deferredPrompt = null;
-      } else {
-        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
-      }
-    };
-
-    function parseJwt(token){
-      try{
-        const base64Url=token.split('.')[1];
-        const base64=base64Url.replace(/-/g,'+').replace(/_/g,'/');
-        const json=decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        return JSON.parse(json);
-      }catch(e){return null;}
+    function handleCredentialResponse(response) {
+      log('✓ Signed in with Google');
+      document.getElementById('testDrive').style.display = 'block';
     }
-
-    function handleCredentialResponse(response){
-      const payload = parseJwt(response.credential);
-      if(!payload) return;
-      
-      currentUser = payload;
-      loginScreen.style.display='none';
-      mainApp.style.display='block';
-      userArea.style.display='flex';
-      userAvatar.src = payload.picture || '';
-      userName.textContent = payload.name;
-      userEmail.textContent = payload.email;
-      gtag('event', 'login', {method: 'google'});
-      
-      // NEW: Request Drive access after sign-in
-      setTimeout(requestDriveAccess, 1000);
-    }
-
-    // NEW: Request Drive access
-    function requestDriveAccess() {
-      if (typeof gapi === 'undefined') {
-        setTimeout(requestDriveAccess, 500);
-        return;
-      }
-      
-      gapi.load('client:auth2', async () => {
-        await gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-        });
-        
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/drive.file',
-          callback: (tokenResponse) => {
-            driveAccessToken = tokenResponse.access_token;
-            gapi.client.setToken({access_token: driveAccessToken});
-            initializeDrive();
-          },
-        });
-        
-        tokenClient.requestAccessToken();
-      });
-    }
-
-    // NEW: Initialize Drive (create folder and load data)
-    async function initializeDrive() {
-      try {
-        // Find or create PropCheck folder
-        const folderResponse = await gapi.client.drive.files.list({
-          q: "name='PropCheck' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-          fields: 'files(id, name)',
-        });
-        
-        if (folderResponse.result.files && folderResponse.result.files.length > 0) {
-          driveFolderId = folderResponse.result.files[0].id;
-          console.log('Found existing PropCheck folder');
-        } else {
-          // Create the folder
-          const createFolderResponse = await gapi.client.drive.files.create({
-            resource: {
-              name: 'PropCheck',
-              mimeType: 'application/vnd.google-apps.folder'
-            },
-            fields: 'id'
-          });
-          driveFolderId = createFolderResponse.result.id;
-          console.log('Created PropCheck folder');
-        }
-        
-        // Load existing data
-        await loadFromDrive();
-      } catch (error) {
-        console.error('Drive initialization error:', error);
-      }
-    }
-
-    // NEW: Save to Drive
-    async function saveToDrive() {
-      if (!driveAccessToken || !driveFolderId) {
-        console.log('Drive not ready');
-        return;
-      }
-      
-      showSyncIndicator('Saving to Drive...');
-      
-      try {
-        const data = {
-          properties: savedProperties,
-          lastModified: new Date().toISOString()
-        };
-        
-        const boundary = '-------314159265358979323846';
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const close_delim = "\r\n--" + boundary + "--";
-        
-        const metadata = {
-          name: 'propcheck_data.json',
-          mimeType: 'application/json'
-        };
-        
-        // Only set parents when creating new file
-        if (!driveFileId) {
-          metadata.parents = [driveFolderId];
-        }
-        
-        const multipartRequestBody =
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          JSON.stringify(data, null, 2) +
-          close_delim;
-        
-        let response;
-        if (driveFileId) {
-          // Update existing file
-          response = await gapi.client.request({
-            path: `/upload/drive/v3/files/${driveFileId}`,
-            method: 'PATCH',
-            params: {uploadType: 'multipart'},
-            headers: {'Content-Type': 'multipart/related; boundary="' + boundary + '"'},
-            body: multipartRequestBody
-          });
-        } else {
-          // Create new file in PropCheck folder
-          response = await gapi.client.request({
-            path: '/upload/drive/v3/files',
-            method: 'POST',
-            params: {uploadType: 'multipart'},
-            headers: {'Content-Type': 'multipart/related; boundary="' + boundary + '"'},
-            body: multipartRequestBody
-          });
-          driveFileId = response.result.id;
-        }
-        
-        showSyncIndicator('Saved to Drive ✓');
-        console.log('Properties saved to PropCheck folder');
-      } catch (error) {
-        console.error('Save error:', error);
-        showSyncIndicator('Save failed');
-      }
-    }
-
-    // NEW: Load from Drive
-    async function loadFromDrive() {
-      if (!driveFolderId) return;
-      
-      try {
-        // Look for data file in PropCheck folder
-        const fileResponse = await gapi.client.drive.files.list({
-          q: `name='propcheck_data.json' and '${driveFolderId}' in parents and trashed=false`,
-          fields: 'files(id)',
-        });
-        
-        if (fileResponse.result.files && fileResponse.result.files.length > 0) {
-          driveFileId = fileResponse.result.files[0].id;
-          
-          const dataResponse = await gapi.client.drive.files.get({
-            fileId: driveFileId,
-            alt: 'media'
-          });
-          
-          const data = typeof dataResponse.result === 'string' ? 
-            JSON.parse(dataResponse.result) : dataResponse.result;
-          savedProperties = data.properties || [];
-          updateSavedPropertiesList();
-          updateComparisonTable();
-          showSyncIndicator('Loaded from Drive ✓');
-          console.log('Loaded', savedProperties.length, 'properties from Drive');
-        }
-      } catch (error) {
-        console.error('Load error:', error);
-      }
-    }
-
-    // NEW: Show sync indicator
-    function showSyncIndicator(text) {
-      const indicator = document.getElementById('syncIndicator');
-      indicator.textContent = text;
-      indicator.classList.add('show');
-      setTimeout(() => indicator.classList.remove('show'), 3000);
-    }
-
-    // Make handleCredentialResponse available globally for Google to call
+    
     window.handleCredentialResponse = handleCredentialResponse;
-
-    window.onload = function(){
-      // Wait a bit for Google library to load, then initialize
-      setTimeout(function() {
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    
+    window.onload = function() {
+      setTimeout(() => {
+        if (google?.accounts?.id) {
           google.accounts.id.initialize({
             client_id: CLIENT_ID,
             callback: handleCredentialResponse
@@ -773,289 +47,96 @@
           
           google.accounts.id.renderButton(
             document.getElementById('g_button_target'),
-            {
-              theme: 'outline',
-              size: 'large',
-              width: 280,
-              text: 'signin_with',
-              shape: 'rectangular'
-            }
+            {theme: 'outline', size: 'large'}
           );
-        } else {
-          console.log('Google Sign-In library not loaded');
-          // Fallback - show a manual button
-          document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
+          log('✓ Google Sign-In ready');
         }
       }, 500);
-      
-      // Initialize AdSense
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    }
-
-    signOut.onclick=()=>{
-      google.accounts.id.disableAutoSelect();
-      userArea.style.display='none';
-      loginScreen.style.display='flex';
-      mainApp.style.display='none';
-      currentUser = null;
-      driveAccessToken = null;
-      savedProperties = [];
-      gtag('event', 'logout');
     };
-
-    // Navigation (from v23)
-    function showPage(pageId) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
-      
-      document.getElementById(pageId + 'Page').classList.add('active');
-      document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
-      document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`).classList.add('active');
-      
-      gtag('event', 'page_view', {page_title: pageId});
-    }
-
-    document.querySelectorAll('[data-page]').forEach(link => {
-      link.onclick = (e) => {
-        e.preventDefault();
-        showPage(link.dataset.page);
-      };
-    });
-
-    // Calculator functions (from v23)
-    function money(n){return '+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
-    function pct(n){return Number(n).toFixed(2)+'%';}
-
-    function calculateCMHC(price, downPercent) {
-      if (downPercent >= 20) return 0;
-      const loanAmount = price * (1 - downPercent/100);
-      let rate;
-      if (downPercent >= 15) rate = 0.028;
-      else if (downPercent >= 10) rate = 0.031;
-      else rate = 0.04;
-      return loanAmount * rate;
-    }
-
-    calcButton.onclick = () => {
-      const price = +document.getElementById('price').value || 0;
-      const downPercent = +down.value || 20;
-      const rate = (+document.getElementById('rate').value || 0) / 100 / 12;
-      const term = (+document.getElementById('term').value || 25) * 12;
-      const monthlyRent = +rent.value || 0;
-      const annualTax = +propertyTax.value || 0;
-      const annualInsurance = +insurance.value || 0;
-      const managementPercent = +management.value || 0;
-      const vacancyPercent = +vacancy.value || 0;
-      const otherMonthly = +otherExpenses.value || 0;
-      
-      if (!price || !monthlyRent) {
-        alert('Please enter at least the purchase price and monthly rent.');
-        return;
-      }
-      
-      // Calculations
-      const downPayment = price * downPercent / 100;
-      const cmhcInsurance = calculateCMHC(price, downPercent);
-      const loanAmount = price - downPayment + cmhcInsurance;
-      
-      let monthlyPayment = 0;
-      if (rate === 0) {
-        monthlyPayment = loanAmount / term;
-      } else {
-        monthlyPayment = loanAmount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1);
-      }
-      
-      // Monthly expenses
-      const monthlyTax = annualTax / 12;
-      const monthlyInsurance = annualInsurance / 12;
-      const managementFee = monthlyRent * managementPercent / 100;
-      const vacancyLoss = monthlyRent * vacancyPercent / 100;
-      
-      const totalMonthlyExpenses = monthlyPayment + monthlyTax + monthlyInsurance + managementFee + vacancyLoss + otherMonthly;
-      const effectiveRent = monthlyRent - vacancyLoss;
-      const netCashFlow = effectiveRent - totalMonthlyExpenses;
-      
-      // Annual calculations
-      const grossAnnualRent = monthlyRent * 12;
-      const effectiveAnnualRent = effectiveRent * 12;
-      const annualExpenses = (monthlyTax + monthlyInsurance + managementFee + otherMonthly) * 12 + (monthlyRent * vacancyPercent / 100 * 12);
-      const noi = effectiveAnnualRent - annualExpenses;
-      const capRate = price ? (noi / price) * 100 : 0;
-      const totalInitialInvestment = downPayment + cmhcInsurance;
-      const cashOnCash = totalInitialInvestment ? (netCashFlow * 12 / totalInitialInvestment) * 100 : 0;
-      
-      // Store current calculation
-      currentProperty = {
-        price, downPercent, rate: +document.getElementById('rate').value, term: +document.getElementById('term').value,
-        monthlyRent, annualTax, annualInsurance, managementPercent, vacancyPercent, otherMonthly,
-        monthlyPayment, netCashFlow, noi, capRate, cashOnCash, totalInitialInvestment,
-        downPayment, cmhcInsurance, timestamp: new Date()
-      };
-      
-      // Display results
-      payment.textContent = money(monthlyPayment);
-      cashflow.textContent = money(netCashFlow);
-      document.getElementById('caprate').textContent = pct(capRate);
-      document.getElementById('coc').textContent = pct(cashOnCash);
-      
-      document.getElementById('downPaymentAmount').textContent = money(downPayment);
-      document.getElementById('cmhcAmount').textContent = money(cmhcInsurance);
-      document.getElementById('totalInitial').textContent = money(totalInitialInvestment);
-      document.getElementById('grossRent').textContent = money(grossAnnualRent);
-      document.getElementById('totalExpenses').textContent = money(annualExpenses);
-      document.getElementById('noi').textContent = money(noi);
-      
-      results.style.display = 'block';
-      
-      // Color coding for cash flow
-      cashflow.style.color = netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
-      
-      gtag('event', 'calculate_property', {
-        value: price,
-        currency: 'CAD'
-      });
-    };
-
-    // CMHC checkbox handler
-    document.getElementById('cmhcRequired').onchange = function() {
-      const downPercent = +down.value || 20;
-      this.checked = downPercent < 20;
-      if (downPercent >= 20) this.checked = false;
-    };
-
-    down.oninput = function() {
-      const downPercent = +this.value || 20;
-      document.getElementById('cmhcRequired').checked = downPercent < 20;
-    };
-
-    // MODIFIED: Save property functionality with Drive sync
-    document.getElementById('saveProperty').onclick = () => {
-      if (!currentProperty.price) {
-        alert('Please calculate a property first.');
-        return;
-      }
-      
-      const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
-      if (name) {
-        currentProperty.name = name;
-        currentProperty.id = Date.now().toString();
-        savedProperties.push({...currentProperty});
-        updateSavedPropertiesList();
-        updateComparisonTable();
-        
-        // Save to Drive if user is signed in
-        if (currentUser && driveAccessToken) {
-          saveToDrive();
-        }
-        
-        alert('Property saved successfully!');
-        gtag('event', 'save_property');
-      }
-    };
-
-    function updateSavedPropertiesList() {
-      const container = document.getElementById('propertiesList');
-      if (savedProperties.length === 0) {
-        container.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
-        return;
-      }
-      
-      container.innerHTML = savedProperties.map((prop, i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
-          <div>
-            <strong>${prop.name}</strong><br>
-            <span class="muted">${money(prop.price)} • ${pct(prop.capRate)} cap • ${money(prop.netCashFlow)}/mo cash flow</span>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-secondary btn-small" onclick="loadProperty(${i})">Load</button>
-            <button class="btn-danger btn-small" onclick="deleteProperty(${i})">Delete</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function loadProperty(index) {
-      const prop = savedProperties[index];
-      price.value = prop.price;
-      down.value = prop.downPercent;
-      document.getElementById('rate').value = prop.rate;
-      document.getElementById('term').value = prop.term;
-      rent.value = prop.monthlyRent;
-      propertyTax.value = prop.annualTax;
-      insurance.value = prop.annualInsurance;
-      management.value = prop.managementPercent;
-      vacancy.value = prop.vacancyPercent;
-      otherExpenses.value = prop.otherMonthly;
-      
-      showPage('calculator');
-      calcButton.click();
-    }
-
-    async function deleteProperty(index) {
-      if (confirm('Are you sure you want to delete this property?')) {
-        savedProperties.splice(index, 1);
-        updateSavedPropertiesList();
-        updateComparisonTable();
-        
-        // Save to Drive if connected
-        if (currentUser && driveAccessToken) {
-          await saveToDrive();
-        }
-      }
-    }
-
-    // All other v23 functions (stress test, tabs, comparison, etc.)
-    // ... [keeping all the original v23 functionality]
-
-    // PWA functionality
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
     
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-flex';
-    });
-
-    function updateComparisonTable() {
-      const container = document.getElementById('comparisonContainer');
-      if (savedProperties.length === 0) {
-        container.innerHTML = '<div class="alert alert-warning">Add properties from the calculator to compare them side-by-side.</div>';
-        return;
-      }
+    document.getElementById('testDrive').onclick = async function() {
+      log('Loading Drive API...');
       
-      container.innerHTML = `
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Price</th>
-              <th>Down Payment</th>
-              <th>Monthly Rent</th>
-              <th>Cash Flow</th>
-              <th>Cap Rate</th>
-              <th>Cash-on-Cash</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${savedProperties.map((prop) => `
-              <tr>
-                <td><strong>${prop.name}</strong></td>
-                <td>${money(prop.price)}</td>
-                <td>${money(prop.downPayment)}</td>
-                <td>${money(prop.monthlyRent)}</td>
-                <td style="color:${prop.netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(prop.netCashFlow)}</td>
-                <td>${pct(prop.capRate)}</td>
-                <td>${pct(prop.cashOnCash)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
+      // Load GAPI
+      await new Promise((resolve) => {
+        gapi.load('client', resolve);
+      });
+      
+      // Initialize GAPI
+      await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+      });
+      
+      log('✓ Drive API loaded');
+      
+      // Request OAuth token
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: async (tokenResponse) => {
+          accessToken = tokenResponse.access_token;
+          gapi.client.setToken({access_token: accessToken});
+          log('✓ Got Drive access token');
+          
+          // Try to create folder
+          try {
+            log('Creating PropCheck folder...');
+            
+            const folderResponse = await gapi.client.drive.files.create({
+              resource: {
+                name: 'PropCheck',
+                mimeType: 'application/vnd.google-apps.folder'
+              },
+              fields: 'id,name'
+            });
+            
+            log('✓ Created folder with ID: ' + folderResponse.result.id);
+            
+            // Create test file in folder
+            log('Creating test file...');
+            
+            const metadata = {
+              name: 'test.json',
+              parents: [folderResponse.result.id],
+              mimeType: 'application/json'
+            };
+            
+            const content = JSON.stringify({test: true, date: new Date()});
+            
+            const boundary = '-------314159265358979323846';
+            const delimiter = "\r\n--" + boundary + "\r\n";
+            const close_delim = "\r\n--" + boundary + "--";
+            
+            const multipartRequestBody =
+              delimiter +
+              'Content-Type: application/json\r\n\r\n' +
+              JSON.stringify(metadata) +
+              delimiter +
+              'Content-Type: application/json\r\n\r\n' +
+              content +
+              close_delim;
+            
+            const fileResponse = await gapi.client.request({
+              path: '/upload/drive/v3/files',
+              method: 'POST',
+              params: {uploadType: 'multipart'},
+              headers: {'Content-Type': 'multipart/related; boundary="' + boundary + '"'},
+              body: multipartRequestBody
+            });
+            
+            log('✓ Created file with ID: ' + fileResponse.result.id);
+            log('SUCCESS! Check your Google Drive for PropCheck folder');
+            
+          } catch (error) {
+            log('✗ Error: ' + error.message);
+            console.error(error);
+          }
+        }
+      });
+      
+      tokenClient.requestAccessToken();
+    };
   </script>
 </body>
 </html>
