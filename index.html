@@ -526,6 +526,10 @@
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
+    // Drive-specific variables
+let driveAccessToken = null;
+let driveFolderId = null;
+let driveFileId = null;
 
     // Login functionality
     guestButton.onclick = () => { 
@@ -559,6 +563,152 @@
     }
 
     function handleCredentialResponse(response){
+      // Request Drive access
+function requestDriveAccess() {
+  if (typeof gapi === 'undefined') {
+    setTimeout(requestDriveAccess, 500);
+    return;
+  }
+  
+  gapi.load('client', async () => {
+    try {
+      await gapi.client.init({
+        apiKey: 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs',
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+      });
+      
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: async (tokenResponse) => {
+          driveAccessToken = tokenResponse.access_token;
+          gapi.client.setToken({access_token: driveAccessToken});
+          await initializeDrive();
+        }
+      });
+      
+      tokenClient.requestAccessToken();
+    } catch (error) {
+      console.error('Drive setup error:', error);
+    }
+  });
+}
+
+// Initialize Drive
+async function initializeDrive() {
+  try {
+    // Check for existing folder
+    let folderSearch = await gapi.client.drive.files.list({
+      q: "name='PropCheck' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+      fields: 'files(id)'
+    });
+    
+    if (folderSearch.result.files && folderSearch.result.files.length > 0) {
+      driveFolderId = folderSearch.result.files[0].id;
+    } else {
+      // Create new folder
+      let newFolder = await gapi.client.drive.files.create({
+        resource: {
+          name: 'PropCheck',
+          mimeType: 'application/vnd.google-apps.folder'
+        },
+        fields: 'id'
+      });
+      driveFolderId = newFolder.result.id;
+    }
+    
+    // Load existing data
+    await loadFromDrive();
+  } catch (error) {
+    console.error('Drive init error:', error);
+  }
+}
+
+// Save to Drive
+async function saveToDrive() {
+  if (!driveAccessToken || !driveFolderId) return;
+  
+  try {
+    const data = {
+      properties: savedProperties,
+      lastModified: new Date().toISOString()
+    };
+    
+    const boundary = '-------314159265358979323846';
+    const delimiter = "\r\n--" + boundary + "\r\n";
+    const close_delim = "\r\n--" + boundary + "--";
+    
+    const metadata = {
+      name: 'propcheck_data.json',
+      mimeType: 'application/json'
+    };
+    
+    if (!driveFileId) {
+      metadata.parents = [driveFolderId];
+    }
+    
+    const multipartRequestBody =
+      delimiter +
+      'Content-Type: application/json\r\n\r\n' +
+      JSON.stringify(metadata) +
+      delimiter +
+      'Content-Type: application/json\r\n\r\n' +
+      JSON.stringify(data, null, 2) +
+      close_delim;
+    
+    if (driveFileId) {
+      await gapi.client.request({
+        path: `/upload/drive/v3/files/${driveFileId}`,
+        method: 'PATCH',
+        params: {uploadType: 'multipart'},
+        headers: {'Content-Type': 'multipart/related; boundary="' + boundary + '"'},
+        body: multipartRequestBody
+      });
+    } else {
+      let response = await gapi.client.request({
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: {uploadType: 'multipart'},
+        headers: {'Content-Type': 'multipart/related; boundary="' + boundary + '"'},
+        body: multipartRequestBody
+      });
+      driveFileId = response.result.id;
+    }
+    
+    console.log('Saved to Drive');
+  } catch (error) {
+    console.error('Save error:', error);
+  }
+}
+
+// Load from Drive
+async function loadFromDrive() {
+  if (!driveFolderId) return;
+  
+  try {
+    let fileSearch = await gapi.client.drive.files.list({
+      q: `name='propcheck_data.json' and '${driveFolderId}' in parents and trashed=false`,
+      fields: 'files(id)'
+    });
+    
+    if (fileSearch.result.files && fileSearch.result.files.length > 0) {
+      driveFileId = fileSearch.result.files[0].id;
+      
+      let fileContent = await gapi.client.drive.files.get({
+        fileId: driveFileId,
+        alt: 'media'
+      });
+      
+      let data = JSON.parse(fileContent.result);
+      savedProperties = data.properties || [];
+      updateSavedPropertiesList();
+      updateComparisonTable();
+      console.log('Loaded from Drive');
+    }
+  } catch (error) {
+    console.error('Load error:', error);
+  }
+}
       const payload = parseJwt(response.credential);
       if(!payload) return;
       
@@ -570,6 +720,8 @@
       userName.textContent = payload.name;
       userEmail.textContent = payload.email;
       gtag('event', 'login', {method: 'google'});
+      // Request Drive access after successful Google sign-in
+setTimeout(requestDriveAccess, 1500);
     }
 
     // Make handleCredentialResponse available globally for Google to call
@@ -751,6 +903,10 @@
       if (name) {
         currentProperty.name = name;
         savedProperties.push({...currentProperty});
+        // Save to Drive if signed in
+if (currentUser && driveAccessToken) {
+  saveToDrive();
+}
         updateSavedPropertiesList();
         alert('Property saved successfully!');
         gtag('event', 'save_property');
@@ -798,6 +954,10 @@
     function deleteProperty(index) {
       if (confirm('Are you sure you want to delete this property?')) {
         savedProperties.splice(index, 1);
+        // Update Drive if signed in
+if (currentUser && driveAccessToken) {
+  saveToDrive();
+}
         updateSavedPropertiesList();
         updateComparisonTable();
       }
