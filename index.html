@@ -444,687 +444,559 @@
                 <option value="montreal">Montreal, QC</option>
                 <option value="calgary">Calgary, AB</option>
                 <option value="ottawa">Ottawa, ON</option>
-                <option value="mississauga">Mississauga, ON</option>
-                <option value="hamilton">Hamilton, ON</option>
+                <option value="halifax">Halifax, NS</option>
               </select>
             </div>
             <div class="form-group">
               <label>Property Type</label>
-              <select id="propertyType">
-                <option value="condo">Condominium</option>
-                <option value="detached">Detached House</option>
-                <option value="townhouse">Townhouse</option>
-                <option value="duplex">Duplex</option>
+              <select id="propertyTypeSelect">
+                <option value="house">Detached House</option>
+                <option value="condo">Condo</option>
+                <option value="duplex">Duplex/Triplex</option>
               </select>
             </div>
           </div>
+          <button id="getMarketData" class="btn btn-primary">Get Market Data</button>
           
-          <button id="loadMarketData" class="btn btn-primary">Load Market Data</button>
-          
-          <div id="marketResults" style="margin-top:24px;">
-            <div class="grid grid-3">
-              <div class="metric">
-                <div class="metric-value">$750K</div>
-                <div class="metric-label">Avg. Sale Price</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value">$2,800</div>
-                <div class="metric-label">Avg. Rent/Month</div>
-              </div>
-              <div class="metric">
-                <div class="metric-value">4.5%</div>
-                <div class="metric-label">Market Cap Rate</div>
-              </div>
-            </div>
-            
-            <div class="alert alert-success" style="margin-top:20px;">
-              <strong>Market Insight:</strong> Current market conditions in Mississauga show strong rental demand with average cap rates around 4.5%. Consider properties priced below $700K for better cash flow potential.
-            </div>
+          <div id="marketDataResults" style="margin-top:20px;">
+            <div class="alert alert-info">Select a city and property type to get market data.</div>
           </div>
         </div>
-
-        <!-- AdSense Ad Unit -->
-        <div style="text-align:center;margin:24px 0;">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-6166342215834701"
-               data-ad-slot="1234567890"
-               data-ad-format="auto"></ins>
-        </div>
       </div>
+      
     </div>
-
-    <!-- Mobile Navigation -->
+    
+    <!-- Mobile Navigation Menu -->
     <div class="mobile-menu">
       <div class="mobile-nav">
         <div class="mobile-nav-item active" data-page="calculator">
-          <div>🏠</div>
-          <div>Calc</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 12-4-4v3H3v2h14v3z"/></svg>
+          <div style="margin-top:2px;">Calculator</div>
         </div>
         <div class="mobile-nav-item" data-page="analysis">
-          <div>📊</div>
-          <div>Analysis</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+          <div style="margin-top:2px;">Analysis</div>
         </div>
         <div class="mobile-nav-item" data-page="compare">
-          <div>⚖️</div>
-          <div>Compare</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6m-3 12v-6m-4-2.5V11m-4 5.5v-3"/></svg>
+          <div style="margin-top:2px;">Compare</div>
         </div>
         <div class="mobile-nav-item" data-page="reports">
-          <div>📋</div>
-          <div>Reports</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+          <div style="margin-top:2px;">Reports</div>
         </div>
         <div class="mobile-nav-item" data-page="market">
-          <div>🏙️</div>
-          <div>Market</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l-5 5 5 5 5-5z"/><path d="M12 12l-5 5 5 5 5-5z"/></svg>
+          <div style="margin-top:2px;">Market</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    let accessToken = null;
-    let propCheckFolderId = null;
+    // Constants and state management
+    const loginScreen = document.getElementById('loginScreen');
+    const mainApp = document.getElementById('mainApp');
+    const userArea = document.getElementById('userArea');
+    const userNameEl = document.getElementById('userName');
+    const userEmailEl = document.getElementById('userEmail');
+    const userAvatarEl = document.getElementById('userAvatar');
+    const installBtn = document.getElementById('installBtn');
+    const homeInstallBtn = document.getElementById('homeInstallBtn');
 
-    // Global state
+    const googleDriveClient = {
+      apiKey: "YOUR_API_KEY",
+      clientId: "539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com",
+      discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+      scope: "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file",
+    };
+
+    let gapiLoaded = false;
+    let gisLoaded = false;
+    let gapiInited = false;
+    let gisInited = false;
+    let gapiClient;
+    let gisClient;
+
+    const savedProperties = [];
+    const comparisonList = [];
+
     let currentProperty = {};
-    let savedProperties = [];
-    let currentUser = null;
 
-    // Login functionality
-    guestButton.onclick = () => { 
-      loginScreen.style.display='none'; 
-      mainApp.style.display='block';
-      gtag('event', 'login', {method: 'guest'});
-    };
-
-    // Homepage PWA install button
-    document.getElementById('homeInstallBtn').onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          gtag('event', 'pwa_install', {source: 'homepage'});
-        }
-        deferredPrompt = null;
-      } else {
-        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
-      }
-    };
-
-    function parseJwt(token){
-      try{
-        const base64Url=token.split('.')[1];
-        const base64=base64Url.replace(/-/g,'+').replace(/_/g,'/');
-        const json=decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        return JSON.parse(json);
-      }catch(e){return null;}
-    }
-
-    function handleCredentialResponse(response){
-      const payload = parseJwt(response.credential);
-      if(!payload) return;
+    // UI functions
+    const showPage = (pageId) => {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
       
-      currentUser = payload;
-      loginScreen.style.display='none';
-      mainApp.style.display='block';
-      userArea.style.display='flex';
-      userAvatar.src = payload.picture || '';
-      userName.textContent = payload.name;
-      userEmail.textContent = payload.email;
-      gtag('event', 'login', {method: 'google'});
+      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+      document.querySelector(`[data-page="${pageId.replace('Page', '')}"]`).classList.add('active');
+      
+      document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`.mobile-nav-item[data-page="${pageId.replace('Page', '')}"]`).classList.add('active');
+    };
 
-      // Request Google Drive access token immediately
-      google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (tokenResponse) => {
-          accessToken = tokenResponse.access_token;
-          gapi.load('client', initDriveClient);
-        },
-      }).requestAccessToken();
-    }
+    const updateAuthUI = (user) => {
+      if (user) {
+        loginScreen.style.display = 'none';
+        mainApp.style.display = 'block';
+        userArea.style.display = 'flex';
+        userNameEl.textContent = user.displayName || 'Guest User';
+        userEmailEl.textContent = user.email || '';
+        if (user.photoURL) {
+          userAvatarEl.src = user.photoURL;
+        }
+      } else {
+        loginScreen.style.display = 'flex';
+        mainApp.style.display = 'none';
+        userArea.style.display = 'none';
+      }
+    };
 
-    // Make handleCredentialResponse available globally for Google to call
-    window.handleCredentialResponse = handleCredentialResponse;
+    const showAlert = (message, type = 'info') => {
+      const alertContainer = document.createElement('div');
+      alertContainer.className = `alert alert-${type}`;
+      alertContainer.textContent = message;
+      document.querySelector('.main').prepend(alertContainer);
+      setTimeout(() => alertContainer.remove(), 5000);
+    };
 
-    // Google Drive Integration Functions
-    function initDriveClient() {
-      gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-      }).then(() => {
-        ensurePropCheckFolder();
+    const formatCurrency = (value) => {
+      return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value);
+    };
+
+    const formatPercent = (value) => {
+      return new Intl.NumberFormat('en-CA', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 100);
+    };
+
+    // Calculation logic
+    const calculate = () => {
+      const price = parseFloat(document.getElementById('price').value);
+      const down = parseFloat(document.getElementById('down').value);
+      const rate = parseFloat(document.getElementById('rate').value);
+      const term = parseFloat(document.getElementById('term').value);
+      const rent = parseFloat(document.getElementById('rent').value);
+      const propertyTax = parseFloat(document.getElementById('propertyTax').value);
+      const insurance = parseFloat(document.getElementById('insurance').value);
+      const management = parseFloat(document.getElementById('management').value);
+      const vacancy = parseFloat(document.getElementById('vacancy').value);
+      const otherExpenses = parseFloat(document.getElementById('otherExpenses').value);
+
+      if (isNaN(price) || isNaN(down) || isNaN(rate) || isNaN(term)) {
+        document.getElementById('results').style.display = 'none';
+        showAlert('Please fill in all required fields.', 'danger');
+        return;
+      }
+      
+      // Mortgage Calculation (Canadian style)
+      const downPaymentAmount = price * (down / 100);
+      let loanAmount = price - downPaymentAmount;
+
+      // CMHC insurance
+      let cmhcAmount = 0;
+      if (document.getElementById('cmhcRequired').checked && down < 20) {
+        const cmhcRate = getCMHCRate(down);
+        cmhcAmount = loanAmount * cmhcRate;
+        loanAmount += cmhcAmount;
+      }
+
+      const monthlyRate = (rate / 100) / 12;
+      const numberOfPayments = term * 12;
+      const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+      
+      // Annual and Monthly Expenses
+      const annualPropertyTax = propertyTax;
+      const annualInsurance = insurance;
+      const annualManagement = rent * 12 * (management / 100);
+      const annualVacancy = rent * 12 * (vacancy / 100);
+      const annualOther = otherExpenses * 12;
+      
+      const totalAnnualExpenses = annualPropertyTax + annualInsurance + annualManagement + annualVacancy + annualOther + (monthlyPayment * 12);
+      const totalMonthlyExpenses = totalAnnualExpenses / 12;
+      const grossAnnualRent = rent * 12;
+      
+      const noi = grossAnnualRent - (annualPropertyTax + annualInsurance + annualManagement + annualVacancy + annualOther);
+      const capRate = (noi / price) * 100;
+      const cashflow = grossAnnualRent - totalAnnualExpenses;
+      const coc = (cashflow / downPaymentAmount) * 100;
+
+      // Update UI with results
+      document.getElementById('payment').textContent = formatCurrency(monthlyPayment);
+      document.getElementById('cashflow').textContent = formatCurrency(cashflow / 12);
+      document.getElementById('caprate').textContent = formatPercent(capRate);
+      document.getElementById('coc').textContent = formatPercent(coc);
+      document.getElementById('downPaymentAmount').textContent = formatCurrency(downPaymentAmount);
+      document.getElementById('cmhcAmount').textContent = formatCurrency(cmhcAmount);
+      document.getElementById('totalInitial').textContent = formatCurrency(downPaymentAmount + cmhcAmount);
+      document.getElementById('grossRent').textContent = formatCurrency(grossAnnualRent);
+      document.getElementById('totalExpenses').textContent = formatCurrency(totalAnnualExpenses);
+      document.getElementById('noi').textContent = formatCurrency(noi);
+
+      // Store results in currentProperty object
+      currentProperty = {
+        price, down, rate, term, rent, propertyTax, insurance, management, vacancy, otherExpenses,
+        downPaymentAmount, cmhcAmount, monthlyPayment, totalInitial: downPaymentAmount + cmhcAmount,
+        grossAnnualRent, totalAnnualExpenses, noi, capRate, coc, cashflow,
+        name: `Property @ ${formatCurrency(price)}`
+      };
+
+      document.getElementById('results').style.display = 'block';
+    };
+
+    const getCMHCRate = (down) => {
+      if (down >= 20) return 0;
+      if (down >= 15) return 0.01;
+      if (down >= 10) return 0.02;
+      return 0.04;
+    };
+    
+    // Google Drive Integration
+    
+    // Function to load the Google APIs client library
+    const loadGapi = () => {
+      return new Promise((resolve) => {
+        gapi.load('client', () => {
+          gapiLoaded = true;
+          resolve();
+        });
       });
-    }
-
-    async function ensurePropCheckFolder() {
-      try {
-        const res = await gapi.client.drive.files.list({
-          q: "mimeType='application/vnd.google-apps.folder' and name='Prop Check' and trashed=false",
-          fields: "files(id, name)",
+    };
+    
+    // Function to initialize the Google Identity Services client
+    const initGis = () => {
+      return new Promise((resolve) => {
+        gisClient = google.accounts.oauth2.initTokenClient({
+          client_id: googleDriveClient.clientId,
+          scope: googleDriveClient.scope,
+          callback: (response) => {
+            console.log('GIS callback response:', response);
+            if (response.access_token) {
+              gapi.client.setToken(response);
+              gisInited = true;
+            } else {
+              showAlert('Failed to get access token from Google.', 'danger');
+            }
+            resolve();
+          },
         });
-        if (res.result.files.length > 0) {
-          propCheckFolderId = res.result.files[0].id;
+        gisLoaded = true;
+      });
+    };
+    
+    // Auth flow
+    window.handleCredentialResponse = async (response) => {
+      console.log("Google Sign-in Response:", response);
+      if (response.credential) {
+        try {
+          // This is a dummy user object. Replace with real auth logic.
+          const user = {
+            displayName: "Google User",
+            email: "user@example.com",
+            photoURL: "https://www.gstatic.com/images/branding/product/2x/avatar_circle_grey_512dp.png"
+          };
+          updateAuthUI(user);
+          // GAPI and GIS initialization
+          if (!gapiLoaded) await loadGapi();
+          if (!gisLoaded) await initGis();
+          if (!gapiInited) await gapi.client.init({}).then(() => gapiInited = true);
+          if (gisClient) gisClient.requestAccessToken();
+        } catch (error) {
+          console.error("Authentication failed:", error);
+          showAlert('Authentication failed. Please try again.', 'danger');
+        }
+      } else {
+        showAlert('Google sign-in failed. Please try again.', 'danger');
+      }
+    };
+    
+    const signInAsGuest = () => {
+      const user = { displayName: "Guest", photoURL: "https://placehold.co/40x40/cccccc/000000?text=G" };
+      updateAuthUI(user);
+      showAlert('Signed in as Guest. Drive functionality is disabled.', 'warning');
+    };
+
+    const signOut = () => {
+      const auth2 = gapi.auth2.getAuthInstance();
+      if (auth2) {
+        auth2.signOut().then(() => {
+          console.log('User signed out.');
+        });
+      }
+      updateAuthUI(null);
+      // Show Google button again
+      google.accounts.id.renderButton(
+        document.getElementById("g_button_target"),
+        { theme: "outline", size: "large", text: "continue_with", width: "100%" }
+      );
+    };
+
+    const getPropertiesFolder = async () => {
+      try {
+        const response = await gapi.client.drive.files.list({
+          q: "name = 'PropCheck Properties' and mimeType = 'application/vnd.google-apps.folder' and 'appDataFolder' in parents",
+          spaces: 'appDataFolder',
+          fields: 'files(id)',
+        });
+
+        if (response.result.files.length > 0) {
+          return response.result.files[0].id;
         } else {
-          const folder = await gapi.client.drive.files.create({
-            resource: { name: "Prop Check", mimeType: "application/vnd.google-apps.folder" },
-            fields: "id",
+          // Create folder if it doesn't exist
+          const folderMetadata = {
+            'name': 'PropCheck Properties',
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': ['appDataFolder']
+          };
+          const createResponse = await gapi.client.drive.files.create({
+            resource: folderMetadata,
+            fields: 'id',
           });
-          propCheckFolderId = folder.result.id;
+          return createResponse.result.id;
         }
-      } catch(error) {
-        console.error("Error creating/finding Prop Check folder:", error);
-      }
-    }
-
-    async function uploadToDrive(name, blob, mimeType) {
-      if (!accessToken || !propCheckFolderId) {
-        alert("Please sign in with Google to use this feature.");
-        return Promise.reject("Not signed in with Google.");
-      }
-      const fileMetadata = { name: name, parents: [propCheckFolderId] };
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-      form.append('file', blob);
-
-      try {
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-          method: 'POST',
-          headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-          body: form,
-        });
-        if (!response.ok) {
-          throw new Error(`Upload failed with status: ${response.status}`);
-        }
-        return response.json();
-      } catch(error) {
-        console.error("Error uploading to Drive:", error);
-        alert("Failed to save to Google Drive. Please try again.");
-        return Promise.reject(error);
-      }
-    }
-
-    async function listPropertiesFromDrive() {
-      if (!accessToken || !propCheckFolderId) {
-        alert("Please sign in with Google to use this feature.");
-        return;
-      }
-      try {
-        const res = await gapi.client.drive.files.list({
-          q: `'${propCheckFolderId}' in parents and trashed=false and mimeType='application/json'`,
-          fields: "files(id, name, createdTime)",
-        });
-        const files = res.result.files;
-        return files.map(file => ({
-          ...file,
-          name: file.name.replace(/\.json$/, '')
-        }));
-      } catch (error) {
-        console.error("Error listing files from Drive:", error);
-        alert("Failed to load properties from Google Drive. Please try again.");
-        return [];
-      }
-    }
-
-    async function loadPropertyFromDrive(fileId) {
-      if (!accessToken) {
-        alert("Please sign in with Google to use this feature.");
-        return;
-      }
-      try {
-        const res = await gapi.client.drive.files.get({
-          fileId: fileId,
-          alt: 'media'
-        });
-        return res.result;
-      } catch (error) {
-        console.error("Error fetching file from Drive:", error);
-        alert("Failed to load property data. Please try again.");
+      } catch (err) {
+        console.error('Error getting/creating folder:', err);
+        showAlert('Error accessing Google Drive.', 'danger');
         return null;
       }
-    }
-
-    window.onload = function(){
-      setTimeout(function() {
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-          google.accounts.id.initialize({
-            client_id: CLIENT_ID,
-            callback: handleCredentialResponse
-          });
-          
-          google.accounts.id.renderButton(
-            document.getElementById('g_button_target'),
-            {
-              theme: 'outline',
-              size: 'large',
-              width: 280,
-              text: 'signin_with',
-              shape: 'rectangular'
-            }
-          );
-        } else {
-          console.log('Google Sign-In library not loaded');
-          document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
-        }
-      }, 500);
-      
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    }
-
-    signOut.onclick=()=>{
-      google.accounts.id.disableAutoSelect();
-      userArea.style.display='none';
-      loginScreen.style.display='flex';
-      mainApp.style.display='none';
-      currentUser = null;
-      gtag('event', 'logout');
     };
 
-    // Navigation
-    function showPage(pageId) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
-      
-      document.getElementById(pageId + 'Page').classList.add('active');
-      document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
-      document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`).classList.add('active');
-      
-      gtag('event', 'page_view', {page_title: pageId});
-    }
+    const uploadToDrive = async (fileName, fileBlob, mimeType) => {
+      try {
+        const folderId = await getPropertiesFolder();
+        if (!folderId) return null;
 
-    document.querySelectorAll('[data-page]').forEach(link => {
-      link.onclick = (e) => {
-        e.preventDefault();
-        showPage(link.dataset.page);
-      };
-    });
+        const fileMetadata = {
+          'name': fileName,
+          'mimeType': mimeType,
+          'parents': [folderId]
+        };
 
-    // Calculator functions
-    function money(n){return '$'+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
-    function pct(n){return Number(n).toFixed(2)+'%';}
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
+        form.append('file', fileBlob);
 
-    function calculateCMHC(price, downPercent) {
-      if (downPercent >= 20) return 0;
-      const loanAmount = price * (1 - downPercent/100);
-      let rate;
-      if (downPercent >= 15) rate = 0.028;
-      else if (downPercent >= 10) rate = 0.031;
-      else rate = 0.04;
-      return loanAmount * rate;
-    }
-
-    calcButton.onclick = () => {
-      const price = +document.getElementById('price').value || 0;
-      const downPercent = +down.value || 20;
-      const rate = (+document.getElementById('rate').value || 0) / 100 / 12;
-      const term = (+document.getElementById('term').value || 25) * 12;
-      const monthlyRent = +rent.value || 0;
-      const annualTax = +propertyTax.value || 0;
-      const annualInsurance = +insurance.value || 0;
-      const managementPercent = +management.value || 0;
-      const vacancyPercent = +vacancy.value || 0;
-      const otherMonthly = +otherExpenses.value || 0;
-      
-      if (!price || !monthlyRent) {
-        alert('Please enter at least the purchase price and monthly rent.');
-        return;
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: new Headers({'Authorization': 'Bearer ' + gapi.client.getToken().access_token}),
+          body: form
+        });
+        
+        return await response.json();
+      } catch (err) {
+        console.error('Error uploading to Drive:', err);
+        showAlert('Error saving to Google Drive.', 'danger');
+        return null;
       }
-      
-      const downPayment = price * downPercent / 100;
-      const cmhcInsurance = calculateCMHC(price, downPercent);
-      const loanAmount = price - downPayment + cmhcInsurance;
-      
-      let monthlyPayment = 0;
-      if (rate === 0) {
-        monthlyPayment = loanAmount / term;
-      } else {
-        monthlyPayment = loanAmount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1);
+    };
+
+    const loadFromDrive = async () => {
+      try {
+        const folderId = await getPropertiesFolder();
+        if (!folderId) return;
+
+        const response = await gapi.client.drive.files.list({
+          q: `'${folderId}' in parents and trashed=false`,
+          spaces: 'appDataFolder',
+          fields: 'files(id, name)',
+        });
+        
+        const files = response.result.files;
+        savedProperties.length = 0; // Clear existing list
+        const propertiesListEl = document.getElementById('propertiesList');
+        propertiesListEl.innerHTML = '';
+
+        if (files.length === 0) {
+          propertiesListEl.innerHTML = '<div class="alert alert-warning">No saved properties found in your Drive.</div>';
+          return;
+        }
+
+        for (const file of files) {
+          const fileResponse = await gapi.client.drive.files.get({
+            fileId: file.id,
+            alt: 'media'
+          });
+          const propertyData = JSON.parse(fileResponse.body);
+          savedProperties.push(propertyData);
+          
+          const propertyEl = document.createElement('div');
+          propertyEl.className = 'card';
+          propertyEl.style.marginBottom = '10px';
+          propertyEl.innerHTML = `
+            <div>
+              <strong>${propertyData.name || 'Untitled Property'}</strong>
+              <div style="font-size:14px;color:var(--muted);">${formatCurrency(propertyData.price)} | Cap Rate: ${formatPercent(propertyData.capRate)}</div>
+            </div>
+            <div style="margin-top:10px;">
+              <button class="btn btn-primary btn-small load-prop" data-id="${file.id}">Load</button>
+              <button class="btn btn-secondary btn-small add-to-compare" data-id="${file.id}">Compare</button>
+            </div>
+          `;
+          propertiesListEl.appendChild(propertyEl);
+        }
+
+        attachLoadAndCompareListeners();
+        showAlert('Properties loaded from Google Drive.', 'success');
+      } catch (err) {
+        console.error('Error loading files:', err);
+        showAlert('Error loading properties from Google Drive. Ensure you are signed in.', 'danger');
       }
-      
-      const monthlyTax = annualTax / 12;
-      const monthlyInsurance = annualInsurance / 12;
-      const managementFee = monthlyRent * managementPercent / 100;
-      const vacancyLoss = monthlyRent * vacancyPercent / 100;
-      
-      const totalMonthlyExpenses = monthlyPayment + monthlyTax + monthlyInsurance + managementFee + vacancyLoss + otherMonthly;
-      const effectiveRent = monthlyRent - vacancyLoss;
-      const netCashFlow = effectiveRent - totalMonthlyExpenses;
-      
-      const grossAnnualRent = monthlyRent * 12;
-      const effectiveAnnualRent = effectiveRent * 12;
-      const annualExpenses = (monthlyTax + monthlyInsurance + managementFee + otherMonthly) * 12 + (monthlyRent * vacancyPercent / 100 * 12);
-      const noi = effectiveAnnualRent - annualExpenses;
-      const capRate = price ? (noi / price) * 100 : 0;
-      const totalInitialInvestment = downPayment + cmhcInsurance;
-      const cashOnCash = totalInitialInvestment ? (netCashFlow * 12 / totalInitialInvestment) * 100 : 0;
-      
-      currentProperty = {
-        price, downPercent, rate: +document.getElementById('rate').value, term: +document.getElementById('term').value,
-        monthlyRent, annualTax, annualInsurance, managementPercent, vacancyPercent, otherMonthly,
-        monthlyPayment, netCashFlow, noi, capRate, cashOnCash, totalInitialInvestment,
-        downPayment, cmhcInsurance, timestamp: new Date()
-      };
-      
-      payment.textContent = money(monthlyPayment);
-      cashflow.textContent = money(netCashFlow);
-      document.getElementById('caprate').textContent = pct(capRate);
-      document.getElementById('coc').textContent = pct(cashOnCash);
-      
-      document.getElementById('downPaymentAmount').textContent = money(downPayment);
-      document.getElementById('cmhcAmount').textContent = money(cmhcInsurance);
-      document.getElementById('totalInitial').textContent = money(totalInitialInvestment);
-      document.getElementById('grossRent').textContent = money(grossAnnualRent);
-      document.getElementById('totalExpenses').textContent = money(annualExpenses);
-      document.getElementById('noi').textContent = money(noi);
-      
-      results.style.display = 'block';
-      
-      cashflow.style.color = netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
-      
-      gtag('event', 'calculate_property', {
-        value: price,
-        currency: 'CAD'
+    };
+
+    const attachLoadAndCompareListeners = () => {
+      document.querySelectorAll('.load-prop').forEach(btn => {
+        btn.onclick = async (e) => {
+          const fileId = e.target.dataset.id;
+          const prop = savedProperties.find(p => p.id === fileId);
+          if (prop) {
+            // Load values back into calculator
+            document.getElementById('price').value = prop.price;
+            document.getElementById('down').value = prop.down;
+            document.getElementById('rate').value = prop.rate;
+            document.getElementById('term').value = prop.term;
+            document.getElementById('rent').value = prop.rent;
+            document.getElementById('propertyTax').value = prop.propertyTax;
+            document.getElementById('insurance').value = prop.insurance;
+            document.getElementById('management').value = prop.management;
+            document.getElementById('vacancy').value = prop.vacancy;
+            document.getElementById('otherExpenses').value = prop.otherExpenses;
+            document.getElementById('cmhcRequired').checked = prop.cmhcAmount > 0;
+            calculate();
+            showAlert('Property loaded successfully!', 'success');
+            showPage('calculatorPage');
+          }
+        };
+      });
+
+      document.querySelectorAll('.add-to-compare').forEach(btn => {
+        btn.onclick = (e) => {
+          const fileId = e.target.dataset.id;
+          const prop = savedProperties.find(p => p.id === fileId);
+          if (prop && !comparisonList.find(p => p.id === fileId)) {
+            comparisonList.push(prop);
+            updateComparisonTable();
+            showAlert('Property added to comparison list.', 'success');
+          } else {
+            showAlert('Property is already in the comparison list.', 'warning');
+          }
+          showPage('comparePage');
+        };
       });
     };
 
-    document.getElementById('cmhcRequired').onchange = function() {
-      const downPercent = +down.value || 20;
-      this.checked = downPercent < 20;
-      if (downPercent >= 20) this.checked = false;
-    };
-
-    down.oninput = function() {
-      const downPercent = +this.value || 20;
-      document.getElementById('cmhcRequired').checked = downPercent < 20;
-    };
-
-    // Save property functionality
-    document.getElementById('saveProperty').onclick = async () => {
-      if (!currentProperty.price) {
-        alert('Please calculate a property first.');
-        return;
-      }
-      
-      if (!accessToken) {
-        alert("Please sign in with Google to use this feature.");
-        return;
-      }
-
-      const name = prompt('Enter a name for this property:', `Property ${new Date().toISOString().slice(0, 10)}`);
-      if (name) {
-        try {
-          const blob = new Blob([JSON.stringify(currentProperty, null, 2)], {type: 'application/json'});
-          const file = await uploadToDrive(name + ".json", blob, "application/json");
-
-          if (file && file.id) {
-            currentProperty.name = name;
-            currentProperty.fileId = file.id;
-            savedProperties.push({...currentProperty});
-            updateSavedPropertiesList();
-            alert('Property saved successfully to Google Drive!');
-            gtag('event', 'save_property');
-          }
-        } catch (error) {
-          console.error("Error saving property:", error);
-        }
-      }
-    };
-
-    document.getElementById('loadFromDrive').onclick = async () => {
-      const properties = await listPropertiesFromDrive();
-      if (properties.length === 0) {
-        alert("No properties found in your 'Prop Check' folder.");
-        return;
-      }
-      
-      const container = document.getElementById('propertiesList');
-      container.innerHTML = properties.map(file => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
-          <div>
-            <strong>${file.name}</strong><br>
-            <span class="muted">${new Date(file.createdTime).toLocaleDateString()}</span>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-secondary btn-small" onclick="loadPropertyById('${file.id}')">Load</button>
-            <button class="btn-danger btn-small" onclick="deleteProperty('${file.id}', event)">Delete</button>
-          </div>
-        </div>
-      `).join('');
-    };
-
-    async function loadPropertyById(fileId) {
-      try {
-        const propData = await loadPropertyFromDrive(fileId);
-        if (propData) {
-          const prop = JSON.parse(propData);
-          price.value = prop.price;
-          down.value = prop.downPercent;
-          document.getElementById('rate').value = prop.rate;
-          document.getElementById('term').value = prop.term;
-          rent.value = prop.monthlyRent;
-          propertyTax.value = prop.annualTax;
-          insurance.value = prop.annualInsurance;
-          management.value = prop.managementPercent;
-          vacancy.value = prop.vacancyPercent;
-          otherExpenses.value = prop.otherMonthly;
-          
-          showPage('calculator');
-          calcButton.click();
-        }
-      } catch (error) {
-        console.error("Error loading property:", error);
-      }
-    }
-
-    function deleteProperty(fileId, event) {
-      if (confirm('Are you sure you want to delete this property from Google Drive?')) {
-        gapi.client.drive.files.delete({ fileId: fileId }).then(() => {
-          alert("Property deleted successfully.");
-          event.target.closest('div').parentElement.remove();
-        }).catch(error => {
-          console.error("Error deleting file:", error);
-          alert("Failed to delete property. Please try again.");
-        });
-      }
-    }
-
-    function updateSavedPropertiesList() {
-      const container = document.getElementById('propertiesList');
-      if (savedProperties.length === 0) {
-        container.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
-        return;
-      }
-      
-      container.innerHTML = savedProperties.map((prop, i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
-          <div>
-            <strong>${prop.name}</strong><br>
-            <span class="muted">${money(prop.price)} • ${pct(prop.capRate)} cap • ${money(prop.netCashFlow)}/mo cash flow</span>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-secondary btn-small" onclick="loadPropertyById('${prop.fileId}')">Load</button>
-            <button class="btn-danger btn-small" onclick="deleteProperty('${prop.fileId}', event)">Delete</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Stress Testing
-    document.getElementById('runStressTest').onclick = () => {
-      if (!currentProperty.price) {
-        alert('Please calculate a property first.');
-        return;
-      }
-      
-      const currentRate = +document.getElementById('currentRate').value / 100 / 12;
-      const stressRate = +document.getElementById('stressRate').value / 100 / 12;
-      const renewalYears = +document.getElementById('renewalPeriod').value;
-      
-      const price = currentProperty.price;
-      const downPayment = currentProperty.downPayment;
-      const loanAmount = price - downPayment + currentProperty.cmhcInsurance;
-      const term = currentProperty.term * 12;
-      
-      const currentPayment = loanAmount * (currentRate * Math.pow(1 + currentRate, term)) / (Math.pow(1 + rate, term) - 1);
-      const stressPayment = loanAmount * (stressRate * Math.pow(1 + stressRate, term)) / (Math.pow(1 + stressRate, term) - 1);
-      
-      const paymentIncrease = stressPayment - currentPayment;
-      const newCashFlow = currentProperty.netCashFlow - paymentIncrease;
-      
-      document.getElementById('stressResults').innerHTML = `
-        <div class="grid grid-2">
-          <div class="metric">
-            <div class="metric-value">${money(currentPayment)}</div>
-            <div class="metric-label">Current Payment</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value" style="color:var(--danger)">${money(stressPayment)}</div>
-            <div class="metric-label">Stress Test Payment</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value" style="color:var(--warning)">${money(paymentIncrease)}</div>
-            <div class="metric-label">Monthly Increase</div>
-          </div>
-          <div class="metric">
-            <div class="metric-value" style="color:${newCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(newCashFlow)}</div>
-            <div class="metric-label">New Cash Flow</div>
-          </div>
-        </div>
-        <div class="alert ${newCashFlow >= 0 ? 'alert-success' : 'alert-danger'}" style="margin-top:16px;">
-          ${newCashFlow >= 0 ? 
-            '<strong>✅ Stress Test Passed:</strong> Property maintains positive cash flow even at higher rates.' :
-            '<strong>⚠️ Stress Test Failed:</strong> Property would have negative cash flow at higher interest rates.'}
-        </div>
-      `;
-      document.getElementById('stressResults').style.display = 'block';
-    };
-
-    // Rent Analysis
-    document.getElementById('runRentAnalysis').onclick = () => {
-      if (!currentProperty.price) {
-        alert('Please calculate a property first.');
-        return;
-      }
-      
-      const annualIncrease = +document.getElementById('rentIncrease').value / 100;
-      const years = +document.getElementById('projectionYears').value;
-      const currentRent = currentProperty.monthlyRent;
-      
-      let projectionHTML = '<h4>Rent Growth Projection</h4><table class="comparison-table"><tr><th>Year</th><th>Monthly Rent</th><th>Annual Income</th><th>Cash Flow</th></tr>';
-      
-      for (let year = 0; year <= Math.min(years, 10); year++) {
-        const projectedRent = currentRent * Math.pow(1 + annualIncrease, year);
-        const annualIncome = projectedRent * 12;
-        const projectedCashFlow = currentProperty.netCashFlow + (projectedRent - currentRent);
-        
-        projectionHTML += `<tr>
-          <td>Year ${year}</td>
-          <td>${money(projectedRent)}</td>
-          <td>${money(annualIncome)}</td>
-          <td style="color:${projectedCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(projectedCashFlow)}</td>
-        </tr>`;
-      }
-      projectionHTML += '</table>';
-      
-      document.getElementById('rentResults').innerHTML = projectionHTML;
-      document.getElementById('rentResults').style.display = 'block';
-    };
-
-    // Tab functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.onclick = () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab + 'Tab').style.display = 'block';
-      };
-    });
-
-    // Comparison functionality
-    document.getElementById('addProperty').onclick = () => {
-      if (!currentProperty.price) {
-        alert('Please calculate a property first, then come back to add it to comparison.');
-        return;
-      }
-      savedProperties.push({...currentProperty});
-      updateComparisonTable();
-    };
-
-    function updateComparisonTable() {
+    const updateComparisonTable = () => {
       const container = document.getElementById('comparisonContainer');
-      if (savedProperties.length === 0) {
-        container.innerHTML = '<div class="alert alert-warning">Add properties from the calculator to compare them side-by-side.</div>';
+      container.innerHTML = '';
+      if (comparisonList.length === 0) {
+        container.innerHTML = `
+          <div class="alert alert-warning">
+            Add properties from the calculator to compare them side-by-side.
+          </div>
+        `;
         return;
       }
-      
-      container.innerHTML = `
+
+      let tableHTML = `
         <table class="comparison-table">
           <thead>
             <tr>
-              <th>Property</th>
-              <th>Price</th>
-              <th>Down Payment</th>
-              <th>Monthly Rent</th>
-              <th>Cash Flow</th>
-              <th>Cap Rate</th>
-              <th>Cash-on-Cash</th>
-              <th>Actions</th>
+              <th>Metric</th>
+              ${comparisonList.map(p => `<th>${p.name}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
-            ${savedProperties.map((prop, i) => `
-              <tr>
-                <td><strong>${prop.name}</strong></td>
-                <td>${money(prop.price)}</td>
-                <td>${money(prop.downPayment)}</td>
-                <td>${money(prop.monthlyRent)}</td>
-                <td style="color:${prop.netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(prop.netCashFlow)}</td>
-                <td>${pct(prop.capRate)}</td>
-                <td>${pct(prop.cashOnCash)}</td>
-                <td>
-                  <button class="btn-secondary btn-small" onclick="loadPropertyById('${prop.fileId}')">Edit</button>
-                  <button class="btn-danger btn-small" onclick="deleteProperty('${prop.fileId}', event)">Delete</button>
-                </td>
-              </tr>
-            `).join('')}
+            <tr>
+              <td>Purchase Price</td>
+              ${comparisonList.map(p => `<td>${formatCurrency(p.price)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td>Monthly Cash Flow</td>
+              ${comparisonList.map(p => `<td>${formatCurrency(p.cashflow / 12)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td>Cap Rate</td>
+              ${comparisonList.map(p => `<td>${formatPercent(p.capRate)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td>Cash-on-Cash</td>
+              ${comparisonList.map(p => `<td>${formatPercent(p.coc)}</td>`).join('')}
+            </tr>
           </tbody>
         </table>
+        <div style="margin-top:20px;">
+          <button id="clearComparisonList" class="btn btn-danger">Clear List</button>
+        </div>
       `;
-    }
-
-    document.getElementById('clearComparison').onclick = () => {
-      if (confirm('Clear all saved properties?')) {
-        savedProperties = [];
+      container.innerHTML = tableHTML;
+      document.getElementById('clearComparisonList').onclick = () => {
+        comparisonList.length = 0;
         updateComparisonTable();
-        updateSavedPropertiesList();
-      }
+      };
     };
 
-    // Reports functionality
-    document.getElementById('generateSummary').onclick = async () => {
+    const updateSavedPropertiesList = () => {
+      const propertiesListEl = document.getElementById('propertiesList');
+      if (savedProperties.length === 0) {
+        propertiesListEl.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
+      } else {
+        propertiesListEl.innerHTML = '';
+        savedProperties.forEach((prop, index) => {
+          const propEl = document.createElement('div');
+          propEl.className = 'card';
+          propEl.style.marginBottom = '10px';
+          propEl.innerHTML = `
+            <div>
+              <strong>${prop.name || `Property ${index + 1}`}</strong>
+              <div style="font-size:14px;color:var(--muted);">${formatCurrency(prop.price)} | Cap Rate: ${formatPercent(prop.capRate)}</div>
+            </div>
+            <div style="margin-top:10px;">
+              <button class="btn btn-primary btn-small load-prop" data-index="${index}">Load</button>
+              <button class="btn btn-secondary btn-small add-to-compare" data-index="${index}">Compare</button>
+            </div>
+          `;
+          propertiesListEl.appendChild(propEl);
+        });
+      }
+    };
+    
+    // Event listeners
+    document.getElementById('calcButton').onclick = calculate;
+    document.getElementById('guestButton').onclick = signInAsGuest;
+    document.getElementById('signOut').onclick = signOut;
+    document.getElementById('saveProperty').onclick = () => {
+      if (Object.keys(currentProperty).length === 0) {
+        showAlert('Please calculate a property first.', 'danger');
+        return;
+      }
+      
+      const fileName = `${currentProperty.name || 'Property'}-${Date.now()}.json`;
+      const blob = new Blob([JSON.stringify(currentProperty)], {type: 'application/json'});
+      uploadToDrive(fileName, blob, 'application/json').then(file => {
+        if (file && file.id) {
+          showAlert('Property saved to Google Drive!', 'success');
+          // Add a link to view the file in Drive
+          const link = document.createElement('a');
+            link.href = `https://drive.google.com/file/d/${file.id}/view`;
+            link.target = '_blank';
+            link.textContent = '📂 View in Drive';
+            link.className = 'btn btn-primary';
+            link.style.marginTop = '10px';
+            document.getElementById('results').appendChild(link);
+        }
+      });
+    };
+
+    document.getElementById('generateSummary').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
       
-      if (!accessToken) {
-        alert("Please sign in with Google to use this feature.");
-        return;
-      }
-
-      try {
-        const reportHTML = `<!DOCTYPE html><html><head><title>${currentProperty.name || 'Property'} Report</title></head><body>${document.getElementById('results').innerHTML}</body></html>`;
-        const blob = new Blob([reportHTML], {type: 'text/html'});
-        const fileName = `${currentProperty.name || 'Property'}-Report.html`;
-
-        const file = await uploadToDrive(fileName, blob, 'text/html');
+      const reportHTML = `<!DOCTYPE html><html><head><title>Property Report</title></head><body>${document.getElementById('results').innerHTML}</body></html>`;
+      const blob = new Blob([reportHTML], {type: 'text/html'});
+      const fileName = `${currentProperty.name || 'Property'}-Report.html`;
+      
+      uploadToDrive(fileName, blob, 'text/html').then(file => {
         if (file && file.id) {
-          alert('Report saved to Google Drive!');
+          showAlert('Report saved to Google Drive!', 'success');
           const link = document.createElement('a');
           link.href = `https://drive.google.com/file/d/${file.id}/view`;
           link.target = '_blank';
@@ -1134,112 +1006,33 @@
           link.style.marginTop = '10px';
           document.getElementById('reportsPage').appendChild(link);
         }
-      } catch (error) {
-        console.error("Error generating summary:", error);
-      }
+      });
     };
+    
+    document.getElementById('loadFromDrive').onclick = loadFromDrive;
 
-    document.getElementById('portfolioReport').onclick = () => {
-      if (savedProperties.length === 0) {
-        alert('No saved properties to analyze. Save some properties first.');
-        return;
-      }
-      
-      const totalInvestment = savedProperties.reduce((sum, prop) => sum + prop.totalInitialInvestment, 0);
-      const totalCashFlow = savedProperties.reduce((sum, prop) => sum + prop.netCashFlow, 0);
-      const totalNOI = savedProperties.reduce((sum, prop) => sum + prop.noi, 0);
-      const avgCapRate = savedProperties.reduce((sum, prop) => sum + prop.capRate, 0) / savedProperties.length;
-      const portfolioCOC = totalInvestment ? (totalCashFlow * 12 / totalInvestment) * 100 : 0;
-      
-      alert(`Portfolio Summary:
-      
-Total Properties: ${savedProperties.length}
-Total Investment: ${money(totalInvestment)}
-Monthly Cash Flow: ${money(totalCashFlow)}
-Annual NOI: ${money(totalNOI)}
-Average Cap Rate: ${pct(avgCapRate)}
-Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
-    };
-
-    // Market data functionality
-    document.getElementById('loadMarketData').onclick = () => {
-      const city = document.getElementById('citySelect').value;
-      const propType = document.getElementById('propertyType').value;
-      
-      // Simulate market data loading
-      setTimeout(() => {
-        alert(`Loading market data for ${city} ${propType} properties...`);
-        gtag('event', 'load_market_data', {
-          city: city,
-          property_type: propType
-        });
-      }, 500);
-    };
-
-    // Expense breakdown for analysis page
-    function updateExpenseBreakdown() {
-      if (!currentProperty.price) {
-        document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>';
-        return;
-      }
-      
-      const monthlyTax = (currentProperty.annualTax || 0) / 12;
-      const monthlyInsurance = (currentProperty.annualInsurance || 0) / 12;
-      const managementFee = currentProperty.monthlyRent * (currentProperty.managementPercent || 0) / 100;
-      const vacancyLoss = currentProperty.monthlyRent * (currentProperty.vacancyPercent || 0) / 100;
-      const otherMonthly = currentProperty.otherMonthly || 0;
-      
-      const expenses = [
-        {name: 'Mortgage Payment', amount: currentProperty.monthlyPayment, percent: 0},
-        {name: 'Property Tax', amount: monthlyTax, percent: 0},
-        {name: 'Insurance', amount: monthlyInsurance, percent: 0},
-        {name: 'Management Fee', amount: managementFee, percent: currentProperty.managementPercent},
-        {name: 'Vacancy Loss', amount: vacancyLoss, percent: currentProperty.vacancyPercent},
-        {name: 'Other Expenses', amount: otherMonthly, percent: 0}
-      ];
-      
-      const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-      
-      document.getElementById('expenseBreakdown').innerHTML = `
-        <h4>Monthly Expense Breakdown</h4>
-        <table class="comparison-table">
-          <tr><th>Expense Category</th><th>Amount</th><th>% of Rent</th></tr>
-          ${expenses.map(exp => `
-            <tr>
-              <td>${exp.name}</td>
-              <td>${money(exp.amount)}</td>
-              <td>${exp.percent ? pct(exp.percent) : pct((exp.amount / currentProperty.monthlyRent) * 100)}</td>
-            </tr>
-          `).join('')}
-          <tr style="border-top:2px solid var(--border);font-weight:bold;">
-            <td>Total Expenses</td>
-            <td>${money(totalExpenses)}</td>
-            <td>${pct((totalExpenses / currentProperty.monthlyRent) * 100)}</td>
-          </tr>
-        </table>
-        
-        <div class="alert ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 'alert-success' : 'alert-warning'}">
-          <strong>Expense Ratio Analysis:</strong> 
-          ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 
-            'Your expense ratio is healthy at under 75% of rental income.' :
-            'Consider reducing expenses - current ratio is above recommended 75% threshold.'}
-        </div>
-      `;
-    }
-
-    // Update expense breakdown when switching to analysis page
-    document.querySelector('[data-page="analysis"]').addEventListener('click', () => {
-      setTimeout(updateExpenseBreakdown, 100);
+    // Tabs functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = (e) => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById(`${e.target.dataset.tab}Tab`).style.display = 'block';
+      };
     });
-
-    // Update comparison table when switching to compare page  
-    document.querySelector('[data-page="compare"]').addEventListener('click', () => {
-      setTimeout(updateComparisonTable, 100);
+    
+    // Navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.onclick = (e) => {
+        e.preventDefault();
+        showPage(`${e.target.dataset.page}Page`);
+      };
     });
-
-    // Update saved properties when switching to reports page
-    document.querySelector('[data-page="reports"]').addEventListener('click', () => {
-      setTimeout(updateSavedPropertiesList, 100);
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+      item.onclick = (e) => {
+        e.preventDefault();
+        showPage(`${e.target.dataset.page}Page`);
+      };
     });
 
     // PWA functionality
@@ -1252,6 +1045,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       e.preventDefault();
       deferredPrompt = e;
       installBtn.style.display = 'inline-flex';
+      homeInstallBtn.style.display = 'block';
     });
     
     installBtn.onclick = async () => {
@@ -1260,6 +1054,18 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
           installBtn.style.display='none';
+          gtag('event', 'pwa_install');
+        }
+        deferredPrompt = null;
+      }
+    };
+    
+    homeInstallBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          homeInstallBtn.style.display='none';
           gtag('event', 'pwa_install');
         }
         deferredPrompt = null;
