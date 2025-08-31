@@ -727,7 +727,9 @@
 
     // Initialize Google APIs
     function gapiLoaded() {
-      gapi.load('client', initializeGapiClient);
+      if (typeof gapi !== 'undefined') {
+        gapi.load('client', initializeGapiClient);
+      }
     }
 
     async function initializeGapiClient() {
@@ -744,13 +746,15 @@
     }
 
     function gisLoaded() {
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: '', // defined later
-      });
-      gisInited = true;
-      maybeEnableButtons();
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: '', // defined later
+        });
+        gisInited = true;
+        maybeEnableButtons();
+      }
     }
 
     function maybeEnableButtons() {
@@ -839,9 +843,13 @@
     window.handleCredentialResponse = handleCredentialResponse;
 
     window.onload = function(){
-      // Load Google APIs
-      gapiLoaded();
-      gisLoaded();
+      // Initialize Google APIs
+      if (typeof gapi !== 'undefined') {
+        gapiLoaded();
+      }
+      if (typeof google !== 'undefined' && google.accounts) {
+        gisLoaded();
+      }
       
       // Wait a bit for Google library to load, then initialize
       setTimeout(function() {
@@ -863,6 +871,7 @@
           );
         } else {
           console.log('Google Sign-In library not loaded');
+          // Fallback - show a manual button
           document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
         }
       }, 500);
