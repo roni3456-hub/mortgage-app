@@ -102,6 +102,7 @@
       justify-content: space-between;
       align-items: center;
       z-index: 1000;
+      flex-wrap: wrap;
     }
     .bottom-bar-left {
       font-size: 1.2rem;
@@ -110,6 +111,7 @@
     .bottom-bar-right {
       display: flex;
       align-items: center;
+      gap: 10px;
     }
     .bottom-bar-right button {
       padding: 10px 20px;
@@ -122,10 +124,16 @@
     .add-btn {
       background-color: var(--brand);
       color: white;
-      margin-left: 10px;
     }
     .add-btn:hover {
       background-color: var(--brand-dark);
+    }
+    .save-btn {
+      background-color: #3498db;
+      color: white;
+    }
+    .save-btn:hover {
+      background-color: #2980b9;
     }
     .modal-overlay {
       position: fixed;
@@ -318,7 +326,7 @@
       <h1>PropCheck</h1>
       <p>Your ultimate real estate investment calculator.</p>
       <div id="g_id_onload"
-        data-client_id="YOUR_GOOGLE_CLIENT_ID"
+        data-client_id="AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs"
         data-callback="handleCredentialResponse"
         data-auto_prompt="false">
       </div>
@@ -358,6 +366,7 @@
         <div class="bottom-bar-right">
           <div id="total-cash-flow" class="value positive">$0</div>
           <button id="add-property-btn" class="add-btn">Add Property</button>
+          <button id="save-to-drive-btn" class="save-btn">Save to Drive</button>
         </div>
       </div>
     </div>
@@ -366,11 +375,8 @@
   <script>
     // --- Configuration and Global Variables for Google API and App State ---
     const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
-    // NOTE: Replace 'YOUR_GOOGLE_CLIENT_ID' in the HTML with your actual client ID.
-    // This is required for both the GSI and gapi.client to work.
-    const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+    const CLIENT_ID = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    const GSI_CLIENT_ID = document.querySelector('[data-client_id]').dataset.clientId;
 
     let accessToken;
     let authInitialized = false;
@@ -385,16 +391,15 @@
     const mainContent = document.getElementById('main-content');
     const pageContent = document.getElementById('page-content');
     const modalOverlay = document.getElementById('modal-overlay');
-    const modalContent = document.getElementById('modal-content');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const addPropertyBtn = document.getElementById('add-property-btn');
+    const saveToDriveBtn = document.getElementById('save-to-drive-btn');
     const installBtn = document.getElementById('install-btn');
     const navLinks = document.querySelectorAll('.nav-link');
     const totalCashFlowEl = document.getElementById('total-cash-flow');
 
     // --- Core App Functions ---
 
-    // Generic function to show a modal with a title and content.
     function showModal(title, bodyHtml, buttonsHtml) {
       document.getElementById('modal-title').textContent = title;
       document.getElementById('modal-body').innerHTML = bodyHtml;
@@ -402,19 +407,32 @@
       modalOverlay.classList.add('active');
     }
 
-    // Function to hide the modal.
     function hideModal() {
       modalOverlay.classList.remove('active');
     }
 
     // --- Google Drive Integration Functions ---
-
-    // A function to handle the Google Identity Services callback.
+    // A single, robust function to handle all Google API initialization and auth.
+    function handleGoogleAuth() {
+        if (!authInitialized) {
+            // Load the GAPI client library
+            gapi.load('client', () => {
+                gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+                }).then(() => {
+                    authInitialized = true;
+                }, (error) => {
+                    showModal('API Initialization Error', `<p>Failed to load Google Drive API. Please check your API key and network connection.</p><p>Error: ${error.details}</p>`, `<button class="modal-buttons save-btn" onclick="hideModal()">OK</button>`);
+                });
+            });
+        }
+    }
+    
+    // Function called by the GSI library after user signs in.
     function handleCredentialResponse(response) {
-      // The GSI library handles sign-in, but we still need to get an access token for Drive.
-      // This is the modern way to get a token and avoid pop-ups.
       const client = google.accounts.oauth2.initTokenClient({
-        client_id: GSI_CLIENT_ID,
+        client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
           if (tokenResponse.error) {
@@ -431,28 +449,12 @@
       client.requestAccessToken();
     }
     
-    // Function to load the Google Drive API and handle authorization.
-    function handleClientLoad() {
-      gapi.load('client', () => {
-        gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-        }).then(() => {
-          authInitialized = true;
-          // The GSI flow will handle the token, so we just set up the client here.
-        }, (error) => {
-          showModal('API Initialization Error', `<p>Failed to load Google Drive API. Check your API key and network connection.</p><p>Error: ${error.details}</p>`, `<button class="modal-buttons save-btn" onclick="hideModal()">OK</button>`);
-        });
-      });
-    }
-
     // A function to find or create the "Prop Check" folder in Google Drive.
     async function getDriveFolderId() {
       if (driveFolderId) {
         return driveFolderId;
       }
       try {
-        // Search for the folder
         const response = await gapi.client.drive.files.list({
           q: "name='Prop Check' and mimeType='application/vnd.google-apps.folder' and trashed=false",
           spaces: 'drive',
@@ -463,7 +465,6 @@
           driveFolderId = response.result.files[0].id;
           return driveFolderId;
         } else {
-          // Create the folder if it doesn't exist
           const folderMetadata = {
             'name': 'Prop Check',
             'mimeType': 'application/vnd.google-apps.folder',
@@ -500,7 +501,6 @@
         const appDataJson = JSON.stringify(appData, null, 2);
         const fileName = `PropCheck-Data-${new Date().toISOString().slice(0, 10)}.json`;
 
-        // Search for an existing file to update it instead of creating a new one every time.
         const fileListRes = await gapi.client.drive.files.list({
           q: `'${parentFolderId}' in parents and name='${fileName}' and trashed=false`,
           spaces: 'drive',
@@ -518,7 +518,6 @@
         };
 
         if (existingFile) {
-          // Update the existing file
           await gapi.client.drive.files.update({
             fileId: existingFile.id,
             resource: fileMetadata,
@@ -526,7 +525,6 @@
           });
           showModal('Saved Successfully!', `<p>Your data has been successfully updated on Google Drive!</p>`, `<button class="modal-buttons save-btn" onclick="hideModal()">OK</button>`);
         } else {
-          // Create a new file
           await gapi.client.drive.files.create({
             resource: fileMetadata,
             media: media,
@@ -542,12 +540,11 @@
     }
 
     // Load the Google API Client on window load
-    window.addEventListener('load', handleClientLoad);
+    window.addEventListener('load', handleGoogleAuth);
 
     // --- Page Rendering and Data Management ---
 
     function getAppData() {
-      // Logic to get the data to save from local storage
       return JSON.parse(localStorage.getItem('properties')) || [];
     }
     
@@ -643,20 +640,10 @@
             <h2>Saved Properties</h2>
             <p>Review, edit, and export your saved properties.</p>
             <div id="saved-properties-list"></div>
-            <div class="card">
-              <button id="save-to-drive-btn" class="save-btn" style="width:100%;"><i class="fa fa-google-drive"></i> Save to Google Drive</button>
-            </div>
           `;
           break;
       }
       pageContent.innerHTML = pageHtml;
-
-      if (pageId === 'reports') {
-        const saveBtn = document.getElementById('save-to-drive-btn');
-        if (saveBtn) {
-          saveBtn.addEventListener('click', saveToDrive);
-        }
-      }
     }
 
     function updateExpenseBreakdown() {
@@ -893,19 +880,8 @@
     }
 
     // --- Event Listeners and Initializers ---
-
-    closeModalBtn.addEventListener('click', hideModal);
-    addPropertyBtn.addEventListener('click', () => {
-      isEditing = false;
-      activeProperty = null;
-      showPropertyModal('Add New Property');
-    });
-
-    // PWA functionality
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
     
+    // PWA functionality
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -924,6 +900,35 @@
         deferredPrompt = null;
       }
     };
+    
+    // A single, robust function to handle all Google API initialization and auth.
+    function handleGoogleAuth() {
+        if (!authInitialized) {
+            // Load the GAPI client library
+            gapi.load('client', () => {
+                gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+                }).then(() => {
+                    authInitialized = true;
+                }, (error) => {
+                    showModal('API Initialization Error', `<p>Failed to load Google Drive API. Please check your API key and network connection.</p><p>Error: ${error.details}</p>`, `<button class="modal-buttons save-btn" onclick="hideModal()">OK</button>`);
+                });
+            });
+        }
+    }
+    
+    // Load the Google API Client on window load
+    window.addEventListener('load', handleGoogleAuth);
+
+    closeModalBtn.addEventListener('click', hideModal);
+    addPropertyBtn.addEventListener('click', () => {
+      isEditing = false;
+      activeProperty = null;
+      showPropertyModal('Add New Property');
+    });
+    
+    saveToDriveBtn.addEventListener('click', saveToDrive);
 
     // Initialize AdSense ads on page load
     window.addEventListener('load', () => {
@@ -951,7 +956,7 @@
     // Handle initial login flow if the user is already authenticated.
     if (!localStorage.getItem('properties')) {
       const tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GSI_CLIENT_ID,
+        client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
           if (!tokenResponse.error) {
@@ -962,7 +967,6 @@
             renderPage('home');
             updateTotalCashFlow();
           } else {
-            // User not signed in or denied permissions
             loginContainer.classList.remove('hidden');
             mainContent.classList.add('hidden');
           }
@@ -978,7 +982,4 @@
   </script>
 </body>
 </html>
-    });
-  </script>
-</body>
-</html>
+
