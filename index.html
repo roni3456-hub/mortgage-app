@@ -90,7 +90,7 @@
     .ad-container{margin-top:20px;text-align:center;}
   </style>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLpIq9A/UeW2r0Xf6l9B/hQnE5r0p3dD3c7V9bU5R0p+zXQ4L8X9x1vJ1r0iX+Kj+gWbA..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLpUePz2S6LpQf2yB/wR/b7t4eB5P8S2D+B0Q4/2A5v5v8U4G6p8A2+eB8G+" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 
@@ -368,7 +368,7 @@
       <span>Reports</span>
     </a>
   </div>
-  
+
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
@@ -406,33 +406,50 @@
     }
 
     async function ensurePropCheckFolder() {
-      const res = await gapi.client.drive.files.list({
-        q: "mimeType='application/vnd.google-apps.folder' and name='Prop Check' and trashed=false",
-        fields: "files(id, name)",
-      });
-      if (res.result.files.length > 0) {
-        propCheckFolderId = res.result.files[0].id;
-      } else {
-        const folder = await gapi.client.drive.files.create({
-          resource: { name: "Prop Check", mimeType: "application/vnd.google-apps.folder" },
-          fields: "id",
+      try {
+        const res = await gapi.client.drive.files.list({
+          q: "mimeType='application/vnd.google-apps.folder' and name='Prop Check' and trashed=false",
+          fields: "files(id, name)",
         });
-        propCheckFolderId = folder.result.id;
+        if (res.result.files.length > 0) {
+          propCheckFolderId = res.result.files[0].id;
+        } else {
+          const folder = await gapi.client.drive.files.create({
+            resource: { name: "Prop Check", mimeType: "application/vnd.google-apps.folder" },
+            fields: "id",
+          });
+          propCheckFolderId = folder.result.id;
+        }
+      } catch(error) {
+        console.error("Error creating/finding Prop Check folder:", error);
       }
     }
 
-    function uploadToDrive(name, blob, mimeType) {
-      if (!accessToken || !propCheckFolderId) return;
+    async function uploadToDrive(name, blob, mimeType) {
+      if (!accessToken || !propCheckFolderId) {
+        alert("Please sign in with Google to use this feature.");
+        return Promise.reject("Not signed in with Google.");
+      }
       const fileMetadata = { name: name, parents: [propCheckFolderId] };
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
       form.append('file', blob);
 
-      return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-        body: form,
-      }).then(r => r.json());
+      try {
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+          body: form,
+        });
+        if (!response.ok) {
+          throw new Error(`Upload failed with status: ${response.status}`);
+        }
+        return response.json();
+      } catch(error) {
+        console.error("Error uploading to Drive:", error);
+        alert("Failed to save to Google Drive. Please try again.");
+        return Promise.reject(error);
+      }
     }
 
     function parseJwt(token){
@@ -630,22 +647,29 @@
     };
 
     // Save property to Drive
-    document.getElementById('saveProperty').onclick = () => {
+    document.getElementById('saveProperty').onclick = async () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
+      if (!accessToken) {
+        alert("Please sign in with Google to use this feature.");
+        return;
+      }
+
       const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
       if (name) {
-        currentProperty.name = name;
-        savedProperties.push({...currentProperty});
-        updateSavedPropertiesList();
-        alert('Property saved successfully!');
-        gtag('event', 'save_property');
+        try {
+          const blob = new Blob([JSON.stringify(currentProperty, null, 2)], {type: 'application/json'});
+          const file = await uploadToDrive(name + ".json", blob, "application/json");
 
-        const blob = new Blob([JSON.stringify(currentProperty, null, 2)], {type: 'application/json'});
-        uploadToDrive(name + ".json", blob, "application/json").then(file => {
           if (file && file.id) {
+            currentProperty.name = name;
+            savedProperties.push({...currentProperty});
+            updateSavedPropertiesList();
+            alert('Property saved successfully to Google Drive!');
+            gtag('event', 'save_property');
+
             const link = document.createElement('a');
             link.href = `https://drive.google.com/file/d/${file.id}/view`;
             link.target = '_blank';
@@ -654,7 +678,9 @@
             link.style.marginTop = '10px';
             document.getElementById('results').appendChild(link);
           }
-        });
+        } catch (error) {
+          console.error("Error saving property:", error);
+        }
       }
     };
 
@@ -837,17 +863,22 @@
     };
 
     // Generate and save report to Drive
-    document.getElementById('generateSummary').onclick = () => {
+    document.getElementById('generateSummary').onclick = async () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
-      
-      const reportHTML = `<!DOCTYPE html><html><head><title>Property Report</title></head><body>${document.getElementById('results').innerHTML}</body></html>`;
-      const blob = new Blob([reportHTML], {type: 'text/html'});
-      const fileName = `${currentProperty.name || 'Property'}-Report.html`;
+      if (!accessToken) {
+        alert("Please sign in with Google to use this feature.");
+        return;
+      }
 
-      uploadToDrive(fileName, blob, 'text/html').then(file => {
+      try {
+        const reportHTML = `<!DOCTYPE html><html><head><title>Property Report</title></head><body>${document.getElementById('results').innerHTML}</body></html>`;
+        const blob = new Blob([reportHTML], {type: 'text/html'});
+        const fileName = `${currentProperty.name || 'Property'}-Report.html`;
+
+        const file = await uploadToDrive(fileName, blob, 'text/html');
         if (file && file.id) {
           alert('Report saved to Google Drive!');
           const link = document.createElement('a');
@@ -859,7 +890,9 @@
           link.style.marginTop = '10px';
           document.getElementById('reportsPage').appendChild(link);
         }
-      });
+      } catch (error) {
+        console.error("Error generating summary:", error);
+      }
     };
 
     document.getElementById('portfolioReport').onclick = () => {
@@ -976,6 +1009,6 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     window.addEventListener('load', () => {
       (adsbygoogle = window.adsbygoogle || []).push({});
     });
-</script>
+  </script>
 </body>
 </html>
