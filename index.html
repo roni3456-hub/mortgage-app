@@ -17,6 +17,8 @@
      crossorigin="anonymous"></script>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <script src="https://apis.google.com/js/api.js"></script>
 
   <link rel="manifest" href="site.webmanifest" />
   <meta name="theme-color" content="#2ecc71" />
@@ -24,220 +26,264 @@
   <style>
     :root{
       --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
-      --page-bg-1:#667eea;--page-bg-2:#764ba2;--text-color:#34495e;--border:#bdc3c7;
-      --danger:#e74c3c;--danger-dark:#c0392b;--success:#2ecc71;--warning:#f1c40f;
+      --page-bg-1:#667eea;--page-bg-2:#764ba2;--max-w:1200px;--danger:#e74c3c;
+      --warning:#f39c12;--info:#3498db;--success:#2ecc71;--text:#2c3e50;
+      --border:#e1e8ed;--shadow:0 6px 20px rgba(2,6,23,0.06);
     }
-    body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif;margin:0;padding:0;background-color:var(--page-bg-1);color:var(--text-color);min-height:100vh;display:flex;flex-direction:column;}
-    .container{padding:20px;max-width:800px;margin:auto;}
-    header{background-color:var(--brand);color:#fff;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.1);}
-    h1{margin:0;font-size:2rem;}
-    .tagline{font-size:1rem;color:rgba(255,255,255,.8);}
-    .card{background-color:var(--card-bg);border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,.1);margin-top:20px;padding:20px;}
-    .form-group{margin-bottom:15px;}
-    label{display:block;margin-bottom:5px;font-weight:700;}
-    input[type=number],input[type=text]{width:100%;padding:10px;border:1px solid var(--border);border-radius:5px;box-sizing:border-box;font-size:1rem;}
-    .input-group{display:flex;}
-    .input-group span{padding:10px;background-color:#eee;border:1px solid var(--border);border-right:0;border-radius:5px 0 0 5px;}
-    .input-group input{border-radius:0 5px 5px 0;}
-    .btn{padding:10px 20px;font-size:1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:inline-block;transition:background-color .3s ease;}
-    .btn-primary{background-color:var(--brand);color:#fff;border:0;}
-    .btn-primary:hover{background-color:var(--brand-dark);}
-    .btn-secondary{background-color:var(--muted);color:#fff;border:0;}
-    .btn-secondary:hover{background-color:#6c7a89;}
-    .btn-danger{background-color:var(--danger);color:#fff;border:0;}
-    .btn-danger:hover{background-color:var(--danger-dark);}
-    .btn-small{padding:5px 10px;font-size:.8rem;}
-    .results{margin-top:20px;border-top:2px dashed var(--border);padding-top:20px;text-align:center;}
-    .metric{margin-bottom:10px;}
-    .metric-value{font-size:2.5rem;font-weight:700;}
-    .metric-label{font-size:.9rem;color:var(--muted);text-transform:uppercase;}
-    .grid{display:grid;grid-template-columns:1fr;gap:20px;}
-    @media(min-width:600px){.grid{grid-template-columns:1fr 1fr;}}
-    .alert{padding:15px;border-radius:5px;margin-bottom:15px;}
-    .alert-info{background-color:#ecf0f1;color:#34495e;border:1px solid var(--border);}
-    .alert-warning{background-color:#fef5e7;color:#c69727;border:1px solid #f1c40f;}
-    .alert-danger{background-color:#fdf4f4;color:#a83232;border:1px solid var(--danger);}
-    .alert-success{background-color:#e9f7ef;color:#27ae60;border:1px solid var(--brand-dark);}
-    .muted{color:var(--muted);}
-    .login-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(45deg,var(--page-bg-1),var(--page-bg-2));color:#fff;}
-    .login-box{background:rgba(255,255,255,.9);padding:40px;border-radius:10px;box-shadow:0 10px 20px rgba(0,0,0,.2);text-align:center;color:#34495e;}
-    .login-box h2{margin-top:0;font-size:2rem;}
-    .g_id_signin{display:flex;justify-content:center;margin-top:20px;}
-    .main-app{display:none;flex-direction:column;min-height:100vh;background:linear-gradient(45deg,var(--page-bg-1),var(--page-bg-2));}
-    .main-content{flex-grow:1;}
-    .nav-bar{background-color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1);display:flex;justify-content:space-around;padding:10px 0;}
-    .nav-link{display:flex;flex-direction:column;align-items:center;color:var(--muted);text-decoration:none;font-size:.8rem;}
-    .nav-link.active{color:var(--brand);font-weight:700;}
-    .nav-link i{font-size:1.5rem;margin-bottom:5px;}
-    .mobile-nav{position:fixed;bottom:0;left:0;right:0;background-color:#fff;box-shadow:0 -2px 4px rgba(0,0,0,.1);display:flex;justify-content:space-around;padding:10px 0;z-index:1000;}
-    .mobile-nav-item{display:flex;flex-direction:column;align-items:center;color:var(--muted);text-decoration:none;font-size:.8rem;flex:1;text-align:center;padding:5px 0;}
-    .mobile-nav-item.active{color:var(--brand);font-weight:700;}
-    .mobile-nav-item i{font-size:1.5rem;margin-bottom:5px;}
-    .page{display:none;}
-    .page.active{display:block;}
-    .header-bar{background-color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1);}
-    .user-area{display:none;align-items:center;}
-    .user-avatar{width:30px;height:30px;border-radius:50%;margin-right:10px;}
-    .tab-nav{display:flex;justify-content:space-around;margin-top:20px;border-bottom:1px solid var(--border);}
-    .tab{padding:10px 0;text-align:center;cursor:pointer;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;transition:all .3s ease;}
-    .tab.active{color:var(--brand);border-bottom:2px solid var(--brand);}
-    .tab-content{display:none;padding-top:20px;}
-    #overviewTab{display:block;}
-    .comparison-table{width:100%;border-collapse:collapse;margin-top:20px;}
-    .comparison-table th,.comparison-table td{padding:10px;text-align:left;border-bottom:1px solid var(--border);}
-    .comparison-table th{background-color:#f9f9f9;font-weight:700;}
-    .ad-container{margin-top:20px;text-align:center;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+         background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
+         color:var(--text);min-height:100vh;}
+    
+    /* Login Styles */
+    .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .login-card{width:100%;max-width:420px;background:var(--card-bg);border-radius:16px;padding:32px;
+                box-shadow:0 18px 40px rgba(2,6,23,0.25);text-align:center}
+    .login-card h1{color:var(--brand);margin:0 0 8px 0;font-size:2.2rem}
+    .subtitle{color:var(--muted);margin-bottom:24px;font-size:1.1rem}
+    
+    /* Navigation */
+    .nav{background:#fff;padding:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+    .nav-container{max-width:var(--max-w);margin:0 auto;padding:0 20px;display:flex;
+                   justify-content:space-between;align-items:center;height:70px}
+    .logo{color:var(--brand);font-size:1.8rem;font-weight:700;text-decoration:none}
+    .nav-links{display:flex;gap:0;align-items:center}
+    .nav-link{padding:12px 20px;text-decoration:none;color:var(--text);font-weight:500;
+              border-radius:8px;transition:all 0.2s}
+    .nav-link:hover,.nav-link.active{background:var(--brand);color:#fff}
+    .user-menu{display:flex;gap:12px;align-items:center}
+    .avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
+    
+    /* Main Content */
+    .main{max-width:var(--max-w);margin:0 auto;padding:24px 20px;min-height:calc(100vh - 70px)}
+    .page{display:none}.page.active{display:block}
+    
+    /* Components */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;
+         border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.2s}
+    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-small{padding:8px 16px;font-size:14px}
+    
+    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+    .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
+    
+    .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
+    .full{grid-column:1/-1}
+    
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-weight:600;margin-bottom:6px;color:var(--text)}
+    .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
+                                        border:1px solid var(--border);font-size:15px}
+    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
+    
+    .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
+                 padding:20px;border-radius:12px;margin-top:20px}
+    .metric{text-align:center;padding:16px}
+    .metric-value{font-size:1.8rem;font-weight:700;color:var(--brand)}
+    .metric-label{color:var(--muted);font-size:0.9rem;margin-top:4px}
+    
+    .alert{padding:16px;border-radius:8px;margin-bottom:20px}
+    .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
+    .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
+    .alert-danger{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
+    
+    .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px}
+    .tab{padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;
+         font-weight:500;color:var(--muted)}
+    .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+    
+    .comparison-table{width:100%;border-collapse:collapse;margin-top:20px}
+    .comparison-table th,.comparison-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
+    .comparison-table th{background:#f8f9fa;font-weight:600}
+    
+    @media(max-width:768px){
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .nav-links{display:none}
+      .nav-container{padding:0 16px}
+      .main{padding:16px}
+      .card{padding:20px}
+    }
+    
+    /* Mobile Menu */
+    .mobile-menu{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;
+                 box-shadow:0 -2px 10px rgba(0,0,0,0.1);padding:12px;z-index:1000}
+    .mobile-nav{display:flex;justify-content:space-around}
+    .mobile-nav-item{text-align:center;padding:8px;border-radius:8px;cursor:pointer;
+                     color:var(--muted);font-size:12px;min-width:60px}
+    .mobile-nav-item.active{color:var(--brand);background:#f0f9ff}
+    
+    @media(max-width:768px){
+      .mobile-menu{display:block}
+      .main{padding-bottom:80px}
+    }
   </style>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLpIq9A/UeW2r0Xf6l9B/hQnE5r0p3dD3c7V9bU5R0p+zXQ4L8X9x1vJ1r0iX+Kj+gWbA..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-
-  <div class="login-container" id="loginScreen">
-    <div class="login-box">
-      <h2>PropCheck</h2>
-      <p class="muted">Your all-in-one real estate underwriting tool.</p>
-      <div id="g_button_target"></div>
-      <p style="margin-top:10px;font-size:.9rem;">or</p>
-      <button class="btn btn-secondary" id="guestButton">Continue as Guest</button>
-      <p style="margin-top:15px;font-size:.8rem;color:var(--muted);">
-        By signing in you agree to our <a href="#" style="color:var(--muted);">Terms</a>.
-      </p>
-    </div>
-  </div>
-
-  <div class="main-app" id="mainApp">
-    <div class="header-bar">
-      <h2>PropCheck</h2>
-      <div class="user-area" id="userArea">
-        <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" />
-        <div class="user-info">
-          <span id="userName"></span>
-          <span id="userEmail" class="muted" style="font-size:.8em;"></span>
+  <main id="loginScreen" class="center-screen">
+    <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
+      <div class="login-card">
+        <h1>🏠 PropCheck</h1>
+        <div class="subtitle">Fast Canadian property underwriting for real estate investors</div>
+        
+        <button id="guestButton" class="btn btn-primary">Continue as Guest</button>
+        
+        <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
+        
+        <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
+        
+        <div id="g_id_onload"
+             data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false"
+             style="display:none;"></div>
+      </div>
+      
+      <div style="margin-top:32px;text-align:center;">
+        <button id="homeInstallBtn" class="btn btn-primary" style="font-size:18px;padding:16px 32px;background:var(--brand);border:none;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
+          📱 Download App
+        </button>
+        <div style="color:rgba(255,255,255,0.8);margin-top:8px;font-size:14px;">
+          Install PropCheck for offline access
         </div>
-        <button id="signOut" class="btn btn-secondary btn-small" style="margin-left:10px;">Sign out</button>
       </div>
     </div>
+  </main>
 
-    <div class="container main-content">
+  <div id="mainApp" style="display:none;">
+    <nav class="nav">
+      <div class="nav-container">
+        <a href="#" class="logo">🏠 PropCheck</a>
+        <div class="nav-links">
+          <a href="#" class="nav-link active" data-page="calculator">Calculator</a>
+          <a href="#" class="nav-link" data-page="analysis">Analysis</a>
+          <a href="#" class="nav-link" data-page="compare">Compare</a>
+          <a href="#" class="nav-link" data-page="reports">Reports</a>
+          <a href="#" class="nav-link" data-page="market">Market Data</a>
+        </div>
+        <div class="user-menu">
+          <button id="installBtn" class="btn-secondary btn-small" style="display:none;">➕ Install</button>
+          <div id="userArea" class="user-menu" style="display:none;">
+            <img id="userAvatar" class="avatar" alt="">
+            <div style="margin-right:12px;">
+              <div id="userName" style="font-weight:600;font-size:14px;"></div>
+              <div id="userEmail" style="color:var(--muted);font-size:12px;"></div>
+            </div>
+            <button id="signOut" class="btn-secondary btn-small">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main">
+      
       <div id="calculatorPage" class="page active">
         <div class="card">
-          <h4>Property Calculator</h4>
-          <div class="form-group">
-            <label for="price">Purchase Price</label>
-            <div class="input-group">
-              <span>$</span>
-              <input type="number" id="price" placeholder="500,000" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="down">Down Payment (%)</label>
-            <div class="input-group">
-              <input type="number" id="down" placeholder="20" min="5" max="100" />
-              <span>%</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-check" style="display:flex;align-items:center;">
-              <input class="form-check-input" type="checkbox" id="cmhcRequired" checked disabled style="margin-right:10px;">
-              <label class="form-check-label" for="cmhcRequired" style="margin-bottom:0;font-weight:normal;">CMHC Required?</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="rate">Interest Rate (%)</label>
-            <div class="input-group">
-              <input type="number" id="rate" placeholder="5.50" step="0.01" />
-              <span>%</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="term">Mortgage Term (Years)</label>
-            <div class="input-group">
-              <input type="number" id="term" placeholder="25" />
-              <span>Years</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="rent">Monthly Rent</label>
-            <div class="input-group">
-              <span>$</span>
-              <input type="number" id="rent" placeholder="2,500" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="propertyTax">Annual Property Tax</label>
-            <div class="input-group">
-              <span>$</span>
-              <input type="number" id="propertyTax" placeholder="3,000" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="insurance">Annual Insurance</label>
-            <div class="input-group">
-              <span>$</span>
-              <input type="number" id="insurance" placeholder="1,200" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="management">Property Management (%)</label>
-            <div class="input-group">
-              <input type="number" id="management" placeholder="10" />
-              <span>%</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="vacancy">Vacancy Rate (%)</label>
-            <div class="input-group">
-              <input type="number" id="vacancy" placeholder="5" />
-              <span>%</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="otherExpenses">Other Monthly Expenses</label>
-            <div class="input-group">
-              <span>$</span>
-              <input type="number" id="otherExpenses" placeholder="100" />
-            </div>
-          </div>
-          <button class="btn btn-primary" id="calcButton" style="width:100%;">Calculate</button>
-        </div>
-        <div class="results" id="results" style="display:none;">
-          <h4>Key Metrics</h4>
+          <h3>🏠 Property Calculator</h3>
           <div class="grid grid-2">
-            <div class="metric">
-              <div class="metric-value" id="payment"></div>
-              <div class="metric-label">Monthly Payment</div>
+            <div class="form-group">
+              <label>Purchase Price ($)</label>
+              <input id="price" type="number" placeholder="e.g. 750000">
             </div>
-            <div class="metric">
-              <div class="metric-value" id="cashflow"></div>
-              <div class="metric-label">Net Cash Flow</div>
+            <div class="form-group">
+              <label>Down Payment (%)</label>
+              <input id="down" type="number" value="20" min="5" max="100">
             </div>
-            <div class="metric">
-              <div class="metric-value" id="caprate"></div>
-              <div class="metric-label">Cap Rate</div>
+            <div class="form-group">
+              <label>Interest Rate (%)</label>
+              <input id="rate" type="number" value="5.5" step="0.1">
             </div>
-            <div class="metric">
-              <div class="metric-value" id="coc"></div>
-              <div class="metric-label">Cash-on-Cash Return</div>
+            <div class="form-group">
+              <label>Amortization (years)</label>
+              <select id="term">
+                <option value="25">25 years</option>
+                <option value="30">30 years</option>
+                <option value="20">20 years</option>
+                <option value="15">15 years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Monthly Rent ($)</label>
+              <input id="rent" type="number" placeholder="e.g. 3200">
+            </div>
+            <div class="form-group">
+              <label>Property Taxes (annual $)</label>
+              <input id="propertyTax" type="number" placeholder="e.g. 8500">
+            </div>
+            <div class="form-group">
+              <label>Insurance (annual $)</label>
+              <input id="insurance" type="number" placeholder="e.g. 1200">
+            </div>
+            <div class="form-group">
+              <label>Management Fee (%)</label>
+              <input id="management" type="number" value="8" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Vacancy Rate (%)</label>
+              <input id="vacancy" type="number" value="5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Other Monthly Expenses ($)</label>
+              <input id="otherExpenses" type="number" placeholder="e.g. 200">
             </div>
           </div>
-          <p style="margin-top:20px;">
-            <span class="muted" style="font-size: .9em;">
-              <strong>Initial Investment:</strong> <span id="totalInitial"></span> (Down Payment: <span id="downPaymentAmount"></span>, CMHC Insurance: <span id="cmhcAmount"></span>)
-            </span>
-            <br>
-            <span class="muted" style="font-size: .9em;">
-              <strong>Annual Income:</strong> <span id="grossRent"></span> (Net Operating Income: <span id="noi"></span>)
-            </span>
-            <br>
-            <span class="muted" style="font-size: .9em;">
-              <strong>Annual Expenses:</strong> <span id="totalExpenses"></span>
-            </span>
-          </p>
-          <button class="btn btn-primary" id="saveProperty" style="margin-top:15px;">Save Property to Google Drive</button>
+          
+          <div class="form-group" style="margin-top:20px;">
+            <label>
+              <input type="checkbox" id="cmhcRequired" style="width:auto;margin-right:8px;">
+              CMHC Insurance Required (down payment < 20%)
+            </label>
+          </div>
+          
+          <button id="calcButton" class="btn btn-primary">Calculate Investment</button>
+          
+          <div id="results" class="result-card" style="display:none;">
+            <div class="grid grid-4">
+              <div class="metric">
+                <div class="metric-value" id="payment">$0</div>
+                <div class="metric-label">Monthly Payment</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="cashflow">$0</div>
+                <div class="metric-label">Net Cash Flow</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="caprate">0%</div>
+                <div class="metric-label">Cap Rate</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="coc">0%</div>
+                <div class="metric-label">Cash-on-Cash</div>
+              </div>
+            </div>
+            
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+              <h4>Investment Summary</h4>
+              <div class="grid grid-2">
+                <div>
+                  <strong>Initial Investment:</strong><br>
+                  Down Payment: <span id="downPaymentAmount">$0</span><br>
+                  CMHC Insurance: <span id="cmhcAmount">$0</span><br>
+                  <strong>Total: <span id="totalInitial">$0</span></strong>
+                </div>
+                <div>
+                  <strong>Annual Numbers:</strong><br>
+                  Gross Rent: <span id="grossRent">$0</span><br>
+                  Total Expenses: <span id="totalExpenses">$0</span><br>
+                  Net Operating Income: <span id="noi">$0</span>
+                </div>
+              </div>
+            </div>
+            
+            <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
+              💾 Save Property
+            </button>
+          </div>
         </div>
-        <div class="ad-container">
+
+        <div style="text-align:center;margin:24px 0;">
           <ins class="adsbygoogle"
                style="display:block"
                data-ad-client="ca-pub-6166342215834701"
@@ -245,157 +291,256 @@
                data-ad-format="auto"
                data-full-width-responsive="true"></ins>
         </div>
-        <div class="card" style="margin-top:20px;">
-          <h4 style="margin-top:0;">Install App</h4>
-          <p>Get a faster experience and offline access by installing PropCheck as a PWA.</p>
-          <button class="btn btn-secondary" id="homeInstallBtn" style="width:100%;">Install to Home Screen</button>
+      </div>
+
+      <div id="analysisPage" class="page">
+        <div class="card">
+          <h3>📊 Stress Testing & Scenarios</h3>
+          
+          <div class="tabs">
+            <div class="tab active" data-tab="rates">Interest Rates</div>
+            <div class="tab" data-tab="rent">Rent Changes</div>
+            <div class="tab" data-tab="expenses">Expense Impact</div>
+          </div>
+          
+          <div id="ratesTab" class="tab-content">
+            <p>Analyze how interest rate changes affect your investment:</p>
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label>Current Rate (%)</label>
+                <input id="currentRate" type="number" value="5.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Stress Test Rate (%)</label>
+                <input id="stressRate" type="number" value="7.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Renewal Period (years)</label>
+                <select id="renewalPeriod">
+                  <option value="1">1 year</option>
+                  <option value="2">2 years</option>
+                  <option value="3">3 years</option>
+                  <option value="5" selected>5 years</option>
+                </select>
+              </div>
+            </div>
+            <button id="runStressTest" class="btn btn-primary">Run Stress Test</button>
+            <div id="stressResults" style="display:none;margin-top:20px;"></div>
+          </div>
+          
+          <div id="rentTab" class="tab-content" style="display:none;">
+            <p>Model different rental scenarios:</p>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label>Annual Rent Increase (%)</label>
+                <input id="rentIncrease" type="number" value="3" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Projection Period (years)</label>
+                <input id="projectionYears" type="number" value="10" min="1" max="30">
+              </div>
+            </div>
+            <button id="runRentAnalysis" class="btn btn-primary">Analyze Rent Growth</button>
+            <div id="rentResults" style="display:none;margin-top:20px;"></div>
+          </div>
+          
+          <div id="expenseTab" class="tab-content" style="display:none;">
+            <p>Break down and optimize your expenses:</p>
+            <div id="expenseBreakdown" style="margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
         </div>
       </div>
 
       <div id="comparePage" class="page">
         <div class="card">
-          <h4>Property Comparison</h4>
+          <h3>⚖️ Property Comparison</h3>
+          <div style="margin-bottom:20px;">
+            <button id="addProperty" class="btn btn-primary">+ Add Property</button>
+            <button id="clearComparison" class="btn btn-secondary">Clear All</button>
+          </div>
+          
           <div id="comparisonContainer">
             <div class="alert alert-warning">
               Add properties from the calculator to compare them side-by-side.
             </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:16px;">
-            <button class="btn btn-secondary" id="addProperty" style="width:48%;">Add Property</button>
-            <button class="btn btn-danger" id="clearComparison" style="width:48%;">Clear</button>
           </div>
         </div>
       </div>
 
       <div id="reportsPage" class="page">
         <div class="card">
-          <h4>Reports & Analysis</h4>
-          <div class="tab-nav">
-            <div class="tab active" data-tab="overview">Overview</div>
-            <div class="tab" data-tab="stress">Stress Test</div>
-            <div class="tab" data-tab="rent">Rent Analysis</div>
-            <div class="tab" data-tab="expenses">Expenses</div>
+          <h3>📋 Investment Reports</h3>
+          
+          <div class="grid grid-2">
+            <div class="card" style="margin:0;">
+              <h4>Property Summary Report</h4>
+              <p class="muted">Generate a comprehensive analysis report for lenders or partners.</p>
+              <button id="generateSummary" class="btn btn-primary">Generate HTML Report</button>
+            </div>
+            <div class="card" style="margin:0;">
+              <h4>Portfolio Analysis</h4>
+              <p class="muted">Analyze all your saved properties together.</p>
+              <button id="portfolioReport" class="btn btn-primary">View Portfolio</button>
+            </div>
           </div>
-
-          <div class="tab-content" id="overviewTab">
+          
+          <div id="savedProperties" class="card">
+            <h4>Saved Properties</h4>
             <div id="propertiesList">
               <div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>
             </div>
-            <div style="margin-top:20px;display:flex;gap:10px;">
-              <button class="btn btn-primary" id="portfolioReport" style="flex:1;">View Portfolio Report</button>
-              <button class="btn btn-secondary" id="generateSummary" style="flex:1;">Generate HTML Report</button>
-            </div>
           </div>
+        </div>
 
-          <div class="tab-content" id="stressTab">
-            <div class="form-group">
-              <label for="currentRate">Current Rate (%)</label>
-              <div class="input-group">
-                <input type="number" id="currentRate" placeholder="5.5" step="0.01" />
-                <span>%</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="stressRate">Stress Test Rate (%)</label>
-              <div class="input-group">
-                <input type="number" id="stressRate" placeholder="7.5" step="0.01" />
-                <span>%</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="renewalPeriod">Renewal Period (Years)</label>
-              <input type="number" id="renewalPeriod" placeholder="5" />
-            </div>
-            <button class="btn btn-primary" id="runStressTest" style="width:100%;">Run Stress Test</button>
-            <div class="results" id="stressResults" style="display:none;"></div>
-          </div>
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
 
-          <div class="tab-content" id="rentTab">
+      <div id="marketPage" class="page">
+        <div class="card">
+          <h3>🏙️ Market Intelligence</h3>
+          
+          <div class="grid grid-2">
             <div class="form-group">
-              <label for="rentIncrease">Annual Rent Increase (%)</label>
-              <div class="input-group">
-                <input type="number" id="rentIncrease" placeholder="2" step="0.1" />
-                <span>%</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="projectionYears">Projection Years</label>
-              <input type="number" id="projectionYears" placeholder="5" />
-            </div>
-            <button class="btn btn-primary" id="runRentAnalysis" style="width:100%;">Run Rent Analysis</button>
-            <div class="results" id="rentResults" style="display:none;"></div>
-          </div>
-
-          <div class="tab-content" id="expensesTab">
-            <div class="results" id="expenseBreakdown">
-              <div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>
-            </div>
-            <div class="form-group" style="margin-top:20px;">
-              <label for="citySelect">Select City</label>
-              <select id="citySelect" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:5px;">
-                <option value="toronto">Toronto</option>
-                <option value="vancouver">Vancouver</option>
-                <option value="calgary">Calgary</option>
-                <option value="montreal">Montreal</option>
+              <label>City/Region</label>
+              <select id="citySelect">
+                <option value="toronto">Toronto, ON</option>
+                <option value="vancouver">Vancouver, BC</option>
+                <option value="montreal">Montreal, QC</option>
+                <option value="calgary">Calgary, AB</option>
+                <option value="ottawa">Ottawa, ON</option>
+                <option value="mississauga">Mississauga, ON</option>
+                <option value="hamilton">Hamilton, ON</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="propertyType">Property Type</label>
-              <select id="propertyType" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:5px;">
-                <option value="condo">Condo</option>
+              <label>Property Type</label>
+              <select id="propertyType">
+                <option value="condo">Condominium</option>
+                <option value="detached">Detached House</option>
                 <option value="townhouse">Townhouse</option>
-                <option value="detached">Detached</option>
+                <option value="duplex">Duplex</option>
               </select>
             </div>
-            <button class="btn btn-primary" id="loadMarketData" style="width:100%;">Load Market Data</button>
           </div>
+          
+          <button id="loadMarketData" class="btn btn-primary">Load Market Data</button>
+          
+          <div id="marketResults" style="margin-top:24px;">
+            <div class="grid grid-3">
+              <div class="metric">
+                <div class="metric-value">$750K</div>
+                <div class="metric-label">Avg. Sale Price</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">$2,800</div>
+                <div class="metric-label">Avg. Rent/Month</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">4.5%</div>
+                <div class="metric-label">Market Cap Rate</div>
+              </div>
+            </div>
+            
+            <div class="alert alert-success" style="margin-top:20px;">
+              <strong>Market Insight:</strong> Current market conditions in Mississauga show strong rental demand with average cap rates around 4.5%. Consider properties priced below $700K for better cash flow potential.
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="mobile-nav">
+        <div class="mobile-nav-item active" data-page="calculator">
+          <div>🏠</div>
+          <div>Calc</div>
+        </div>
+        <div class="mobile-nav-item" data-page="analysis">
+          <div>📊</div>
+          <div>Analysis</div>
+        </div>
+        <div class="mobile-nav-item" data-page="compare">
+          <div>⚖️</div>
+          <div>Compare</div>
+        </div>
+        <div class="mobile-nav-item" data-page="reports">
+          <div>📋</div>
+          <div>Reports</div>
+        </div>
+        <div class="mobile-nav-item" data-page="market">
+          <div>🏙️</div>
+          <div>Market</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="mobile-nav" id="mobileNav">
-    <a href="#" class="mobile-nav-item active" data-page="calculator">
-      <i class="fas fa-calculator"></i>
-      <span>Calculator</span>
-    </a>
-    <a href="#" class="mobile-nav-item" data-page="compare">
-      <i class="fas fa-balance-scale"></i>
-      <span>Compare</span>
-    </a>
-    <a href="#" class="mobile-nav-item" data-page="reports">
-      <i class="fas fa-chart-line"></i>
-      <span>Reports</span>
-    </a>
-  </div>
-  
   <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
+    const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key if needed, though client ID is sufficient for this purpose.
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    let accessToken = null;
-    let propCheckFolderId = null;
 
-    // Global state variables
+    // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
+    let accessToken = null;
+    let propCheckFolderId = null;
+    
+    // Login functionality
+    guestButton.onclick = () => { 
+      loginScreen.style.display='none'; 
+      mainApp.style.display='block';
+      gtag('event', 'login', {method: 'guest'});
+    };
 
-    // Functions from the original code (unchanged)
-    function money(n){return '$'+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
-    function pct(n){return Number(n).toFixed(2)+'%';}
+    // Homepage PWA install button
+    document.getElementById('homeInstallBtn').onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          gtag('event', 'pwa_install', {source: 'homepage'});
+        }
+        deferredPrompt = null;
+      } else {
+        // Fallback for browsers that don't support install prompt
+        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
+      }
+    };
 
-    function calculateCMHC(price, downPercent) {
-      if (downPercent >= 20) return 0;
-      const loanAmount = price * (1 - downPercent/100);
-      let rate;
-      if (downPercent >= 15) rate = 0.028;
-      else if (downPercent >= 10) rate = 0.031;
-      else rate = 0.04;
-      return loanAmount * rate;
+    function parseJwt(token){
+      try{
+        const base64Url=token.split('.')[1];
+        const base64=base64Url.replace(/-/g,'+').replace(/_/g,'/');
+        const json=decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(json);
+      }catch(e){return null;}
     }
 
-    // Google Drive Integration Functions
+    // New Google Drive-related functions
     function initDriveClient() {
       gapi.client.init({
         apiKey: API_KEY,
@@ -422,7 +567,10 @@
     }
 
     function uploadToDrive(name, blob, mimeType) {
-      if (!accessToken || !propCheckFolderId) return;
+      if (!accessToken || !propCheckFolderId) {
+        alert("Please sign in with Google to use this feature.");
+        return Promise.reject("Not signed in with Google.");
+      }
       const fileMetadata = { name: name, parents: [propCheckFolderId] };
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
@@ -435,20 +583,10 @@
       }).then(r => r.json());
     }
 
-    function parseJwt(token){
-      try{
-        const base64Url=token.split('.')[1];
-        const base64=base64Url.replace(/-/g,'+').replace(/_/g,'/');
-        const json=decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        return JSON.parse(json);
-      }catch(e){return null;}
-    }
-
-    // Consolidated and Corrected handleCredentialResponse function
     function handleCredentialResponse(response){
       const payload = parseJwt(response.credential);
       if(!payload) return;
-
+      
       currentUser = payload;
       loginScreen.style.display='none';
       mainApp.style.display='block';
@@ -468,35 +606,19 @@
         },
       }).requestAccessToken();
     }
+
+    // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
 
-    // Event listeners
-    guestButton.onclick = () => {
-      loginScreen.style.display='none';
-      mainApp.style.display='block';
-      gtag('event', 'login', {method: 'guest'});
-    };
-
-    document.getElementById('homeInstallBtn').onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          gtag('event', 'pwa_install', {source: 'homepage'});
-        }
-        deferredPrompt = null;
-      } else {
-        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
-      }
-    };
-
     window.onload = function(){
+      // Wait a bit for Google library to load, then initialize
       setTimeout(function() {
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
           google.accounts.id.initialize({
             client_id: CLIENT_ID,
             callback: handleCredentialResponse
           });
+          
           google.accounts.id.renderButton(
             document.getElementById('g_button_target'),
             {
@@ -509,9 +631,12 @@
           );
         } else {
           console.log('Google Sign-In library not loaded');
+          // Fallback - show a manual button
           document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
         }
       }, 500);
+      
+      // Initialize AdSense
       (adsbygoogle = window.adsbygoogle || []).push({});
     }
 
@@ -524,16 +649,16 @@
       gtag('event', 'logout');
     };
 
-    // Remaining functions for navigation, calculator, etc. (unchanged)
+    // Navigation
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
-
+      
       document.getElementById(pageId + 'Page').classList.add('active');
       document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
       document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`).classList.add('active');
-
+      
       gtag('event', 'page_view', {page_title: pageId});
     }
 
@@ -543,6 +668,20 @@
         showPage(link.dataset.page);
       };
     });
+
+    // Calculator functions
+    function money(n){return '$'+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
+    function pct(n){return Number(n).toFixed(2)+'%';}
+
+    function calculateCMHC(price, downPercent) {
+      if (downPercent >= 20) return 0;
+      const loanAmount = price * (1 - downPercent/100);
+      let rate;
+      if (downPercent >= 15) rate = 0.028;
+      else if (downPercent >= 10) rate = 0.031;
+      else rate = 0.04;
+      return loanAmount * rate;
+    }
 
     calcButton.onclick = () => {
       const price = +document.getElementById('price').value || 0;
@@ -555,32 +694,35 @@
       const managementPercent = +management.value || 0;
       const vacancyPercent = +vacancy.value || 0;
       const otherMonthly = +otherExpenses.value || 0;
-
+      
       if (!price || !monthlyRent) {
         alert('Please enter at least the purchase price and monthly rent.');
         return;
       }
-
+      
+      // Calculations
       const downPayment = price * downPercent / 100;
       const cmhcInsurance = calculateCMHC(price, downPercent);
       const loanAmount = price - downPayment + cmhcInsurance;
-
+      
       let monthlyPayment = 0;
       if (rate === 0) {
         monthlyPayment = loanAmount / term;
       } else {
         monthlyPayment = loanAmount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1);
       }
-
+      
+      // Monthly expenses
       const monthlyTax = annualTax / 12;
       const monthlyInsurance = annualInsurance / 12;
       const managementFee = monthlyRent * managementPercent / 100;
       const vacancyLoss = monthlyRent * vacancyPercent / 100;
-
+      
       const totalMonthlyExpenses = monthlyPayment + monthlyTax + monthlyInsurance + managementFee + vacancyLoss + otherMonthly;
       const effectiveRent = monthlyRent - vacancyLoss;
       const netCashFlow = effectiveRent - totalMonthlyExpenses;
-
+      
+      // Annual calculations
       const grossAnnualRent = monthlyRent * 12;
       const effectiveAnnualRent = effectiveRent * 12;
       const annualExpenses = (monthlyTax + monthlyInsurance + managementFee + otherMonthly) * 12 + (monthlyRent * vacancyPercent / 100 * 12);
@@ -588,36 +730,40 @@
       const capRate = price ? (noi / price) * 100 : 0;
       const totalInitialInvestment = downPayment + cmhcInsurance;
       const cashOnCash = totalInitialInvestment ? (netCashFlow * 12 / totalInitialInvestment) * 100 : 0;
-
+      
+      // Store current calculation
       currentProperty = {
         price, downPercent, rate: +document.getElementById('rate').value, term: +document.getElementById('term').value,
         monthlyRent, annualTax, annualInsurance, managementPercent, vacancyPercent, otherMonthly,
         monthlyPayment, netCashFlow, noi, capRate, cashOnCash, totalInitialInvestment,
         downPayment, cmhcInsurance, timestamp: new Date()
       };
-
+      
+      // Display results
       payment.textContent = money(monthlyPayment);
       cashflow.textContent = money(netCashFlow);
       document.getElementById('caprate').textContent = pct(capRate);
       document.getElementById('coc').textContent = pct(cashOnCash);
-
+      
       document.getElementById('downPaymentAmount').textContent = money(downPayment);
       document.getElementById('cmhcAmount').textContent = money(cmhcInsurance);
       document.getElementById('totalInitial').textContent = money(totalInitialInvestment);
       document.getElementById('grossRent').textContent = money(grossAnnualRent);
       document.getElementById('totalExpenses').textContent = money(annualExpenses);
       document.getElementById('noi').textContent = money(noi);
-
+      
       results.style.display = 'block';
-
+      
+      // Color coding for cash flow
       cashflow.style.color = netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
-
+      
       gtag('event', 'calculate_property', {
         value: price,
         currency: 'CAD'
       });
     };
 
+    // CMHC checkbox handler
     document.getElementById('cmhcRequired').onchange = function() {
       const downPercent = +down.value || 20;
       this.checked = downPercent < 20;
@@ -629,12 +775,13 @@
       document.getElementById('cmhcRequired').checked = downPercent < 20;
     };
 
-    // Save property to Drive
+    // Save property functionality
     document.getElementById('saveProperty').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
+      
       const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
       if (name) {
         currentProperty.name = name;
@@ -642,7 +789,7 @@
         updateSavedPropertiesList();
         alert('Property saved successfully!');
         gtag('event', 'save_property');
-
+        
         const blob = new Blob([JSON.stringify(currentProperty, null, 2)], {type: 'application/json'});
         uploadToDrive(name + ".json", blob, "application/json").then(file => {
           if (file && file.id) {
@@ -664,7 +811,7 @@
         container.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
         return;
       }
-
+      
       container.innerHTML = savedProperties.map((prop, i) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
           <div>
@@ -691,7 +838,7 @@
       management.value = prop.managementPercent;
       vacancy.value = prop.vacancyPercent;
       otherExpenses.value = prop.otherMonthly;
-
+      
       showPage('calculator');
       calcButton.click();
     }
@@ -699,26 +846,34 @@
     function deleteProperty(index) {
       if (confirm('Are you sure you want to delete this property?')) {
         savedProperties.splice(index, 1);
+        updateSavedPropertiesList();
         updateComparisonTable();
       }
     }
 
+    // Stress Testing
     document.getElementById('runStressTest').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
+      
       const currentRate = +document.getElementById('currentRate').value / 100 / 12;
       const stressRate = +document.getElementById('stressRate').value / 100 / 12;
       const renewalYears = +document.getElementById('renewalPeriod').value;
+      
       const price = currentProperty.price;
       const downPayment = currentProperty.downPayment;
       const loanAmount = price - downPayment + currentProperty.cmhcInsurance;
       const term = currentProperty.term * 12;
+      
+      // Calculate payments at different rates
       const currentPayment = loanAmount * (currentRate * Math.pow(1 + currentRate, term)) / (Math.pow(1 + currentRate, term) - 1);
       const stressPayment = loanAmount * (stressRate * Math.pow(1 + stressRate, term)) / (Math.pow(1 + stressRate, term) - 1);
+      
       const paymentIncrease = stressPayment - currentPayment;
       const newCashFlow = currentProperty.netCashFlow - paymentIncrease;
+      
       document.getElementById('stressResults').innerHTML = `
         <div class="grid grid-2">
           <div class="metric">
@@ -739,25 +894,32 @@
           </div>
         </div>
         <div class="alert ${newCashFlow >= 0 ? 'alert-success' : 'alert-danger'}" style="margin-top:16px;">
-          <strong>✅ Stress Test Passed:</strong> Property maintains positive cash flow even at higher rates.
+          ${newCashFlow >= 0 ? 
+            '<strong>✅ Stress Test Passed:</strong> Property maintains positive cash flow even at higher rates.' :
+            '<strong>⚠️ Stress Test Failed:</strong> Property would have negative cash flow at higher interest rates.'}
         </div>
       `;
       document.getElementById('stressResults').style.display = 'block';
     };
 
+    // Rent Analysis
     document.getElementById('runRentAnalysis').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
+      
       const annualIncrease = +document.getElementById('rentIncrease').value / 100;
       const years = +document.getElementById('projectionYears').value;
       const currentRent = currentProperty.monthlyRent;
+      
       let projectionHTML = '<h4>Rent Growth Projection</h4><table class="comparison-table"><tr><th>Year</th><th>Monthly Rent</th><th>Annual Income</th><th>Cash Flow</th></tr>';
+      
       for (let year = 0; year <= Math.min(years, 10); year++) {
         const projectedRent = currentRent * Math.pow(1 + annualIncrease, year);
         const annualIncome = projectedRent * 12;
         const projectedCashFlow = currentProperty.netCashFlow + (projectedRent - currentRent);
+        
         projectionHTML += `<tr>
           <td>Year ${year}</td>
           <td>${money(projectedRent)}</td>
@@ -766,19 +928,23 @@
         </tr>`;
       }
       projectionHTML += '</table>';
+      
       document.getElementById('rentResults').innerHTML = projectionHTML;
       document.getElementById('rentResults').style.display = 'block';
     };
 
+    // Tab functionality
     document.querySelectorAll('.tab').forEach(tab => {
       tab.onclick = () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab + 'Tab').style.display = 'block';
       };
     });
 
+    // Comparison functionality
     document.getElementById('addProperty').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first, then come back to add it to comparison.');
@@ -793,6 +959,7 @@
         container.innerHTML = '<div class="alert alert-warning">Add properties from the calculator to compare them side-by-side.</div>';
         return;
       }
+      
       container.innerHTML = `
         <table class="comparison-table">
           <thead>
@@ -836,7 +1003,7 @@
       }
     };
 
-    // Generate and save report to Drive
+    // Reports functionality
     document.getElementById('generateSummary').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
@@ -846,7 +1013,7 @@
       const reportHTML = `<!DOCTYPE html><html><head><title>Property Report</title></head><body>${document.getElementById('results').innerHTML}</body></html>`;
       const blob = new Blob([reportHTML], {type: 'text/html'});
       const fileName = `${currentProperty.name || 'Property'}-Report.html`;
-
+      
       uploadToDrive(fileName, blob, 'text/html').then(file => {
         if (file && file.id) {
           alert('Report saved to Google Drive!');
@@ -867,12 +1034,15 @@
         alert('No saved properties to analyze. Save some properties first.');
         return;
       }
+      
       const totalInvestment = savedProperties.reduce((sum, prop) => sum + prop.totalInitialInvestment, 0);
       const totalCashFlow = savedProperties.reduce((sum, prop) => sum + prop.netCashFlow, 0);
       const totalNOI = savedProperties.reduce((sum, prop) => sum + prop.noi, 0);
       const avgCapRate = savedProperties.reduce((sum, prop) => sum + prop.capRate, 0) / savedProperties.length;
       const portfolioCOC = totalInvestment ? (totalCashFlow * 12 / totalInvestment) * 100 : 0;
+      
       alert(`Portfolio Summary:
+      
 Total Properties: ${savedProperties.length}
 Total Investment: ${money(totalInvestment)}
 Monthly Cash Flow: ${money(totalCashFlow)}
@@ -881,9 +1051,12 @@ Average Cap Rate: ${pct(avgCapRate)}
 Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     };
 
+    // Market data functionality
     document.getElementById('loadMarketData').onclick = () => {
       const city = document.getElementById('citySelect').value;
       const propType = document.getElementById('propertyType').value;
+      
+      // Simulate market data loading
       setTimeout(() => {
         alert(`Loading market data for ${city} ${propType} properties...`);
         gtag('event', 'load_market_data', {
@@ -893,16 +1066,19 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       }, 500);
     };
 
+    // Expense breakdown for analysis page
     function updateExpenseBreakdown() {
       if (!currentProperty.price) {
         document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>';
         return;
       }
+      
       const monthlyTax = (currentProperty.annualTax || 0) / 12;
       const monthlyInsurance = (currentProperty.annualInsurance || 0) / 12;
       const managementFee = currentProperty.monthlyRent * (currentProperty.managementPercent || 0) / 100;
       const vacancyLoss = currentProperty.monthlyRent * (currentProperty.vacancyPercent || 0) / 100;
       const otherMonthly = currentProperty.otherMonthly || 0;
+      
       const expenses = [
         {name: 'Mortgage Payment', amount: currentProperty.monthlyPayment, percent: 0},
         {name: 'Property Tax', amount: monthlyTax, percent: 0},
@@ -911,7 +1087,9 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
         {name: 'Vacancy Loss', amount: vacancyLoss, percent: currentProperty.vacancyPercent},
         {name: 'Other Expenses', amount: otherMonthly, percent: 0}
       ];
+      
       const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      
       document.getElementById('expenseBreakdown').innerHTML = `
         <h4>Monthly Expense Breakdown</h4>
         <table class="comparison-table">
@@ -929,38 +1107,43 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
             <td>${pct((totalExpenses / currentProperty.monthlyRent) * 100)}</td>
           </tr>
         </table>
+        
         <div class="alert ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 'alert-success' : 'alert-warning'}">
-          <strong>Expense Ratio Analysis:</strong>
-          ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ?
+          <strong>Expense Ratio Analysis:</strong> 
+          ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 
             'Your expense ratio is healthy at under 75% of rental income.' :
             'Consider reducing expenses - current ratio is above recommended 75% threshold.'}
         </div>
       `;
     }
 
+    // Update expense breakdown when switching to analysis page
     document.querySelector('[data-page="analysis"]').addEventListener('click', () => {
       setTimeout(updateExpenseBreakdown, 100);
     });
 
+    // Update comparison table when switching to compare page  
     document.querySelector('[data-page="compare"]').addEventListener('click', () => {
       setTimeout(updateComparisonTable, 100);
     });
 
+    // Update saved properties when switching to reports page
     document.querySelector('[data-page="reports"]').addEventListener('click', () => {
       setTimeout(updateSavedPropertiesList, 100);
     });
 
+    // PWA functionality
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
-
+    
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       installBtn.style.display = 'inline-flex';
     });
-
+    
     installBtn.onclick = async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -973,9 +1156,12 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       }
     };
 
+    // Initialize AdSense ads on page load
     window.addEventListener('load', () => {
       (adsbygoogle = window.adsbygoogle || []).push({});
     });
-</script>
+  </script>
+</body>
+</html>
 </body>
 </html>
