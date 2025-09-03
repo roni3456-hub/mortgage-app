@@ -1,578 +1,1359 @@
-<!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
-
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
 
-  <!-- Tailwind CSS & JS PDF & Chart.js -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PRQW949FW1');
+  </script>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
+     crossorigin="anonymous"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="theme-color" content="#2ecc71" />
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    body {
-      font-family: 'Inter', sans-serif;
+    :root{
+      --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
+      --page-bg-1:#667eea;--page-bg-2:#764ba2;--max-w:1200px;--danger:#e74c3c;
+      --warning:#f39c12;--info:#3498db;--success:#2ecc71;--text:#2c3e50;
+      --border:#e1e8ed;--shadow:0 6px 20px rgba(2,6,23,0.06);
     }
-
-    .brand-color {
-      color: #2ecc71;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+         background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
+         color:var(--text);min-height:100vh;}
+    
+    /* Loading Styles */
+    .loading-spinner{
+      position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);
+      display:flex;justify-content:center;align-items:center;z-index:9999;
+      transition:opacity 0.3s ease-in-out;opacity:1;
     }
+    .loading-spinner.hidden{opacity:0;pointer-events:none;}
+    .spinner-inner{border:4px solid var(--border);border-top-color:var(--brand);
+                   border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    .app-container.loading .main-app{opacity:0;}
 
-    .bg-brand {
-      background-color: #2ecc71;
+    /* Login Styles */
+    .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .login-card{width:100%;max-width:420px;background:var(--card-bg);border-radius:16px;padding:32px;
+                box-shadow:0 18px 40px rgba(2,6,23,0.25);text-align:center}
+    .login-card h1{color:var(--brand);margin:0 0 8px 0;font-size:2.2rem}
+    .subtitle{color:var(--muted);margin-bottom:24px;font-size:1.1rem}
+    
+    /* Navigation */
+    .nav{background:#fff;padding:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+    .nav-container{max-width:var(--max-w);margin:0 auto;padding:0 20px;display:flex;
+                   justify-content:space-between;align-items:center;height:70px}
+    .logo{color:var(--brand);font-size:1.8rem;font-weight:700;text-decoration:none}
+    .nav-links{display:flex;gap:0;align-items:center}
+    .nav-link{padding:12px 20px;text-decoration:none;color:var(--text);font-weight:500;
+              border-radius:8px;transition:all 0.2s}
+    .nav-link:hover,.nav-link.active{background:var(--brand);color:#fff}
+    .user-menu{display:flex;gap:12px;align-items:center}
+    .avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
+    
+    /* Main Content */
+    .main{max-width:var(--max-w);margin:0 auto;padding:24px 20px;min-height:calc(100vh - 70px)}
+    .page{display:none}.page.active{display:block}
+    
+    /* Components */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;
+         border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.2s}
+    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-small{padding:8px 16px;font-size:14px}
+    
+    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+    .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
+    
+    .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
+    .full{grid-column:1/-1}
+    
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-weight:600;margin-bottom:6px;color:var(--text)}
+    .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
+                                        border:1px solid var(--border);font-size:15px}
+    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
+    
+    .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
+                 padding:20px;border-radius:12px;margin-top:20px}
+    .metric{text-align:center;padding:16px}
+    .metric-value{font-size:1.8rem;font-weight:700;color:var(--brand)}
+    .metric-label{color:var(--muted);font-size:0.9rem;margin-top:4px}
+    
+    .alert{padding:16px;border-radius:8px;margin-bottom:20px}
+    .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
+    .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
+    .alert-danger{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
+    
+    .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px}
+    .tab{padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;
+         font-weight:500;color:var(--muted)}
+    .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+    
+    .comparison-table{width:100%;border-collapse:collapse;margin-top:20px}
+    .comparison-table th,.comparison-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
+    .comparison-table th{background:#f8f9fa;font-weight:600}
+
+    /* File upload styles */
+    .file-upload-container {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 16px;
     }
-
-    .hover\:bg-brand-dark:hover {
-      background-color: #27ae60;
+    .file-upload-container:hover {
+        border-color: var(--brand);
+        background-color: #f9f9f9;
     }
-
-    #app-container.loading {
-      display: none;
+    .file-upload-container input {
+        display: none;
     }
-
-    #loading-spinner {
-      display: flex;
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        margin-top: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-
-    #loading-spinner.hidden {
-      display: none;
+    
+    @media(max-width:768px){
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .nav-links{display:none}
+      .nav-container{padding:0 16px}
+      .main{padding:16px}
+      .card{padding:20px}
     }
-
-    .mobile-nav-item {
-      @apply flex flex-col items-center p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors duration-200;
-    }
-
-    .mobile-nav-item.active {
-      @apply text-gray-800 bg-gray-100 font-medium;
+    
+    /* Mobile Menu */
+    .mobile-menu{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;
+                 box-shadow:0 -2px 10px rgba(0,0,0,0.1);padding:12px;z-index:1000}
+    .mobile-nav{display:flex;justify-content:space-around}
+    .mobile-nav-item{text-align:center;padding:8px;border-radius:8px;cursor:pointer;
+                     color:var(--muted);font-size:12px;min-width:60px}
+    .mobile-nav-item.active{color:var(--brand);background:#f0f9ff}
+    
+    @media(max-width:768px){
+      .mobile-menu{display:block}
+      .main{padding-bottom:80px}
     }
   </style>
 </head>
-
-<body class="h-full bg-gray-50">
-  <!-- Loading Spinner -->
-  <div id="loading-spinner" class="fixed inset-0 bg-gray-50 flex items-center justify-center z-50">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-color"></div>
+<body class="app-container loading">
+  <div class="loading-spinner">
+    <div class="spinner-inner"></div>
   </div>
 
-  <!-- Main App Container -->
-  <div id="app-container" class="min-h-full flex flex-col loading">
-    <!-- Navbar -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-        <div class="flex items-center">
-          <a href="#" class="flex-shrink-0 text-2xl font-bold text-gray-800">PropCheck</a>
-        </div>
-        <div class="flex items-center space-x-4">
-          <span id="userIdDisplay" class="text-sm text-gray-500 hidden sm:block"></span>
-          <button id="googleSignInBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full font-medium hover:bg-gray-300 transition-colors duration-200 shadow-md hidden">Sign in with Google</button>
-        </div>
-      </nav>
-      <div class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex space-x-4">
-          <button id="navAddProperty" data-page="add" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Add Property</button>
-          <button id="navAnalysis" data-page="analysis" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Analysis</button>
-          <button id="navCompare" data-page="compare" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Compare</button>
-          <button id="navMarketData" data-page="market" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Market Data</button>
-          <button id="navSavedProperties" data-page="saved" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Saved Properties</button>
+  <main id="loginScreen" class="center-screen" style="display:none;">
+    <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
+      <div class="login-card">
+        <h1>🏠 PropCheck</h1>
+        <div class="subtitle">Fast Canadian property underwriting for real estate investors</div>
+        
+        <button id="guestButton" class="btn btn-primary">Continue as Guest</button>
+        
+        <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
+        
+        <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
+        
+        <div id="g_id_onload"
+             data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false"
+             style="display:none;"></div>
+      </div>
+      
+      <div style="margin-top:32px;text-align:center;">
+        <button id="homeInstallBtn" class="btn btn-primary hidden" style="font-size:18px;padding:16px 32px;background:var(--brand);border:none;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
+          📱 Download App
+        </button>
+        <div style="color:rgba(255,255,255,0.8);margin-top:8px;font-size:14px;">
+          Install PropCheck for offline access
         </div>
       </div>
-    </header>
+    </div>
+  </main>
 
-    <main class="flex-1">
-      <div id="page-content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Page content will be injected here -->
+  <div id="mainApp" style="display:none;">
+    <nav class="nav">
+      <div class="nav-container">
+        <a href="#" class="logo">🏠 PropCheck</a>
+        <div class="nav-links">
+          <a href="#" class="nav-link active" data-page="calculator">Calculator</a>
+          <a href="#" class="nav-link" data-page="analysis">Analysis</a>
+          <a href="#" class="nav-link" data-page="compare">Compare</a>
+          <a href="#" class="nav-link" data-page="reports">Reports</a>
+          <a href="#" class="nav-link" data-page="market">Market Data</a>
+        </div>
+        <div class="user-menu">
+          <button id="installBtn" class="btn-secondary btn-small" style="display:none;">➕ Install</button>
+          <div id="userArea" class="user-menu" style="display:none;">
+            <img id="userAvatar" class="avatar" alt="">
+            <div style="margin-right:12px;">
+              <div id="userName" style="font-weight:600;font-size:14px;"></div>
+              <div id="userEmail" style="color:var(--muted);font-size:12px;"></div>
+            </div>
+            <button id="signOut" class="btn-secondary btn-small">Sign out</button>
+          </div>
+        </div>
       </div>
-    </main>
+    </nav>
 
-    <!-- Mobile Navigation Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg sm:hidden">
-      <div class="flex justify-around py-2">
-        <button class="mobile-nav-item active" data-page="add">
+    <div class="main">
+      
+      <div id="calculatorPage" class="page active">
+        <div class="card">
+          <h3>🏠 Property Calculator</h3>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label>Purchase Price ($)</label>
+              <input id="price" type="number" placeholder="e.g. 750000">
+            </div>
+            <div class="form-group">
+              <label>Down Payment (%)</label>
+              <input id="down" type="number" value="20" min="5" max="100">
+            </div>
+            <div class="form-group">
+              <label>Interest Rate (%)</label>
+              <input id="rate" type="number" value="5.5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Amortization (years)</label>
+              <select id="term">
+                <option value="25">25 years</option>
+                <option value="30">30 years</option>
+                <option value="20">20 years</option>
+                <option value="15">15 years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Monthly Rent ($)</label>
+              <input id="rent" type="number" placeholder="e.g. 3200">
+            </div>
+            <div class="form-group">
+              <label>Property Taxes (annual $)</label>
+              <input id="propertyTax" type="number" placeholder="e.g. 8500">
+            </div>
+            <div class="form-group">
+              <label>Insurance (annual $)</label>
+              <input id="insurance" type="number" placeholder="e.g. 1200">
+            </div>
+            <div class="form-group">
+              <label>Management Fee (%)</label>
+              <input id="management" type="number" value="8" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Vacancy Rate (%)</label>
+              <input id="vacancy" type="number" value="5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Other Monthly Expenses ($)</label>
+              <input id="otherExpenses" type="number" placeholder="e.g. 200">
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-top:20px;">
+            <label>
+              <input type="checkbox" id="cmhcRequired" style="width:auto;margin-right:8px;">
+              CMHC Insurance Required (down payment < 20%)
+            </label>
+          </div>
+          
+          <button id="calcButton" class="btn btn-primary">Calculate Investment</button>
+          
+          <div id="results" class="result-card" style="display:none;">
+            <div class="grid grid-4">
+              <div class="metric">
+                <div class="metric-value" id="payment">$0</div>
+                <div class="metric-label">Monthly Payment</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="cashflow">$0</div>
+                <div class="metric-label">Net Cash Flow</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="caprate">0%</div>
+                <div class="metric-label">Cap Rate</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="coc">0%</div>
+                <div class="metric-label">Cash-on-Cash</div>
+              </div>
+            </div>
+            
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+              <h4>Investment Summary</h4>
+              <div class="grid grid-2">
+                <div>
+                  <strong>Initial Investment:</strong><br>
+                  Down Payment: <span id="downPaymentAmount">$0</span><br>
+                  CMHC Insurance: <span id="cmhcAmount">$0</span><br>
+                  <strong>Total: <span id="totalInitial">$0</span></strong>
+                </div>
+                <div>
+                  <strong>Annual Numbers:</strong><br>
+                  Gross Rent: <span id="grossRent">$0</span><br>
+                  Total Expenses: <span id="totalExpenses">$0</span><br>
+                  Net Operating Income: <span id="noi">$0</span>
+                </div>
+              </div>
+            </div>
+            
+            <button id="saveProperty" class="btn btn-secondary" style="margin-top:16px;">
+              💾 Save Property
+            </button>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
+      </div>
+
+      <div id="analysisPage" class="page">
+        <div class="card">
+          <h3>📊 Stress Testing & Scenarios</h3>
+          
+          <div class="tabs">
+            <div class="tab active" data-tab="rates">Interest Rates</div>
+            <div class="tab" data-tab="rent">Rent Changes</div>
+            <div class="tab" data-tab="expenses">Expense Impact</div>
+          </div>
+          
+          <div id="ratesTab" class="tab-content">
+            <p>Analyze how interest rate changes affect your investment:</p>
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label>Current Rate (%)</label>
+                <input id="currentRate" type="number" value="5.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Stress Test Rate (%)</label>
+                <input id="stressRate" type="number" value="7.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Renewal Period (years)</label>
+                <select id="renewalPeriod">
+                  <option value="1">1 year</option>
+                  <option value="2">2 years</option>
+                  <option value="3">3 years</option>
+                  <option value="5" selected>5 years</option>
+                </select>
+              </div>
+            </div>
+            <button id="runStressTest" class="btn btn-primary">Run Stress Test</button>
+            <div id="stressResults" style="display:none;margin-top:20px;"></div>
+          </div>
+          
+          <div id="rentTab" class="tab-content" style="display:none;">
+            <p>Model different rental scenarios:</p>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label>Annual Rent Increase (%)</label>
+                <input id="rentIncrease" type="number" value="3" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Projection Period (years)</label>
+                <input id="projectionYears" type="number" value="10" min="1" max="30">
+              </div>
+            </div>
+            <button id="runRentAnalysis" class="btn btn-primary">Analyze Rent Growth</button>
+            <div id="rentResults" style="display:none;margin-top:20px;"></div>
+          </div>
+          
+          <div id="expenseTab" class="tab-content" style="display:none;">
+            <p>Break down and optimize your expenses:</p>
+            <div id="expenseBreakdown" style="margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
+
+      <div id="comparePage" class="page">
+        <div class="card">
+          <h3>⚖️ Property Comparison</h3>
+          <div style="margin-bottom:20px;">
+            <button id="addProperty" class="btn btn-primary">+ Add Property</button>
+            <button id="clearComparison" class="btn btn-secondary">Clear All</button>
+          </div>
+          
+          <div id="comparisonContainer">
+            <div class="alert alert-warning">
+              Add properties from the calculator to compare them side-by-side.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="reportsPage" class="page">
+        <div class="card">
+          <h3>📋 Investment Reports</h3>
+          
+          <div class="grid grid-2">
+            <div class="card" style="margin:0;">
+              <h4>Property Summary Report</h4>
+              <p class="muted">Generate a comprehensive analysis report for lenders or partners.</p>
+              <div class="file-upload-container">
+                  <input type="file" id="photoUpload" accept="image/*">
+                  <p>Click or drag a photo to upload</p>
+                  <img id="photoPreview" class="preview-image hidden">
+              </div>
+              <button id="generateSummary" class="btn btn-primary" style="margin-top:16px;">Generate PDF</button>
+            </div>
+            <div class="card" style="margin:0;">
+              <h4>Portfolio Analysis</h4>
+              <p class="muted">Analyze all your saved properties together.</p>
+              <button id="portfolioReport" class="btn btn-primary">View Portfolio</button>
+            </div>
+          </div>
+          
+          <div id="savedProperties" class="card">
+            <h4>Saved Properties</h4>
+            <div id="propertiesList">
+              <div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
+
+      <div id="marketPage" class="page">
+        <div class="card">
+          <h3>🏙️ Market Intelligence</h3>
+          
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label>City/Region</label>
+              <select id="citySelect">
+                <option value="toronto">Toronto, ON</option>
+                <option value="vancouver">Vancouver, BC</option>
+                <option value="montreal">Montreal, QC</option>
+                <option value="calgary">Calgary, AB</option>
+                <option value="ottawa">Ottawa, ON</option>
+                <option value="mississauga">Mississauga, ON</option>
+                <option value="hamilton">Hamilton, ON</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Property Type</label>
+              <select id="propertyType">
+                <option value="condo">Condominium</option>
+                <option value="detached">Detached House</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="duplex">Duplex</option>
+              </select>
+            </div>
+          </div>
+          
+          <button id="loadMarketData" class="btn btn-primary">Load Market Data</button>
+          
+          <div id="marketResults" style="margin-top:24px;">
+            <div class="grid grid-3">
+              <div class="metric">
+                <div class="metric-value">$750K</div>
+                <div class="metric-label">Avg. Sale Price</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">$2,800</div>
+                <div class="metric-label">Avg. Rent/Month</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">4.5%</div>
+                <div class="metric-label">Market Cap Rate</div>
+              </div>
+            </div>
+            
+            <div class="alert alert-success" style="margin-top:20px;">
+              <strong>Market Insight:</strong> Current market conditions in Mississauga show strong rental demand with average cap rates around 4.5%. Consider properties priced below $700K for better cash flow potential.
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-menu">
+      <div class="mobile-nav">
+        <div class="mobile-nav-item active" data-page="calculator">
           <div>🏠</div>
-          <div class="text-xs">Add</div>
-        </button>
-        <button class="mobile-nav-item" data-page="analysis">
+          <div>Calc</div>
+        </div>
+        <div class="mobile-nav-item" data-page="analysis">
           <div>📊</div>
-          <div class="text-xs">Analysis</div>
-        </button>
-        <button class="mobile-nav-item" data-page="compare">
+          <div>Analysis</div>
+        </div>
+        <div class="mobile-nav-item" data-page="compare">
           <div>⚖️</div>
-          <div class="text-xs">Compare</div>
-        </button>
-        <button class="mobile-nav-item" data-page="market">
-          <div>🗺️</div>
-          <div class="text-xs">Market</div>
-        </button>
-        <button class="mobile-nav-item" data-page="saved">
-          <div>💾</div>
-          <div class="text-xs">Saved</div>
-        </button>
+          <div>Compare</div>
+        </div>
+        <div class="mobile-nav-item" data-page="reports">
+          <div>📋</div>
+          <div>Reports</div>
+        </div>
+        <div class="mobile-nav-item" data-page="market">
+          <div>🏙️</div>
+          <div>Market</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Custom Alert/Modal Box -->
-  <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-80">
-      <h3 id="modalTitle" class="text-lg font-bold text-gray-800"></h3>
-      <p id="modalMessage" class="mt-2 text-sm text-gray-600"></p>
-      <div class="mt-4 flex justify-end">
-        <button id="modalOkBtn" class="bg-brand text-white px-4 py-2 rounded-full font-medium hover:bg-brand-dark">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase SDKs -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, doc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    setLogLevel('debug');
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-    let app, auth, db, userId;
-
-    const appContainer = document.getElementById('app-container');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const userIdDisplay = document.getElementById('userIdDisplay');
-    const pageContent = document.getElementById('page-content');
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalMessage = document.getElementById('modalMessage');
-    const modalOkBtn = document.getElementById('modalOkBtn');
-    const googleSignInBtn = document.getElementById('googleSignInBtn');
-
-    // Page navigation buttons
-    const navButtons = document.querySelectorAll('nav button, .mobile-nav-item');
-
-    /**
-     * Replaces alert() with a custom modal box.
-     * @param {string} title - The title of the modal.
-     * @param {string} message - The message content.
-     */
-    function showAlert(title, message) {
-      modalTitle.textContent = title;
-      modalMessage.textContent = message;
-      modal.classList.remove('hidden');
-    }
-
-    modalOkBtn.onclick = () => {
-      modal.classList.add('hidden');
+    // Firebase configuration and initialization
+    const firebaseConfig = {
+      // Your Firebase config here
+      apiKey: "YOUR_API_KEY", // Replace with your actual key
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
+    
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    db.setLogLevel('debug');
 
+    // Google Sign-In Client ID
+    const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
+    
+    // Global state
+    let currentProperty = {};
     let savedProperties = [];
-
-    function money(amount) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0
-      }).format(amount);
-    }
-
-    function pct(rate) {
-      return (rate * 100).toFixed(2) + '%';
-    }
-
-    /**
-     * Renders the "Add Property" page.
-     */
-    function renderAddPropertyPage() {
-      pageContent.innerHTML = `
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-bold text-gray-800">Add New Property</h2>
-          <form id="property-form" class="mt-4 space-y-4">
-            <div>
-              <label for="address" class="block text-sm font-medium text-gray-700">Property Address</label>
-              <input type="text" id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand" required>
-            </div>
-            <div>
-              <label for="purchasePrice" class="block text-sm font-medium text-gray-700">Purchase Price ($)</label>
-              <input type="number" id="purchasePrice" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand" required>
-            </div>
-            <div>
-              <label for="monthlyRent" class="block text-sm font-medium text-gray-700">Monthly Rent ($)</label>
-              <input type="number" id="monthlyRent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand" required>
-            </div>
-            <div>
-              <label for="monthlyExpenses" class="block text-sm font-medium text-gray-700">Monthly Expenses (Excluding Mortgage) ($)</label>
-              <input type="number" id="monthlyExpenses" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand" required>
-            </div>
-            <div class="flex space-x-4">
-              <button type="submit" id="save-btn" class="bg-brand text-white px-6 py-3 rounded-full font-bold hover:bg-brand-dark transition-colors duration-200 shadow-md flex-1">Save Property</button>
-            </div>
-          </form>
-        </div>
-      `;
-
-      const propertyForm = document.getElementById('property-form');
-      propertyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const address = document.getElementById('address').value;
-        const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
-        const monthlyRent = parseFloat(document.getElementById('monthlyRent').value);
-        const monthlyExpenses = parseFloat(document.getElementById('monthlyExpenses').value);
-
-        if (isNaN(purchasePrice) || isNaN(monthlyRent) || isNaN(monthlyExpenses)) {
-          showAlert('Error', 'Please enter valid numbers for all financial fields.');
-          return;
-        }
-
-        const newProperty = {
-          address,
-          purchasePrice,
-          monthlyRent,
-          monthlyExpenses,
-          totalInvestment: purchasePrice,
-          monthlyCashFlow: monthlyRent - monthlyExpenses,
-          annualNOI: (monthlyRent - monthlyExpenses) * 12,
-          capRate: (monthlyRent - monthlyExpenses) * 12 / purchasePrice,
-          cashOnCash: (monthlyRent - monthlyExpenses) * 12 / purchasePrice
-        };
-
-        try {
-          await addDoc(collection(db, `artifacts/${appId}/users/${userId}/properties`), newProperty);
-          showAlert('Success', `Property "${address}" saved successfully!`);
-          propertyForm.reset();
-        } catch (e) {
-          console.error("Error adding document: ", e);
-          showAlert('Error', 'Failed to save property. Please try again.');
-        }
-      });
-    }
-
-    /**
-     * Renders the saved properties list from Firestore data.
-     */
-    function renderSavedPropertiesPage() {
-      pageContent.innerHTML = `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden p-6">
-          <h2 class="text-2xl font-bold text-gray-800">Saved Properties</h2>
-          <div id="properties-list" class="mt-4 space-y-4">
-            ${savedProperties.length === 0 ? '<p class="text-gray-500">No properties saved yet. Add a new property to get started.</p>' : ''}
-          </div>
-        </div>
-      `;
-
-      const propertiesList = document.getElementById('properties-list');
-      savedProperties.forEach(prop => {
-        const propEl = document.createElement('div');
-        propEl.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center';
-        propEl.innerHTML = `
-          <div class="mb-2 sm:mb-0">
-            <h3 class="font-bold text-lg">${prop.address}</h3>
-            <p class="text-sm text-gray-600">Purchase Price: ${money(prop.purchasePrice)}</p>
-            <p class="text-sm text-gray-600">Monthly Cash Flow: ${money(prop.monthlyCashFlow)}</p>
-          </div>
-          <div class="flex space-x-2">
-            <button onclick="deleteProperty('${prop.id}')" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition-colors duration-200">Delete</button>
-          </div>
-        `;
-        propertiesList.appendChild(propEl);
-      });
-    }
-
-    /**
-     * Renders the "Analysis" page.
-     */
-    function renderAnalysisPage() {
-      if (savedProperties.length === 0) {
-        pageContent.innerHTML = `<div class="bg-white rounded-lg shadow-md p-6"><p class="text-gray-500">Add some properties to see an analysis.</p></div>`;
-        return;
-      }
-
-      const totalInvestment = savedProperties.reduce((sum, prop) => sum + prop.totalInvestment, 0);
-      const totalCashFlow = savedProperties.reduce((sum, prop) => sum + prop.monthlyCashFlow, 0);
-      const totalNOI = savedProperties.reduce((sum, prop) => sum + prop.annualNOI, 0);
-      const avgCapRate = totalInvestment > 0 ? totalNOI / totalInvestment : 0;
-      const portfolioCOC = totalInvestment > 0 ? totalCashFlow * 12 / totalInvestment : 0;
-
-      pageContent.innerHTML = `
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-bold text-gray-800">Portfolio Analysis</h2>
-          <div class="mt-4 space-y-4">
-            <div class="bg-gray-100 p-4 rounded-lg">
-              <h3 class="text-lg font-bold text-gray-800">Summary</h3>
-              <p>Total Properties: ${savedProperties.length}</p>
-              <p>Total Investment: ${money(totalInvestment)}</p>
-              <p>Monthly Cash Flow: ${money(totalCashFlow)}</p>
-              <p>Annual NOI: ${money(totalNOI)}</p>
-              <p>Average Cap Rate: ${pct(avgCapRate)}</p>
-              <p>Portfolio Cash-on-Cash: ${pct(portfolioCOC)}</p>
-            </div>
-            <div class="bg-gray-100 p-4 rounded-lg">
-              <h3 class="text-lg font-bold text-gray-800">Breakdown by Property</h3>
-              <canvas id="analysisChart"></canvas>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const ctx = document.getElementById('analysisChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: savedProperties.map(p => p.address),
-          datasets: [{
-            label: 'Investment Breakdown',
-            data: savedProperties.map(p => p.totalInvestment),
-            backgroundColor: [
-              '#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f1c40f', '#34495e',
-            ],
-            hoverOffset: 4
-          }]
-        },
-      });
-    }
-
-    /**
-     * Renders the "Compare" page.
-     */
-    function renderComparePage() {
-      if (savedProperties.length < 2) {
-        pageContent.innerHTML = `<div class="bg-white rounded-lg shadow-md p-6"><p class="text-gray-500">Add at least two properties to compare them.</p></div>`;
-        return;
-      }
-
-      pageContent.innerHTML = `
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-bold text-gray-800">Compare Properties</h2>
-          <div class="mt-4 flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-            <select id="property1Select" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand">
-              ${savedProperties.map(p => `<option value="${p.id}">${p.address}</option>`).join('')}
-            </select>
-            <select id="property2Select" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand">
-              ${savedProperties.slice(1).map(p => `<option value="${p.id}">${p.address}</option>`).join('')}
-            </select>
-          </div>
-          <div id="comparison-table" class="mt-4"></div>
-        </div>
-      `;
-
-      const property1Select = document.getElementById('property1Select');
-      const property2Select = document.getElementById('property2Select');
-      const comparisonTable = document.getElementById('comparison-table');
-
-      function updateComparison() {
-        const p1 = savedProperties.find(p => p.id === property1Select.value);
-        const p2 = savedProperties.find(p => p.id === property2Select.value);
-
-        if (!p1 || !p2) return;
-
-        comparisonTable.innerHTML = `
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Metric</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${p1.address}</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">${p2.address}</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Purchase Price</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p1.purchasePrice)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p2.purchasePrice)}</td>
-                </tr>
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Monthly Rent</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p1.monthlyRent)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p2.monthlyRent)}</td>
-                </tr>
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Monthly Cash Flow</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p1.monthlyCashFlow)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${money(p2.monthlyCashFlow)}</td>
-                </tr>
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Cap Rate</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${pct(p1.capRate)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${pct(p2.capRate)}</td>
-                </tr>
-                <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Cash-on-Cash</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${pct(p1.cashOnCash)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${pct(p2.cashOnCash)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-      property1Select.addEventListener('change', updateComparison);
-      property2Select.addEventListener('change', updateComparison);
-      updateComparison();
-    }
-
-    /**
-     * Renders the "Market Data" page.
-     */
-    function renderMarketDataPage() {
-      pageContent.innerHTML = `
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-2xl font-bold text-gray-800">Market Data</h2>
-          <div class="mt-4 space-y-4">
-            <div>
-              <label for="citySelect" class="block text-sm font-medium text-gray-700">City</label>
-              <select id="citySelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand">
-                <option value="New York">New York</option>
-                <option value="San Francisco">San Francisco</option>
-                <option value="Austin">Austin</option>
-              </select>
-            </div>
-            <div>
-              <label for="propertyType" class="block text-sm font-medium text-gray-700">Property Type</label>
-              <select id="propertyType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand">
-                <option value="Single Family">Single Family</option>
-                <option value="Multi Family">Multi Family</option>
-                <option value="Commercial">Commercial</option>
-              </select>
-            </div>
-            <button id="loadMarketDataBtn" class="bg-brand text-white px-6 py-3 rounded-full font-bold hover:bg-brand-dark transition-colors duration-200 shadow-md">Load Data</button>
-            <div id="marketDataResults" class="mt-4"></div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('loadMarketDataBtn').addEventListener('click', () => {
-        const city = document.getElementById('citySelect').value;
-        const propType = document.getElementById('propertyType').value;
-        const resultsEl = document.getElementById('marketDataResults');
-        resultsEl.innerHTML = `<p class="text-gray-500">Simulating market data for ${propType} properties in ${city}. This feature is not yet fully implemented.</p>`;
-        showAlert('Coming Soon', `Loading market data for ${propType} properties in ${city}...`);
-      });
-    }
-
-    /**
-     * Deletes a property from Firestore.
-     * @param {string} propertyId - The ID of the property to delete.
-     */
-    async function deleteProperty(propertyId) {
-      try {
-        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/properties/${propertyId}`));
-        showAlert('Success', 'Property deleted successfully!');
-      } catch (e) {
-        console.error("Error deleting document: ", e);
-        showAlert('Error', 'Failed to delete property. Please try again.');
-      }
-    }
-
-    /**
-     * Navigates to a specific page and updates the active button.
-     * @param {string} pageName - The name of the page to navigate to.
-     */
-    function navigateTo(pageName) {
-      document.querySelectorAll('[data-page]').forEach(btn => {
-        btn.classList.remove('active', 'text-gray-800', 'bg-gray-100', 'font-medium');
-        btn.classList.add('text-gray-600');
-      });
-
-      const activeBtn = document.querySelector(`[data-page="${pageName}"]`);
-      if (activeBtn) {
-        activeBtn.classList.add('active', 'text-gray-800', 'bg-gray-100', 'font-medium');
-        activeBtn.classList.remove('text-gray-600');
-      }
-
-      pageContent.dataset.page = pageName;
-      switch (pageName) {
-        case 'add':
-          renderAddPropertyPage();
-          break;
-        case 'analysis':
-          renderAnalysisPage();
-          break;
-        case 'compare':
-          renderComparePage();
-          break;
-        case 'market':
-          renderMarketDataPage();
-          break;
-        case 'saved':
-          renderSavedPropertiesPage();
-          break;
-        default:
-          renderAddPropertyPage();
-          break;
-      }
-    }
-
-    // --- Core App Initialization ---
-    window.onload = () => {
-      try {
-        if (Object.keys(firebaseConfig).length === 0) {
-          throw new Error("Firebase config is missing.");
-        }
-
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            userId = user.uid;
-            userIdDisplay.textContent = `User ID: ${userId}`;
-            userIdDisplay.classList.remove('hidden');
-            googleSignInBtn.classList.add('hidden');
-            console.log("User authenticated:", userId);
-
-            loadingSpinner.classList.add('hidden');
-            appContainer.classList.remove('loading');
-
-            // Set up a real-time listener for the user's properties
-            const propertiesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/properties`);
-            onSnapshot(propertiesCollectionRef, (snapshot) => {
-              savedProperties = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }));
-              navigateTo(pageContent.dataset.page || 'add');
-            }, (error) => {
-              console.error("Error listening to properties:", error);
-            });
-            navigateTo('add');
-          } else {
-            console.log("No user signed in. Attempting to sign in.");
-            if (initialAuthToken) {
-              await signInWithCustomToken(auth, initialAuthToken);
-            } else {
-              googleSignInBtn.classList.remove('hidden');
-              loadingSpinner.classList.add('hidden');
-              appContainer.classList.remove('loading');
-            }
-          }
-        });
-
-      } catch (e) {
-        console.error("Firebase initialization failed:", e);
-        showAlert('Initialization Error', `Failed to initialize the app: ${e.message}`);
-        loadingSpinner.classList.add('hidden');
+    let currentUser = null;
+    let userId = null;
+    let deferredPrompt;
+    
+    // UI Elements
+    const loginScreen = document.getElementById('loginScreen');
+    const mainApp = document.getElementById('mainApp');
+    const loadingSpinner = document.querySelector('.loading-spinner');
+    const appContainer = document.querySelector('.app-container');
+    const guestButton = document.getElementById('guestButton');
+    const userArea = document.getElementById('userArea');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const signOut = document.getElementById('signOut');
+    const installBtn = document.getElementById('installBtn');
+    const homeInstallBtn = document.getElementById('homeInstallBtn');
+    
+    // Loading State Management
+    function setLoading(isLoading) {
+      if (isLoading) {
+        appContainer.classList.add('loading');
+        loadingSpinner.classList.remove('hidden');
+        loginScreen.style.display = 'none';
+        mainApp.style.display = 'none';
+      } else {
         appContainer.classList.remove('loading');
+        loadingSpinner.classList.add('hidden');
       }
-    };
+    }
+    
+    // User Authentication
+    function signInAnonymously() {
+      auth.signInAnonymously()
+        .then(() => {
+          console.log("Signed in anonymously.");
+        })
+        .catch((error) => {
+          console.error("Anonymous sign-in failed:", error);
+          setLoading(false);
+          alert('Failed to connect to backend. Please try again later.');
+        });
+    }
 
-    // --- Page Navigation Event Listeners ---
-    navButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const pageName = button.getAttribute('data-page');
-        navigateTo(pageName);
-      });
+    let isAuthChecked = false;
+    auth.onAuthStateChanged(user => {
+      setLoading(false);
+      if (user) {
+        currentUser = user;
+        userId = user.uid;
+        console.log("User state changed:", user);
+        
+        // Handle Google Sign-In user details
+        if (user.providerData && user.providerData.length > 0) {
+          const providerInfo = user.providerData[0];
+          userAvatar.src = providerInfo.photoURL || '';
+          userName.textContent = providerInfo.displayName || 'Anonymous User';
+          userEmail.textContent = providerInfo.email || 'Guest';
+        } else {
+          // Anonymous user
+          userAvatar.src = 'https://www.gravatar.com/avatar/?d=retro'; // Generic avatar
+          userName.textContent = 'Anonymous User';
+          userEmail.textContent = 'Guest';
+        }
+        
+        loginScreen.style.display = 'none';
+        mainApp.style.display = 'block';
+        userArea.style.display = 'flex';
+        
+        // Load user data from Firestore
+        loadUserProperties();
+      } else {
+        loginScreen.style.display = 'flex';
+        mainApp.style.display = 'none';
+        userArea.style.display = 'none';
+        if (!isAuthChecked) {
+          const initialToken = localStorage.getItem('__initial_auth_token');
+          if (initialToken) {
+            auth.signInWithCustomToken(initialToken)
+              .catch(() => {
+                signInAnonymously();
+              });
+          } else {
+            signInAnonymously();
+          }
+          isAuthChecked = true;
+        }
+      }
     });
 
-    // Make functions globally accessible for inline event handlers
-    window.deleteProperty = deleteProperty;
+    // Google Sign-In Callback
+    window.handleCredentialResponse = async (response) => {
+      const idToken = response.credential;
+      const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+      try {
+        await auth.signInWithCredential(credential);
+        gtag('event', 'login', { method: 'google' });
+      } catch (error) {
+        console.error("Google sign-in with Firebase failed:", error);
+        alert('Google sign-in failed.');
+      }
+    };
+    
+    // Sign Out
+    signOut.onclick = async () => {
+      try {
+        await auth.signOut();
+        console.log("User signed out.");
+        localStorage.removeItem('__initial_auth_token');
+        gtag('event', 'logout');
+      } catch (error) {
+        console.error("Sign-out failed:", error);
+      }
+    };
+
+    // Guest sign-in
+    guestButton.onclick = () => {
+      signInAnonymously();
+      gtag('event', 'login', { method: 'guest' });
+    };
+
+    // Firestore Integration
+    const userPropertiesRef = () => db.collection('users').doc(userId).collection('properties');
+
+    async function savePropertyToFirestore(property) {
+      if (!userId) {
+        alert('You must be signed in to save properties.');
+        return;
+      }
+      try {
+        await userPropertiesRef().add(property);
+        alert('Property saved to your account!');
+        gtag('event', 'save_property');
+      } catch (e) {
+        console.error("Error saving property:", e);
+        alert('Failed to save property. Please try again.');
+      }
+    }
+
+    async function loadUserProperties() {
+      if (!userId) return;
+      try {
+        const snapshot = await userPropertiesRef().get();
+        savedProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        updateSavedPropertiesList();
+        console.log("Properties loaded from Firestore:", savedProperties);
+      } catch (e) {
+        console.error("Error loading properties:", e);
+      }
+    }
+
+    async function deletePropertyFromFirestore(propertyId) {
+      if (!userId) return;
+      try {
+        await userPropertiesRef().doc(propertyId).delete();
+        console.log("Property deleted from Firestore:", propertyId);
+      } catch (e) {
+        console.error("Error deleting property:", e);
+      }
+    }
+    
+    // PWA Functionality
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+      homeInstallBtn.classList.remove('hidden');
+    });
+    
+    installBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display='none';
+          homeInstallBtn.classList.add('hidden');
+          gtag('event', 'pwa_install', { source: 'nav_button' });
+        }
+        deferredPrompt = null;
+      }
+    };
+
+    homeInstallBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          homeInstallBtn.classList.add('hidden');
+          gtag('event', 'pwa_install', { source: 'homepage' });
+        }
+        deferredPrompt = null;
+      } else {
+        alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
+      }
+    };
+
+    // Navigation
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
+      
+      const pageElement = document.getElementById(pageId + 'Page');
+      if (pageElement) pageElement.classList.add('active');
+
+      const navLinkElement = document.querySelector(`[data-page="${pageId}"]`);
+      if (navLinkElement) navLinkElement.classList.add('active');
+
+      const mobileNavLink = document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`);
+      if (mobileNavLink) mobileNavLink.classList.add('active');
+      
+      gtag('event', 'page_view', {page_title: pageId});
+    }
+    
+    document.querySelectorAll('[data-page]').forEach(link => {
+      link.onclick = (e) => {
+        e.preventDefault();
+        showPage(link.dataset.page);
+      };
+    });
+
+    // Helper functions
+    function money(n){return '$'+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
+    function pct(n){return Number(n).toFixed(2)+'%';}
+
+    function calculateCMHC(price, downPercent) {
+      if (downPercent >= 20) return 0;
+      const loanAmount = price * (1 - downPercent/100);
+      let rate;
+      if (downPercent >= 15) rate = 0.028;
+      else if (downPercent >= 10) rate = 0.031;
+      else rate = 0.04;
+      return loanAmount * rate;
+    }
+
+    // Calculator functions
+    document.getElementById('calcButton').onclick = () => {
+      const price = +document.getElementById('price').value || 0;
+      const downPercent = +document.getElementById('down').value || 20;
+      const rate = (+document.getElementById('rate').value || 0) / 100 / 12;
+      const term = (+document.getElementById('term').value || 25) * 12;
+      const monthlyRent = +document.getElementById('rent').value || 0;
+      const annualTax = +document.getElementById('propertyTax').value || 0;
+      const annualInsurance = +document.getElementById('insurance').value || 0;
+      const managementPercent = +document.getElementById('management').value || 0;
+      const vacancyPercent = +document.getElementById('vacancy').value || 0;
+      const otherMonthly = +document.getElementById('otherExpenses').value || 0;
+      
+      if (!price || !monthlyRent) {
+        alert('Please enter at least the purchase price and monthly rent.');
+        return;
+      }
+      
+      // Calculations
+      const downPayment = price * downPercent / 100;
+      const cmhcInsurance = calculateCMHC(price, downPercent);
+      const loanAmount = price - downPayment + cmhcInsurance;
+      
+      let monthlyPayment = 0;
+      if (rate === 0) {
+        monthlyPayment = loanAmount / term;
+      } else {
+        monthlyPayment = loanAmount * (rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1);
+      }
+      
+      // Monthly expenses
+      const monthlyTax = annualTax / 12;
+      const monthlyInsurance = annualInsurance / 12;
+      const managementFee = monthlyRent * managementPercent / 100;
+      const vacancyLoss = monthlyRent * vacancyPercent / 100;
+      
+      const totalMonthlyExpenses = monthlyPayment + monthlyTax + monthlyInsurance + managementFee + vacancyLoss + otherMonthly;
+      const effectiveRent = monthlyRent - vacancyLoss;
+      const netCashFlow = effectiveRent - totalMonthlyExpenses;
+      
+      // Annual calculations
+      const grossAnnualRent = monthlyRent * 12;
+      const effectiveAnnualRent = effectiveRent * 12;
+      const annualExpenses = (monthlyTax + monthlyInsurance + managementFee + otherMonthly) * 12 + (monthlyRent * vacancyPercent / 100 * 12);
+      const noi = effectiveAnnualRent - annualExpenses;
+      const capRate = price ? (noi / price) * 100 : 0;
+      const totalInitialInvestment = downPayment + cmhcInsurance;
+      const cashOnCash = totalInitialInvestment ? (netCashFlow * 12 / totalInitialInvestment) * 100 : 0;
+      
+      // Store current calculation
+      currentProperty = {
+        price, downPercent, rate: +document.getElementById('rate').value, term: +document.getElementById('term').value,
+        monthlyRent, annualTax, annualInsurance, managementPercent, vacancyPercent, otherMonthly,
+        monthlyPayment, netCashFlow, noi, capRate, cashOnCash, totalInitialInvestment,
+        downPayment, cmhcInsurance, timestamp: new Date(),
+        image: null
+      };
+      
+      // Display results
+      document.getElementById('payment').textContent = money(monthlyPayment);
+      document.getElementById('cashflow').textContent = money(netCashFlow);
+      document.getElementById('caprate').textContent = pct(capRate);
+      document.getElementById('coc').textContent = pct(cashOnCash);
+      
+      document.getElementById('downPaymentAmount').textContent = money(downPayment);
+      document.getElementById('cmhcAmount').textContent = money(cmhcInsurance);
+      document.getElementById('totalInitial').textContent = money(totalInitialInvestment);
+      document.getElementById('grossRent').textContent = money(grossAnnualRent);
+      document.getElementById('totalExpenses').textContent = money(annualExpenses);
+      document.getElementById('noi').textContent = money(noi);
+      
+      document.getElementById('results').style.display = 'block';
+      
+      // Color coding for cash flow
+      document.getElementById('cashflow').style.color = netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)';
+      
+      gtag('event', 'calculate_property', {
+        value: price,
+        currency: 'CAD'
+      });
+    };
+
+    // CMHC checkbox and down payment sync
+    document.getElementById('cmhcRequired').onchange = function() {
+      const downPercent = +document.getElementById('down').value || 20;
+      this.checked = downPercent < 20;
+      if (downPercent >= 20) this.checked = false;
+    };
+    document.getElementById('down').oninput = function() {
+      const downPercent = +this.value || 20;
+      document.getElementById('cmhcRequired').checked = downPercent < 20;
+    };
+
+    // Save property functionality
+    document.getElementById('saveProperty').onclick = () => {
+      if (!currentProperty.price) {
+        alert('Please calculate a property first.');
+        return;
+      }
+      
+      const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
+      if (name) {
+        currentProperty.name = name;
+        savePropertyToFirestore(currentProperty);
+      }
+    };
+
+    function updateSavedPropertiesList() {
+      const container = document.getElementById('propertiesList');
+      if (savedProperties.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">No saved properties yet. Calculate and save properties to see them here.</div>';
+        return;
+      }
+      
+      container.innerHTML = savedProperties.map(prop => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
+          <div>
+            <strong>${prop.name}</strong><br>
+            <span class="muted">${money(prop.price)} • ${pct(prop.capRate)} cap • ${money(prop.netCashFlow)}/mo cash flow</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-secondary btn-small" onclick="loadProperty('${prop.id}')">Load</button>
+            <button class="btn-danger btn-small" onclick="deleteProperty('${prop.id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadProperty(id) {
+      const prop = savedProperties.find(p => p.id === id);
+      if (!prop) {
+        console.error("Property not found in local cache.");
+        return;
+      }
+      
+      document.getElementById('price').value = prop.price;
+      document.getElementById('down').value = prop.downPercent;
+      document.getElementById('rate').value = prop.rate;
+      document.getElementById('term').value = prop.term;
+      document.getElementById('rent').value = prop.monthlyRent;
+      document.getElementById('propertyTax').value = prop.annualTax;
+      document.getElementById('insurance').value = prop.annualInsurance;
+      document.getElementById('management').value = prop.managementPercent;
+      document.getElementById('vacancy').value = prop.vacancyPercent;
+      document.getElementById('otherExpenses').value = prop.otherMonthly;
+      
+      showPage('calculator');
+      document.getElementById('calcButton').click();
+      
+      currentProperty.name = prop.name;
+      currentProperty.image = prop.image || null;
+      
+      const photoPreview = document.getElementById('photoPreview');
+      if (currentProperty.image) {
+        photoPreview.src = currentProperty.image;
+        photoPreview.classList.remove('hidden');
+      } else {
+        photoPreview.classList.add('hidden');
+      }
+    }
+
+    async function deleteProperty(id) {
+      if (confirm('Are you sure you want to delete this property?')) {
+        await deletePropertyFromFirestore(id);
+        savedProperties = savedProperties.filter(p => p.id !== id);
+        updateSavedPropertiesList();
+        updateComparisonTable();
+      }
+    }
+
+    // Stress Testing and Analysis Tabs
+    document.getElementById('runStressTest').onclick = () => {
+      if (!currentProperty.price) {
+        alert('Please calculate a property first.');
+        return;
+      }
+      const currentRate = +document.getElementById('currentRate').value / 100 / 12;
+      const stressRate = +document.getElementById('stressRate').value / 100 / 12;
+      const loanAmount = currentProperty.price - currentProperty.downPayment + currentProperty.cmhcInsurance;
+      const term = currentProperty.term * 12;
+      
+      const currentPayment = loanAmount * (currentRate * Math.pow(1 + currentRate, term)) / (Math.pow(1 + currentRate, term) - 1);
+      const stressPayment = loanAmount * (stressRate * Math.pow(1 + stressRate, term)) / (Math.pow(1 + stressRate, term) - 1);
+      const paymentIncrease = stressPayment - currentPayment;
+      const newCashFlow = currentProperty.netCashFlow - paymentIncrease;
+      
+      document.getElementById('stressResults').innerHTML = `
+        <div class="grid grid-2">
+          <div class="metric">
+            <div class="metric-value">${money(currentPayment)}</div>
+            <div class="metric-label">Current Payment</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" style="color:var(--danger)">${money(stressPayment)}</div>
+            <div class="metric-label">Stress Test Payment</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" style="color:var(--warning)">${money(paymentIncrease)}</div>
+            <div class="metric-label">Monthly Increase</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" style="color:${newCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(newCashFlow)}</div>
+            <div class="metric-label">New Cash Flow</div>
+          </div>
+        </div>
+        <div class="alert ${newCashFlow >= 0 ? 'alert-success' : 'alert-danger'}" style="margin-top:16px;">
+          ${newCashFlow >= 0 ? 
+            '<strong>✅ Stress Test Passed:</strong> Property maintains positive cash flow even at higher rates.' :
+            '<strong>⚠️ Stress Test Failed:</strong> Property would have negative cash flow at higher interest rates.'}
+        </div>
+      `;
+      document.getElementById('stressResults').style.display = 'block';
+    };
+
+    document.getElementById('runRentAnalysis').onclick = () => {
+      if (!currentProperty.price) {
+        alert('Please calculate a property first.');
+        return;
+      }
+      const annualIncrease = +document.getElementById('rentIncrease').value / 100;
+      const years = +document.getElementById('projectionYears').value;
+      const currentRent = currentProperty.monthlyRent;
+      
+      let projectionHTML = '<h4>Rent Growth Projection</h4><table class="comparison-table"><tr><th>Year</th><th>Monthly Rent</th><th>Annual Income</th><th>Cash Flow</th></tr>';
+      
+      for (let year = 0; year <= Math.min(years, 10); year++) {
+        const projectedRent = currentRent * Math.pow(1 + annualIncrease, year);
+        const annualIncome = projectedRent * 12;
+        const projectedCashFlow = currentProperty.netCashFlow + (projectedRent - currentRent);
+        
+        projectionHTML += `<tr>
+          <td>Year ${year}</td>
+          <td>${money(projectedRent)}</td>
+          <td>${money(annualIncome)}</td>
+          <td style="color:${projectedCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(projectedCashFlow)}</td>
+        </tr>`;
+      }
+      projectionHTML += '</table>';
+      
+      document.getElementById('rentResults').innerHTML = projectionHTML;
+      document.getElementById('rentResults').style.display = 'block';
+    };
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + 'Tab').style.display = 'block';
+      };
+    });
+
+    // Comparison functionality
+    document.getElementById('addProperty').onclick = () => {
+      if (!currentProperty.price) {
+        alert('Please calculate a property first, then come back to add it to comparison.');
+        return;
+      }
+      showPage('calculator');
+    };
+
+    function updateComparisonTable() {
+      const container = document.getElementById('comparisonContainer');
+      if (savedProperties.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">Add properties from the calculator to compare them side-by-side.</div>';
+        return;
+      }
+      
+      container.innerHTML = `
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Price</th>
+              <th>Down Payment</th>
+              <th>Monthly Rent</th>
+              <th>Cash Flow</th>
+              <th>Cap Rate</th>
+              <th>Cash-on-Cash</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${savedProperties.map(prop => `
+              <tr>
+                <td><strong>${prop.name}</strong></td>
+                <td>${money(prop.price)}</td>
+                <td>${money(prop.downPayment)}</td>
+                <td>${money(prop.monthlyRent)}</td>
+                <td style="color:${prop.netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)'}">${money(prop.netCashFlow)}</td>
+                <td>${pct(prop.capRate)}</td>
+                <td>${pct(prop.cashOnCash)}</td>
+                <td>
+                  <button class="btn-secondary btn-small" onclick="loadProperty('${prop.id}')">Edit</button>
+                  <button class="btn-danger btn-small" onclick="deleteProperty('${prop.id}')">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById('clearComparison').onclick = () => {
+      if (!userId) {
+        alert('This action is only available for signed-in users.');
+        return;
+      }
+      if (confirm('Clear all saved properties?')) {
+        const batch = db.batch();
+        savedProperties.forEach(prop => {
+          batch.delete(userPropertiesRef().doc(prop.id));
+        });
+        batch.commit()
+          .then(() => {
+            savedProperties = [];
+            updateComparisonTable();
+            updateSavedPropertiesList();
+            alert('All properties cleared from your account.');
+          })
+          .catch(e => {
+            console.error("Error clearing properties:", e);
+            alert('Failed to clear properties. Please try again.');
+          });
+      }
+    };
+
+    // Reports and Photo Upload
+    const photoUploadInput = document.getElementById('photoUpload');
+    const photoPreview = document.getElementById('photoPreview');
+    
+    photoUploadInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          photoPreview.src = e.target.result;
+          photoPreview.classList.remove('hidden');
+          currentProperty.image = e.target.result; // Store Base64 data
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('generateSummary').onclick = () => {
+      if (!currentProperty.price) {
+        alert('Please calculate a property first.');
+        return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(22);
+      doc.text("🏠 Property Investment Report", 10, 20);
+      doc.setFontSize(12);
+      doc.text(`Generated on ${new Date().toLocaleDateString('en-CA')}`, 10, 28);
+      if (currentUser) {
+        doc.text(`Prepared for: ${userName.textContent}`, 10, 34);
+      }
+      
+      let yOffset = 45;
+      
+      // Add photo if available
+      if (currentProperty.image) {
+        const img = new Image();
+        img.src = currentProperty.image;
+        const imgWidth = 80;
+        const imgHeight = (img.height * imgWidth) / img.width;
+        doc.addImage(currentProperty.image, 'JPEG', 10, yOffset, imgWidth, imgHeight);
+        yOffset += imgHeight + 10;
+      }
+      
+      doc.setFontSize(16);
+      doc.text("Property Overview", 10, yOffset);
+      yOffset += 10;
+      
+      const overviewData = [
+        ['Purchase Price', money(currentProperty.price)],
+        [`Down Payment (${currentProperty.downPercent}%)`, money(currentProperty.downPayment)],
+        ['CMHC Insurance', money(currentProperty.cmhcInsurance)],
+        ['Total Initial Investment', money(currentProperty.totalInitialInvestment)]
+      ];
+      
+      doc.autoTable({
+        startY: yOffset,
+        head: [['Metric', 'Value']],
+        body: overviewData,
+        theme: 'striped',
+        headStyles: { fillColor: [46, 204, 113] },
+      });
+      yOffset = doc.lastAutoTable.finalY + 10;
+      
+      doc.setFontSize(16);
+      doc.text("Financial Performance", 10, yOffset);
+      yOffset += 10;
+      
+      const financialData = [
+        ['Monthly Cash Flow', money(currentProperty.netCashFlow)],
+        ['Cap Rate', pct(currentProperty.capRate)],
+        ['Cash-on-Cash Return', pct(currentProperty.cashOnCash)],
+        ['Net Operating Income', money(currentProperty.noi)]
+      ];
+      
+      doc.autoTable({
+        startY: yOffset,
+        head: [['Metric', 'Value']],
+        body: financialData,
+        theme: 'striped',
+        headStyles: { fillColor: [46, 204, 113] },
+      });
+      yOffset = doc.lastAutoTable.finalY + 20;
+
+      doc.setFontSize(10);
+      doc.text("This report was generated by PropCheck. Please consult with a qualified financial advisor before making investment decisions.", 10, yOffset);
+
+      doc.save("PropCheck_Report.pdf");
+      gtag('event', 'generate_report');
+    };
+
+    document.getElementById('portfolioReport').onclick = () => {
+      if (savedProperties.length === 0) {
+        alert('No saved properties to analyze. Save some properties first.');
+        return;
+      }
+      const totalInvestment = savedProperties.reduce((sum, prop) => sum + prop.totalInitialInvestment, 0);
+      const totalCashFlow = savedProperties.reduce((sum, prop) => sum + prop.netCashFlow, 0);
+      const totalNOI = savedProperties.reduce((sum, prop) => sum + prop.noi, 0);
+      const avgCapRate = savedProperties.reduce((sum, prop) => sum + prop.capRate, 0) / savedProperties.length;
+      const portfolioCOC = totalInvestment ? (totalCashFlow * 12 / totalInvestment) * 100 : 0;
+      
+      alert(`Portfolio Summary:
+      
+Total Properties: ${savedProperties.length}
+Total Investment: ${money(totalInvestment)}
+Monthly Cash Flow: ${money(totalCashFlow)}
+Annual NOI: ${money(totalNOI)}
+Average Cap Rate: ${pct(avgCapRate)}
+Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
+      gtag('event', 'view_portfolio_report');
+    };
+
+    // Market data functionality
+    document.getElementById('loadMarketData').onclick = () => {
+      const city = document.getElementById('citySelect').value;
+      const propType = document.getElementById('propertyType').value;
+      setTimeout(() => {
+        alert(`Loading market data for ${city} ${propType} properties...`);
+        gtag('event', 'load_market_data', {
+          city: city,
+          property_type: propType
+        });
+      }, 500);
+    };
+
+    // Expense breakdown for analysis page
+    function updateExpenseBreakdown() {
+      if (!currentProperty.price) {
+        document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>';
+        return;
+      }
+      const monthlyTax = (currentProperty.annualTax || 0) / 12;
+      const monthlyInsurance = (currentProperty.annualInsurance || 0) / 12;
+      const managementFee = currentProperty.monthlyRent * (currentProperty.managementPercent || 0) / 100;
+      const vacancyLoss = currentProperty.monthlyRent * (currentProperty.vacancyPercent || 0) / 100;
+      const otherMonthly = currentProperty.otherMonthly || 0;
+      
+      const expenses = [
+        {name: 'Mortgage Payment', amount: currentProperty.monthlyPayment, percent: 0},
+        {name: 'Property Tax', amount: monthlyTax, percent: 0},
+        {name: 'Insurance', amount: monthlyInsurance, percent: 0},
+        {name: 'Management Fee', amount: managementFee, percent: currentProperty.managementPercent},
+        {name: 'Vacancy Loss', amount: vacancyLoss, percent: currentProperty.vacancyPercent},
+        {name: 'Other Expenses', amount: otherMonthly, percent: 0}
+      ];
+      const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      
+      document.getElementById('expenseBreakdown').innerHTML = `
+        <h4>Monthly Expense Breakdown</h4>
+        <table class="comparison-table">
+          <tr><th>Expense Category</th><th>Amount</th><th>% of Rent</th></tr>
+          ${expenses.map(exp => `
+            <tr>
+              <td>${exp.name}</td>
+              <td>${money(exp.amount)}</td>
+              <td>${exp.percent ? pct(exp.percent) : pct((exp.amount / currentProperty.monthlyRent) * 100)}</td>
+            </tr>
+          `).join('')}
+          <tr style="border-top:2px solid var(--border);font-weight:bold;">
+            <td>Total Expenses</td>
+            <td>${money(totalExpenses)}</td>
+            <td>${pct((totalExpenses / currentProperty.monthlyRent) * 100)}</td>
+          </tr>
+        </table>
+        
+        <div class="alert ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 'alert-success' : 'alert-warning'}">
+          <strong>Expense Ratio Analysis:</strong> 
+          ${(totalExpenses / currentProperty.monthlyRent) < 0.75 ? 
+            'Your expense ratio is healthy at under 75% of rental income.' :
+            'Consider reducing expenses - current ratio is above recommended 75% threshold.'}
+        </div>
+      `;
+    }
+
+    // Event listeners for page changes
+    document.querySelector('[data-page="analysis"]').addEventListener('click', () => {
+      setTimeout(updateExpenseBreakdown, 100);
+    });
+    document.querySelector('[data-page="compare"]').addEventListener('click', () => {
+      setTimeout(updateComparisonTable, 100);
+    });
+    document.querySelector('[data-page="reports"]').addEventListener('click', () => {
+      setTimeout(updateSavedPropertiesList, 100);
+    });
+    
+    // Initialize the app
+    window.addEventListener('load', () => {
+      // Initialize AdSense
+      (adsbygoogle = window.adsbygoogle || []).push({});
+
+      // Initialize Google Sign-in button
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: handleCredentialResponse
+        });
+        
+        google.accounts.id.renderButton(
+          document.getElementById('g_button_target'),
+          {
+            theme: 'outline',
+            size: 'large',
+            width: 280,
+            text: 'signin_with',
+            shape: 'rectangular'
+          }
+        );
+      } else {
+        console.log('Google Sign-In library not loaded');
+        document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
+      }
+    });
+
   </script>
 </body>
-
 </html>
-
