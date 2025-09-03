@@ -1,4 +1,4 @@
-!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -187,13 +187,14 @@
       color: var(--text-color);
     }
 
-    .input-group input, .input-group select {
+    .input-group input, .input-group select, .input-group textarea {
       padding: 12px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       font-size: 1rem;
       background-color: var(--input-bg);
       color: var(--text-color);
+      font-family: 'Inter', sans-serif;
     }
 
     .button-container {
@@ -543,8 +544,7 @@
            data-theme="outline"
            data-text="sign_in_with"
            data-shape="rectangular"
-           data-logo_alignment="left"
-           data-callback="handleCredentialResponse">
+           data-logo_alignment="left">
       </div>
     </header>
     <section class="main-content">
@@ -760,6 +760,26 @@
     let cashflowChart;
     let uploadedPhotos = [];
     let deferredPrompt;
+
+    // Google Sign-In callback function
+    function handleCredentialResponse(response) {
+      console.log("Google Sign-In response:", response);
+      // Here you would typically send the credential to your server for verification
+      // For this client-side app, we'll just log it
+      const data = parseJwt(response.credential);
+      console.log("User data:", data);
+      // You could save user data to localStorage or use it for personalization
+    }
+
+    // Helper function to parse JWT token from Google Sign-In
+    function parseJwt(token) {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize theme based on local storage
@@ -1418,4 +1438,3 @@
   </script>
 </body>
 </html>
-
