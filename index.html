@@ -6,29 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'G-PRQW949FW1');
-  </script>
-
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701" crossorigin="anonymous"></script>
-
-  <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="site.webmanifest" />
-  <meta name="theme-color" content="#2ecc71" />
-
-  <!-- Tailwind CSS & JS PDF -->
+  <!-- Tailwind CSS & JS PDF & Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -73,7 +51,6 @@
       @apply text-gray-800 bg-gray-100 font-medium;
     }
   </style>
-
 </head>
 
 <body class="h-full bg-gray-50">
@@ -92,8 +69,7 @@
         </div>
         <div class="flex items-center space-x-4">
           <span id="userIdDisplay" class="text-sm text-gray-500 hidden sm:block"></span>
-          <button id="googleSignInBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full font-medium hover:bg-gray-300 transition-colors duration-200 shadow-md">Sign in with Google</button>
-          <button id="pwaInstallBtn" class="bg-brand text-white px-4 py-2 rounded-full font-medium hover:bg-brand-dark transition-colors duration-200 shadow-md hidden">Download App</button>
+          <button id="googleSignInBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full font-medium hover:bg-gray-300 transition-colors duration-200 shadow-md hidden">Sign in with Google</button>
         </div>
       </nav>
       <div class="bg-white border-t border-gray-200">
@@ -105,7 +81,7 @@
           <button id="navSavedProperties" data-page="saved" class="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors duration-200">Saved Properties</button>
         </div>
       </div>
-    </div>
+    </header>
 
     <main class="flex-1">
       <div id="page-content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -154,8 +130,8 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     setLogLevel('debug');
@@ -164,9 +140,8 @@
     const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-    let app, auth, db, userId, googleAuthProvider;
+    let app, auth, db, userId;
 
-    const installBtn = document.getElementById('pwaInstallBtn');
     const appContainer = document.getElementById('app-container');
     const loadingSpinner = document.getElementById('loading-spinner');
     const userIdDisplay = document.getElementById('userIdDisplay');
@@ -179,26 +154,6 @@
 
     // Page navigation buttons
     const navButtons = document.querySelectorAll('nav button, .mobile-nav-item');
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.classList.remove('hidden');
-    });
-
-    installBtn.onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const {
-          outcome
-        } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installBtn.classList.add('hidden');
-        }
-        deferredPrompt = null;
-      }
-    };
 
     /**
      * Replaces alert() with a custom modal box.
@@ -214,94 +169,6 @@
     modalOkBtn.onclick = () => {
       modal.classList.add('hidden');
     };
-
-    /**
-     * Handles the Google Sign-in credential response.
-     * @param {object} response - The credential response object from Google.
-     */
-    window.handleCredentialResponse = async (response) => {
-      try {
-        if (!response.credential) {
-          throw new Error("Google credential not found.");
-        }
-        const credential = GoogleAuthProvider.credential(response.credential);
-        await signInWithCredential(auth, credential);
-      } catch (e) {
-        console.error("Error with Google Sign-in:", e);
-        showAlert("Sign-in Error", "Failed to sign in with Google. Please try again.");
-      }
-    };
-
-    /**
-     * Generates a sample report for a property.
-     * @param {string} propertyId - The ID of the property.
-     */
-    async function generateReport(propertyId) {
-      try {
-        const docRef = doc(db, `artifacts/${appId}/users/${userId}/properties/${propertyId}`);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const property = docSnap.data();
-          const {
-            jsPDF
-          } = window.jspdf;
-          const doc = new jsPDF();
-          let y = 10;
-
-          // Add title
-          doc.setFontSize(20);
-          doc.text(`Report for ${property.address}`, 10, y);
-          y += 10;
-          doc.setFontSize(12);
-          doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 10, y);
-          y += 10;
-
-          // Add photos if they exist
-          if (property.photos && property.photos.length > 0) {
-            y += 5;
-            for (const photo of property.photos) {
-              const imgData = photo.data;
-              doc.addImage(imgData, 'JPEG', 10, y, 180, 100);
-              y += 110;
-              if (y > 280) {
-                doc.addPage();
-                y = 10;
-              }
-            }
-          }
-
-          // Add financial summary
-          doc.addPage();
-          y = 10;
-          doc.setFontSize(16);
-          doc.text("Financial Summary", 10, y);
-          y += 10;
-
-          doc.autoTable({
-            startY: y,
-            head: [
-              ['Metric', 'Value']
-            ],
-            body: [
-              ['Purchase Price', `$${property.purchasePrice.toLocaleString()}`],
-              ['Total Investment', `$${property.totalInvestment.toLocaleString()}`],
-              ['Monthly Cash Flow', `$${property.monthlyCashFlow.toLocaleString()}`],
-              ['Cap Rate', `${(property.capRate * 100).toFixed(2)}%`],
-              ['Cash-on-Cash', `${(property.cashOnCash * 100).toFixed(2)}%`]
-            ]
-          });
-
-          doc.save(`${property.address.replace(/[^a-z0-9]/gi, '_')}-report.pdf`);
-          showAlert('Success', 'Report generated successfully!');
-        } else {
-          showAlert('Error', 'Property not found.');
-        }
-      } catch (e) {
-        console.error("Error generating report:", e);
-        showAlert('Error', 'Failed to generate report. Please try again.');
-      }
-    }
 
     let savedProperties = [];
 
@@ -341,11 +208,6 @@
               <label for="monthlyExpenses" class="block text-sm font-medium text-gray-700">Monthly Expenses (Excluding Mortgage) ($)</label>
               <input type="number" id="monthlyExpenses" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand" required>
             </div>
-            <div>
-              <label for="photos" class="block text-sm font-medium text-gray-700">Property Photos</label>
-              <input type="file" id="photos" accept="image/*" multiple class="mt-1 block w-full text-sm text-gray-500">
-            </div>
-            <div id="photo-preview" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4"></div>
             <div class="flex space-x-4">
               <button type="submit" id="save-btn" class="bg-brand text-white px-6 py-3 rounded-full font-bold hover:bg-brand-dark transition-colors duration-200 shadow-md flex-1">Save Property</button>
             </div>
@@ -354,29 +216,6 @@
       `;
 
       const propertyForm = document.getElementById('property-form');
-      const photosInput = document.getElementById('photos');
-      const photoPreview = document.getElementById('photo-preview');
-      let photos = [];
-
-      photosInput.addEventListener('change', (e) => {
-        photos = [];
-        photoPreview.innerHTML = '';
-        const files = e.target.files;
-        for (const file of files) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            photos.push({
-              data: event.target.result
-            });
-            const img = document.createElement('img');
-            img.src = event.target.result;
-            img.className = 'w-full h-auto rounded-lg object-cover shadow-sm';
-            photoPreview.appendChild(img);
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
       propertyForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const address = document.getElementById('address').value;
@@ -389,32 +228,22 @@
           return;
         }
 
-        const totalInvestment = purchasePrice;
-        const monthlyCashFlow = monthlyRent - monthlyExpenses;
-        const annualNOI = (monthlyRent - monthlyExpenses) * 12;
-        const capRate = annualNOI / purchasePrice;
-        const cashOnCash = monthlyCashFlow * 12 / totalInvestment;
-
         const newProperty = {
           address,
           purchasePrice,
           monthlyRent,
           monthlyExpenses,
-          totalInvestment,
-          monthlyCashFlow,
-          annualNOI,
-          capRate,
-          cashOnCash,
-          photos: photos
+          totalInvestment: purchasePrice,
+          monthlyCashFlow: monthlyRent - monthlyExpenses,
+          annualNOI: (monthlyRent - monthlyExpenses) * 12,
+          capRate: (monthlyRent - monthlyExpenses) * 12 / purchasePrice,
+          cashOnCash: (monthlyRent - monthlyExpenses) * 12 / purchasePrice
         };
 
         try {
           await addDoc(collection(db, `artifacts/${appId}/users/${userId}/properties`), newProperty);
           showAlert('Success', `Property "${address}" saved successfully!`);
           propertyForm.reset();
-          photos = [];
-          photoPreview.innerHTML = '';
-          navigateTo('saved');
         } catch (e) {
           console.error("Error adding document: ", e);
           showAlert('Error', 'Failed to save property. Please try again.');
@@ -446,7 +275,6 @@
             <p class="text-sm text-gray-600">Monthly Cash Flow: ${money(prop.monthlyCashFlow)}</p>
           </div>
           <div class="flex space-x-2">
-            <button onclick="generateReport('${prop.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition-colors duration-200">Report</button>
             <button onclick="deleteProperty('${prop.id}')" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition-colors duration-200">Delete</button>
           </div>
         `;
@@ -689,20 +517,6 @@
         app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
-        googleAuthProvider = new GoogleAuthProvider();
-
-        // Initialize Google Sign-in and add a click event listener to the custom button.
-        if (window.google && window.google.accounts && window.google.accounts.id) {
-          window.google.accounts.id.initialize({
-            client_id: "YOUR_GOOGLE_CLIENT_ID",
-            callback: window.handleCredentialResponse
-          });
-          googleSignInBtn.addEventListener('click', () => {
-            window.google.accounts.id.prompt();
-          });
-        } else {
-          console.error("Google Identity Services not loaded.");
-        }
 
         onAuthStateChanged(auth, async (user) => {
           if (user) {
@@ -756,7 +570,6 @@
     });
 
     // Make functions globally accessible for inline event handlers
-    window.generateReport = generateReport;
     window.deleteProperty = deleteProperty;
   </script>
 </body>
