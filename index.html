@@ -1,8 +1,8 @@
-<!doctype html>
+!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
 
   <!-- Google tag (gtag.js) -->
@@ -46,6 +46,9 @@
       --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       --input-bg: #f8f8f8;
       --button-hover: #f1f1f1;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --danger: #e74c3c;
     }
 
     /* Dark Mode Variables */
@@ -91,6 +94,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 15px;
     }
 
     .logo-container {
@@ -115,6 +120,7 @@
     nav {
       display: flex;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
     .nav-button {
@@ -194,6 +200,7 @@
       display: flex;
       gap: 12px;
       margin-top: 24px;
+      flex-wrap: wrap;
     }
 
     .button {
@@ -204,6 +211,8 @@
       font-weight: 600;
       cursor: pointer;
       transition: background-color 0.2s ease, transform 0.1s ease;
+      min-width: 120px;
+      text-align: center;
     }
 
     .button:active {
@@ -304,6 +313,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .tabs {
@@ -311,6 +322,8 @@
       gap: 8px;
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+      padding-bottom: 5px;
     }
 
     .tab-button {
@@ -322,6 +335,7 @@
       color: var(--muted);
       font-weight: 500;
       position: relative;
+      white-space: nowrap;
     }
 
     .tab-button.active {
@@ -364,22 +378,143 @@
       opacity: 1;
     }
 
+    /* New styles for improved mobile experience */
+    .photo-preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .photo-preview {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .photo-preview .remove-photo {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .notes-section {
+      margin-top: 20px;
+    }
+
+    .notes-section textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      resize: vertical;
+    }
+
+    /* Improved mobile responsiveness */
     @media (max-width: 768px) {
       .app-container {
         padding: 16px;
+        margin: 10px;
       }
 
       header {
         flex-direction: column;
         gap: 16px;
+        align-items: flex-start;
       }
 
       nav {
         flex-wrap: wrap;
         justify-content: center;
+        width: 100%;
+      }
+
+      .nav-button {
+        flex: 1 1 auto;
+        min-width: 100px;
+      }
+
+      .results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
+      .button-container {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .reports-list li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .reports-list li > div {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .proforma-table-container {
+        overflow-x: auto;
+      }
+
+      .comparison-table {
+        font-size: 0.9rem;
+      }
+
+      .comparison-table th, .comparison-table td {
+        padding: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        gap: 0;
+      }
+
+      .tab-button {
+        padding: 8px 10px;
+        font-size: 0.9rem;
       }
     }
   </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
 
 <body>
@@ -488,7 +623,11 @@
           <div class="input-group">
             <label for="property-photos">Property Photos</label>
             <input type="file" id="property-photos" accept="image/*" multiple>
-            <div id="photo-preview-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+            <div class="photo-preview-container" id="photo-preview-container"></div>
+          </div>
+          <div class="notes-section input-group">
+            <label for="property-notes">Property Notes</label>
+            <textarea id="property-notes" placeholder="Add any notes about this property..."></textarea>
           </div>
         </div>
         <div class="button-container">
@@ -505,6 +644,7 @@
             <button class="tab-button" data-tab="stress-test">Stress Test</button>
             <button class="tab-button" data-tab="proforma">Pro Forma</button>
             <button class="tab-button" data-tab="sensitivity">Sensitivity Analysis</button>
+            <button class="tab-button" data-tab="cashflow">Cash Flow</button>
           </div>
           <div id="summary-tab" class="tab-content active">
             <h2>Summary</h2>
@@ -544,7 +684,7 @@
               <label for="appreciation-rate">Annual Appreciation Rate (%)</label>
               <input type="number" step="0.1" id="appreciation-rate" placeholder="3">
             </div>
-            <div id="proforma-table-container" style="overflow-x:auto;">
+            <div class="proforma-table-container" style="overflow-x:auto;">
               <table class="expense-breakdown-table" id="proforma-table">
                 <thead>
                   <tr>
@@ -562,7 +702,15 @@
           </div>
           <div id="sensitivity-tab" class="tab-content">
             <h2>Sensitivity Analysis</h2>
-            <canvas id="sensitivity-chart"></canvas>
+            <div class="chart-container">
+              <canvas id="sensitivity-chart"></canvas>
+            </div>
+          </div>
+          <div id="cashflow-tab" class="tab-content">
+            <h2>Cash Flow Visualization</h2>
+            <div class="chart-container">
+              <canvas id="cashflow-chart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -607,8 +755,9 @@
       95: 4.0, 90: 3.1, 85: 2.8, 80: 0
     };
     let currentProperty = {};
-    let savedProperties = [];
+    let savedProperties = JSON.parse(localStorage.getItem('savedProperties')) || [];
     let sensitivityChart;
+    let cashflowChart;
     let uploadedPhotos = [];
     let deferredPrompt;
 
@@ -640,6 +789,7 @@
           if (tabId === 'breakdown-tab') updateExpenseBreakdown();
           if (tabId === 'proforma-tab') updateProFormaTable();
           if (tabId === 'sensitivity-tab') createSensitivityChart();
+          if (tabId === 'cashflow-tab') createCashflowChart();
         });
       });
 
@@ -686,6 +836,9 @@
       window.addEventListener('load', () => {
         (adsbygoogle = window.adsbygoogle || []).push({});
       });
+
+      // Load saved properties
+      updateSavedPropertiesList();
     });
 
     function toggleDarkMode() {
@@ -698,21 +851,33 @@
     function handlePhotoUpload(event) {
       const files = event.target.files;
       const previewContainer = document.getElementById('photo-preview-container');
-      previewContainer.innerHTML = '';
-      uploadedPhotos = [];
+      // uploadedPhotos = [];
 
       for (const file of files) {
         if (file.type.startsWith('image/')) {
           const reader = new FileReader();
           reader.onload = (e) => {
             uploadedPhotos.push(e.target.result);
+            const photoPreview = document.createElement('div');
+            photoPreview.className = 'photo-preview';
+            
             const img = document.createElement('img');
             img.src = e.target.result;
-            img.style.width = '100px';
-            img.style.height = '100px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '8px';
-            previewContainer.appendChild(img);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-photo';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => {
+              const index = uploadedPhotos.indexOf(e.target.result);
+              if (index !== -1) {
+                uploadedPhotos.splice(index, 1);
+              }
+              photoPreview.remove();
+            };
+            
+            photoPreview.appendChild(img);
+            photoPreview.appendChild(removeBtn);
+            previewContainer.appendChild(photoPreview);
           };
           reader.readAsDataURL(file);
         }
@@ -735,6 +900,7 @@
       const vacancyRate = parseFloat(document.getElementById('vacancy-rate').value) / 100;
       const capexBudget = parseFloat(document.getElementById('capex-budget').value);
       const closingCostsInput = document.getElementById('closing-costs').value;
+      const propertyNotes = document.getElementById('property-notes').value;
 
       document.getElementById('price-validation').classList.remove('active');
       document.getElementById('rent-validation').classList.remove('active');
@@ -809,7 +975,8 @@
         capRate,
         totalInvestment,
         cocRoi,
-        uploadedPhotos
+        uploadedPhotos,
+        propertyNotes
       };
       
       updateSummary();
@@ -959,7 +1126,9 @@
             label: 'Annual Cash Flow vs. Interest Rate',
             data: cashFlows,
             borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            fill: true
           }]
         },
         options: {
@@ -983,6 +1152,68 @@
       });
     }
 
+    function createCashflowChart() {
+      const ctx = document.getElementById('cashflow-chart').getContext('2d');
+      if (cashflowChart) {
+        cashflowChart.destroy();
+      }
+
+      const years = Array.from({length: 10}, (_, i) => i + 1);
+      const rentGrowth = 0.025;
+      const expenseInflation = 0.02;
+      const appreciationRate = 0.03;
+      
+      const p = currentProperty;
+      let grossIncome = p.grossMonthlyIncome * 12;
+      let expenses = p.totalMonthlyExpenses * 12 - p.mortgagePayment;
+      let propertyValue = p.purchasePrice;
+      const mortgagePayment = p.mortgagePayment;
+      const cashFlows = [];
+
+      for (let year = 1; year <= 10; year++) {
+        let netOperatingIncome = grossIncome - expenses;
+        let cashFlow = netOperatingIncome - (mortgagePayment * 12) - (grossIncome * p.vacancyRate / 100);
+        cashFlows.push(cashFlow);
+        
+        grossIncome *= (1 + rentGrowth);
+        expenses *= (1 + expenseInflation);
+        propertyValue *= (1 + appreciationRate);
+      }
+
+      cashflowChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [{
+            label: 'Annual Cash Flow',
+            data: cashFlows,
+            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+            borderColor: 'rgba(46, 204, 113, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Cash Flow ($)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Year'
+              }
+            }
+          }
+        }
+      });
+    }
+
     function saveProperty() {
       if (Object.keys(currentProperty).length === 0) {
         return;
@@ -990,6 +1221,7 @@
       
       const newProperty = { ...currentProperty, id: Date.now() };
       savedProperties.push(newProperty);
+      localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
       updateSavedPropertiesList();
       
       // Show save confirmation message
@@ -1010,6 +1242,7 @@
           <span>${prop.name} - Cap Rate: ${prop.capRate.toFixed(2)}%, CoC ROI: ${prop.cocRoi.toFixed(2)}%</span>
           <div>
             <button class="button light" onclick="generateReport(${prop.id})">Report</button>
+            <button class="button light" onclick="exportToCSV(${prop.id})">Export CSV</button>
             <button class="button light" onclick="removeProperty(${prop.id})">Remove</button>
           </div>
         `;
@@ -1020,6 +1253,7 @@
     
     function removeProperty(id) {
       savedProperties = savedProperties.filter(p => p.id !== id);
+      localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
       updateSavedPropertiesList();
     }
 
@@ -1058,6 +1292,12 @@
       y += 10;
       doc.text(`Purchase Price: $${prop.purchasePrice.toLocaleString()}`, 14, y);
       y += 10;
+
+      // Add notes if they exist
+      if (prop.propertyNotes) {
+        doc.text(`Notes: ${prop.propertyNotes}`, 14, y);
+        y += 10;
+      }
 
       // Add photos
       if (prop.uploadedPhotos && prop.uploadedPhotos.length > 0) {
@@ -1104,6 +1344,45 @@
       });
 
       doc.save(`PropCheck_Report_${prop.name}.pdf`);
+    }
+
+    function exportToCSV(id) {
+      const prop = savedProperties.find(p => p.id === id);
+      if (!prop) {
+        console.error('Property not found.');
+        return;
+      }
+
+      // Create CSV content
+      let csvContent = "Property Underwriting Report\n";
+      csvContent += `Property Name: ${prop.name}\n`;
+      csvContent += `Purchase Price: $${prop.purchasePrice.toLocaleString()}\n\n`;
+
+      csvContent += "Metric,Value\n";
+      csvContent += `Total Investment,$${prop.totalInvestment.toLocaleString()}\n`;
+      csvContent += `Annual Cash Flow,$${prop.annualCashFlow.toFixed(2)}\n`;
+      csvContent += `Net Operating Income,$${prop.netOperatingIncome.toFixed(2)}\n`;
+      csvContent += `Cap Rate,${prop.capRate.toFixed(2)}%\n`;
+      csvContent += `CoC ROI,${prop.cocRoi.toFixed(2)}%\n\n`;
+
+      csvContent += "10-Year Pro Forma\n";
+      csvContent += "Year,Gross Income,Total Expenses,NOI,Cash Flow,Property Value\n";
+      
+      const proformaData = getProFormaDataForPdf(prop);
+      proformaData.forEach(row => {
+        csvContent += row.join(",") + "\n";
+      });
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `PropCheck_Report_${prop.name}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function getProFormaDataForPdf(prop) {
