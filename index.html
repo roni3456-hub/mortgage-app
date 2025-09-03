@@ -19,11 +19,7 @@
      crossorigin="anonymous"></script>
 
   <!-- Google Identity Services -->
-  <div id="g_id_onload"
-     data-client_id="845244585117-91f86q131m5u6p67mks3038q9916q88o.apps.googleusercontent.com"
-     data-auto_prompt="false"
-     data-callback="handleCredentialResponse">
-</div>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="site.webmanifest" />
@@ -344,6 +340,29 @@
     .validation-message.active {
       display: block;
     }
+    
+    .pwa-install-button {
+      background-color: var(--brand);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none; /* Initially hidden */
+    }
+
+    .save-message {
+      color: var(--brand);
+      font-size: 0.9rem;
+      margin-top: 10px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    
+    .save-message.show {
+      opacity: 1;
+    }
 
     @media (max-width: 768px) {
       .app-container {
@@ -381,6 +400,7 @@
         <button class="nav-button" data-page="compare">Compare</button>
         <button class="nav-button" data-page="reports">Reports</button>
         <button class="nav-button" id="darkModeBtn">Dark Mode</button>
+        <button class="pwa-install-button" id="pwaInstallBtn">Download App</button>
       </nav>
       <div class="g_id_signin"
            data-type="standard"
@@ -389,7 +409,6 @@
            data-text="sign_in_with"
            data-shape="rectangular"
            data-logo_alignment="left"
-           data-width="200"
            data-callback="handleCredentialResponse">
       </div>
     </header>
@@ -475,6 +494,7 @@
         <div class="button-container">
           <button class="button primary" id="calculate-btn">Calculate</button>
           <button class="button light" id="save-btn">Save Property</button>
+          <div id="save-message" class="save-message"></div>
         </div>
       </div>
       <div id="analysis-page" class="page">
@@ -590,6 +610,7 @@
     let savedProperties = [];
     let sensitivityChart;
     let uploadedPhotos = [];
+    let deferredPrompt;
 
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize theme based on local storage
@@ -630,13 +651,35 @@
 
       // PWA functionality
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service worker registered.', reg))
+          .catch(err => console.log('Service worker registration failed.', err));
       }
       
-      let deferredPrompt;
+      const pwaInstallBtn = document.getElementById('pwaInstallBtn');
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
+        pwaInstallBtn.style.display = 'inline-block';
+      });
+
+      pwaInstallBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            console.log('User accepted the install prompt.');
+            gtag('event', 'pwa_install');
+          } else {
+            console.log('User dismissed the install prompt.');
+          }
+          deferredPrompt = null;
+          pwaInstallBtn.style.display = 'none';
+        }
+      });
+      
+      window.addEventListener('appinstalled', (e) => {
+        pwaInstallBtn.style.display = 'none';
       });
 
       // Initialize AdSense ads on page load
@@ -948,7 +991,14 @@
       const newProperty = { ...currentProperty, id: Date.now() };
       savedProperties.push(newProperty);
       updateSavedPropertiesList();
-      alert('Property saved successfully!');
+      
+      // Show save confirmation message
+      const saveMessage = document.getElementById('save-message');
+      saveMessage.textContent = 'Property saved successfully!';
+      saveMessage.classList.add('show');
+      setTimeout(() => {
+        saveMessage.classList.remove('show');
+      }, 3000);
     }
 
     function updateSavedPropertiesList() {
@@ -993,7 +1043,7 @@
     function generateReport(id) {
       const prop = savedProperties.find(p => p.id === id);
       if (!prop) {
-        alert('Property not found.');
+        console.error('Property not found.');
         return;
       }
 
@@ -1089,3 +1139,4 @@
   </script>
 </body>
 </html>
+
