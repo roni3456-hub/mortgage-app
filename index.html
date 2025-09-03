@@ -97,6 +97,40 @@
     .loading { opacity: 0; pointer-events: none; }
     .hidden { display: none !important; }
     
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      z-index: 10000;
+      max-width: 400px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.warning { border-left: 4px solid var(--warning); }
+    .toast.danger { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--info); }
+    
+    .toast .toast-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .toast .toast-message {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    
     /* Login Styles */
     .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
     .login-card{width:100%;max-width:420px;background:var(--card-bg);border-radius:16px;padding:32px;
@@ -610,6 +644,14 @@
           <div>🏠</div>
           <div>Calc</div>
         </div>
+        <div class="mobile-nav-item" data-page="analysis">
+          <div>📊</div>
+          <div>Analysis</div>
+        </div>
+        <div class="mobile-nav-item" data-page="compare">
+          <div>⚖️</div>
+          <div>Compare</div>
+        </div>
         <div class="mobile-nav-item" data-page="reports">
           <div>📋</div>
           <div>Reports</div>
@@ -623,26 +665,45 @@
   </div>
 
   <script type="module">
-    // Firebase configuration (replace with your actual config)
+    // Firebase configuration
     const firebaseConfig = {
-      apiKey: "your-api-key",
-      authDomain: "your-project.firebaseapp.com",
-      projectId: "your-project-id",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "your-app-id"
+      apiKey: "AIzaSyDemoKey-ReplaceWithActualKey",
+      authDomain: "propcheck-demo.firebaseapp.com",
+      projectId: "propcheck-demo",
+      storageBucket: "propcheck-demo.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcdef123456"
     };
 
     // Global variables
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     let currentProperty = {};
-    let savedProperties = [];
+    let savedProperties = JSON.parse(sessionStorage.getItem('savedProperties') || '[]');
     let currentUser = null;
     let userId = null;
     let db = null;
     let auth = null;
     let deferredPrompt = null;
     let propertyPhotos = [];
+
+    // Toast notification system
+    function showToast(message, type = 'info', title = '') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        ${title ? `<div class="toast-title">${title}</div>` : ''}
+        <div class="toast-message">${message}</div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 4000);
+    }
 
     // Initialize Firebase and app when modules are loaded
     window.addEventListener('firebaseModulesLoaded', initializeApp);
@@ -660,7 +721,7 @@
         db = getFirestore(app);
         
         // Enable Firestore debug logging
-        setLogLevel('debug');
+        setLogLevel('error'); // Reduced to error level to prevent spam
 
         // Set up auth state listener
         onAuthStateChanged(auth, async (user) => {
@@ -680,16 +741,17 @@
           }
         });
 
-        // Initialize other components
-        initializePWA();
-        initializeGoogleSignIn();
-        initializeEventListeners();
-        
       } catch (error) {
         console.error('Firebase initialization error:', error);
+        showToast('Firebase connection failed. Using local storage only.', 'warning', 'Connection Issue');
         // Show app even if Firebase fails
         showMainApp();
       }
+
+      // Initialize other components
+      initializePWA();
+      initializeGoogleSignIn();
+      initializeEventListeners();
     }
 
     function showMainApp() {
@@ -697,6 +759,10 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
       document.getElementById('mainApp').classList.remove('loading');
+      
+      // Load saved properties from session storage
+      updateSavedPropertiesList();
+      updateComparisonTable();
       
       // Initialize AdSense
       if (typeof adsbygoogle !== 'undefined') {
@@ -717,15 +783,24 @@
           savedProperties.push({ id: doc.id, ...doc.data() });
         });
         
+        // Also save to session storage as backup
+        sessionStorage.setItem('savedProperties', JSON.stringify(savedProperties));
+        
         updateSavedPropertiesList();
         updateComparisonTable();
       } catch (error) {
         console.error('Error loading user data:', error);
+        // Fall back to session storage
+        savedProperties = JSON.parse(sessionStorage.getItem('savedProperties') || '[]');
       }
     }
 
     async function savePropertyToFirebase(property) {
-      if (!db || !userId) return;
+      if (!db || !userId) {
+        // Save to session storage if Firebase unavailable
+        property.id = Date.now().toString();
+        return property.id;
+      }
       
       try {
         const { collection, doc, setDoc } = window.firebaseModules;
@@ -738,7 +813,9 @@
         return propertyRef.id;
       } catch (error) {
         console.error('Error saving property:', error);
-        throw error;
+        // Fall back to session storage
+        property.id = Date.now().toString();
+        return property.id;
       }
     }
 
@@ -773,17 +850,20 @@
           if (outcome === 'accepted') {
             gtag('event', 'pwa_install', { source: 'button' });
             document.getElementById('pwaInstallBtn').classList.add('hidden');
+            document.getElementById('homeInstallBtn').classList.add('hidden');
           }
           deferredPrompt = null;
         } else {
           // Fallback instructions
-          alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
+          showToast('To install this app: iOS: Tap Share → Add to Home Screen | Android: Tap menu → Add to Home Screen | Desktop: Look for install icon in address bar', 'info', 'Install Instructions');
         }
       }
 
       // Register service worker
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.log('Service worker registration failed:', err);
+        });
       }
     }
 
@@ -807,6 +887,7 @@
         document.getElementById('userName').textContent = payload.name;
         document.getElementById('userEmail').textContent = payload.email;
         showMainApp();
+        showToast(`Welcome back, ${payload.name}!`, 'success', 'Signed In');
         gtag('event', 'login', { method: 'google' });
       };
 
@@ -829,7 +910,7 @@
             }
           );
         }
-      }, 500);
+      }, 1000);
 
       // Sign out
       document.getElementById('signOut').onclick = () => {
@@ -840,6 +921,7 @@
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
         currentUser = null;
+        showToast('Successfully signed out', 'info', 'Signed Out');
         gtag('event', 'logout');
       };
     }
@@ -899,7 +981,7 @@
       // Comparison
       document.getElementById('addProperty').onclick = () => {
         if (!currentProperty.price) {
-          alert('Please calculate a property first, then come back to add it to comparison.');
+          showToast('Please calculate a property first, then come back to add it to comparison.', 'warning', 'No Property');
           return;
         }
         showPage('calculator');
@@ -929,16 +1011,12 @@
     }
 
     // Utility functions
-    function money(n) { return 'analysis">
-          <div>📊</div>
-          <div>Analysis</div>
-        </div>
-        <div class="mobile-nav-item" data-page="compare">
-          <div>⚖️</div>
-          <div>Compare</div>
-        </div>
-        <div class="mobile-nav-item" data-page=" + Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
-    function pct(n) { return Number(n).toFixed(2) + '%'; }
+    function money(n) { 
+      return ' + Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0}); 
+    }
+    function pct(n) { 
+      return Number(n).toFixed(2) + '%'; 
+    }
 
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -947,7 +1025,8 @@
       
       document.getElementById(pageId + 'Page').classList.add('active');
       document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
-      document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`).classList.add('active');
+      const mobileNavItem = document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`);
+      if (mobileNavItem) mobileNavItem.classList.add('active');
       
       gtag('event', 'page_view', { page_title: pageId });
     }
@@ -975,7 +1054,7 @@
       const otherMonthly = +document.getElementById('otherExpenses').value || 0;
       
       if (!price || !monthlyRent) {
-        alert('Please enter at least the purchase price and monthly rent.');
+        showToast('Please enter at least the purchase price and monthly rent.', 'warning', 'Missing Information');
         return;
       }
       
@@ -1045,7 +1124,7 @@
 
     async function saveProperty() {
       if (!currentProperty.price) {
-        alert('Please calculate a property first.');
+        showToast('Please calculate a property first.', 'warning', 'No Property');
         return;
       }
       
@@ -1054,18 +1133,21 @@
         try {
           currentProperty.name = name;
           
-          if (db && userId) {
-            const propertyId = await savePropertyToFirebase(currentProperty);
-            currentProperty.id = propertyId;
-          }
+          const propertyId = await savePropertyToFirebase(currentProperty);
+          currentProperty.id = propertyId;
           
           savedProperties.push({...currentProperty});
+          
+          // Save to session storage as backup
+          sessionStorage.setItem('savedProperties', JSON.stringify(savedProperties));
+          
           updateSavedPropertiesList();
-          alert('Property saved successfully!');
+          updateComparisonTable();
+          showToast('Property saved successfully!', 'success', 'Property Saved');
           gtag('event', 'save_property');
         } catch (error) {
           console.error('Error saving property:', error);
-          alert('Error saving property. Please try again.');
+          showToast('Error saving property. Please try again.', 'danger', 'Save Error');
         }
       }
     }
@@ -1080,11 +1162,14 @@
           }
           
           savedProperties.splice(index, 1);
+          sessionStorage.setItem('savedProperties', JSON.stringify(savedProperties));
+          
           updateSavedPropertiesList();
           updateComparisonTable();
+          showToast('Property deleted successfully', 'info', 'Property Deleted');
         } catch (error) {
           console.error('Error deleting property:', error);
-          alert('Error deleting property. Please try again.');
+          showToast('Error deleting property. Please try again.', 'danger', 'Delete Error');
         }
       }
     }
@@ -1109,6 +1194,7 @@
       
       showPage('calculator');
       calculateProperty();
+      showToast(`Loaded ${prop.name}`, 'success', 'Property Loaded');
     }
 
     function updateSavedPropertiesList() {
@@ -1177,14 +1263,16 @@
     function clearComparison() {
       if (confirm('Clear all saved properties?')) {
         savedProperties = [];
+        sessionStorage.setItem('savedProperties', JSON.stringify(savedProperties));
         updateComparisonTable();
         updateSavedPropertiesList();
+        showToast('All properties cleared', 'info', 'Properties Cleared');
       }
     }
 
     function runStressTest() {
       if (!currentProperty.price) {
-        alert('Please calculate a property first.');
+        showToast('Please calculate a property first.', 'warning', 'No Property');
         return;
       }
       
@@ -1234,7 +1322,7 @@
 
     function runRentAnalysis() {
       if (!currentProperty.price) {
-        alert('Please calculate a property first.');
+        showToast('Please calculate a property first.', 'warning', 'No Property');
         return;
       }
       
@@ -1317,7 +1405,7 @@
       
       files.forEach(file => {
         if (file.size > 5 * 1024 * 1024) {
-          alert(`${file.name} is too large. Maximum size is 5MB.`);
+          showToast(`${file.name} is too large. Maximum size is 5MB.`, 'warning', 'File Too Large');
           return;
         }
         
@@ -1347,7 +1435,7 @@
 
     function generateReport() {
       if (!currentProperty.price) {
-        alert('Please calculate a property first.');
+        showToast('Please calculate a property first.', 'warning', 'No Property');
         return;
       }
 
@@ -1457,19 +1545,21 @@
         // Save the PDF
         doc.save(`${currentProperty.name || 'Property'}_Investment_Report.pdf`);
         
+        showToast('PDF report generated successfully!', 'success', 'Report Generated');
+        
         gtag('event', 'generate_report', {
           property_value: currentProperty.price
         });
         
       } catch (error) {
         console.error('Error generating PDF:', error);
-        alert('Error generating PDF. Please try again.');
+        showToast('Error generating PDF. Please try again.', 'danger', 'PDF Error');
       }
     }
 
     function portfolioReport() {
       if (savedProperties.length === 0) {
-        alert('No saved properties to analyze. Save some properties first.');
+        showToast('No saved properties to analyze. Save some properties first.', 'warning', 'No Properties');
         return;
       }
       
@@ -1479,14 +1569,16 @@
       const avgCapRate = savedProperties.reduce((sum, prop) => sum + prop.capRate, 0) / savedProperties.length;
       const portfolioCOC = totalInvestment ? (totalCashFlow * 12 / totalInvestment) * 100 : 0;
       
-      alert(`Portfolio Summary:
+      const summaryMessage = `Portfolio Summary:
       
 Total Properties: ${savedProperties.length}
 Total Investment: ${money(totalInvestment)}
 Monthly Cash Flow: ${money(totalCashFlow)}
 Annual NOI: ${money(totalNOI)}
 Average Cap Rate: ${pct(avgCapRate)}
-Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
+Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`;
+
+      showToast(summaryMessage, 'info', 'Portfolio Analysis');
     }
 
     function loadMarketData() {
@@ -1495,7 +1587,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       
       // Simulate market data loading
       setTimeout(() => {
-        alert(`Loading market data for ${city} ${propType} properties...`);
+        showToast(`Loading market data for ${city} ${propType} properties...`, 'info', 'Market Data');
         gtag('event', 'load_market_data', {
           city: city,
           property_type: propType
@@ -1508,20 +1600,17 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     window.deleteProperty = deleteProperty;
     window.removePhoto = removePhoto;
 
-    // Initialize when DOM is loaded
+    // Start initialization
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        // Firebase modules will trigger initialization
+        // Will be triggered by Firebase modules loading
       });
+    } else {
+      // DOM already loaded, wait for Firebase modules
+      if (window.firebaseModules) {
+        initializeApp();
+      }
     }
   </script>
 </body>
-</html>analysis">
-          <div>📊</div>
-          <div>Analysis</div>
-        </div>
-        <div class="mobile-nav-item" data-page="compare">
-          <div>⚖️</div>
-          <div>Compare</div>
-        </div>
-        <div class="mobile-nav-item" data-page="
+</html>
