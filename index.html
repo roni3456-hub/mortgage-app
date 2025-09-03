@@ -2,1439 +2,481 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>PropCheck – RE Calculator & Underwriting Tool</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#16a34a" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- Google tag (gtag.js) -->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag(){dataLayer.push(arguments);} 
     gtag('js', new Date());
     gtag('config', 'G-PRQW949FW1');
   </script>
 
   <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
-     crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701" crossorigin="anonymous"></script>
 
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="site.webmanifest" />
-  <meta name="theme-color" content="#2ecc71" />
-
-  <!-- jsPDF for PDF generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- Chart.js for charts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
   <style>
-    :root {
-      --brand: #2ecc71;
-      --brand-dark: #27ae60;
-      --muted: #7f8c8d;
-      --card-bg: #ffffff;
-      --page-bg-1: #667eea;
-      --page-bg-2: #764ba2;
-      --text-color: #333;
-      --heading-color: #2c3e50;
-      --border-color: #e0e0e0;
-      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --input-bg: #f8f8f8;
-      --button-hover: #f1f1f1;
-      --success: #2ecc71;
-      --warning: #f39c12;
-      --danger: #e74c3c;
-    }
-
-    /* Dark Mode Variables */
-    body[data-theme="dark"] {
-      --card-bg: #2d3748;
-      --page-bg-1: #1a202c;
-      --page-bg-2: #2d3748;
-      --text-color: #e2e8f0;
-      --heading-color: #f7fafc;
-      --border-color: #4a5568;
-      --input-bg: #4a5568;
-      --button-hover: #4a5568;
-    }
-
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(45deg, var(--page-bg-1), var(--page-bg-2));
-      color: var(--text-color);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .app-container {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: var(--box-shadow);
-      margin: 20px;
-      padding: 24px;
-      width: 95%;
-      max-width: 1000px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: var(--heading-color);
-      font-weight: 600;
-    }
-
-    nav {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .nav-button {
-      background-color: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .nav-button:hover, .nav-button.active {
-      color: var(--brand);
-    }
-
-    .nav-button.active {
-      background-color: var(--brand);
-      color: #fff;
-    }
-
-    .main-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .page {
-      display: none;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      padding: 24px;
-      margin-top: 16px;
-      border: 1px solid var(--border-color);
-    }
-
-    h2 {
-      color: var(--heading-color);
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-top: 0;
-      margin-bottom: 16px;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 16px;
-    }
-
-    .input-group label {
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text-color);
-    }
-
-    .input-group input, .input-group select, .input-group textarea {
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1rem;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      font-family: 'Inter', sans-serif;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-      flex-wrap: wrap;
-    }
-
-    .button {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      min-width: 120px;
-      text-align: center;
-    }
-
-    .button:active {
-      transform: scale(0.98);
-    }
-
-    .button.primary {
-      background-color: var(--brand);
-      color: #fff;
-    }
-
-    .button.secondary {
-      background-color: var(--muted);
-      color: #fff;
-    }
-
-    .button.light {
-      background-color: #f0f0f0;
-      color: var(--text-color);
-    }
-
-    .button.light:hover {
-      background-color: var(--button-hover);
-    }
-
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .result-item {
-      padding: 16px;
-      background-color: var(--input-bg);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .result-item span:first-child {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .result-item span:last-child {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--heading-color);
-    }
-
-    .expense-breakdown-table, .comparison-table, .reports-list {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-    }
-
-    .expense-breakdown-table th, .expense-breakdown-table td,
-    .comparison-table th, .comparison-table td {
-      border: 1px solid var(--border-color);
-      padding: 12px;
-      text-align: left;
-    }
-
-    .expense-breakdown-table th, .comparison-table th {
-      background-color: var(--input-bg);
-      color: var(--heading-color);
-      font-weight: 600;
-    }
-
-    .stress-test-container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    .stress-test-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background-color: var(--input-bg);
-      border-radius: 8px;
-    }
-
-    .stress-test-item span {
-      font-weight: 500;
-    }
-
-    .reports-list li {
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border-color);
-      overflow-x: auto;
-      padding-bottom: 5px;
-    }
-
-    .tab-button {
-      padding: 8px 16px;
-      font-size: 1rem;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      color: var(--muted);
-      font-weight: 500;
-      position: relative;
-      white-space: nowrap;
-    }
-
-    .tab-button.active {
-      color: var(--brand);
-      border-bottom: 2px solid var(--brand);
-      margin-bottom: -1px;
-    }
-
-    .validation-message {
-      color: red;
-      font-size: 0.8rem;
-      margin-top: 4px;
-      display: none;
+    /* Prevent horizontal scroll on mobile */
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
     }
     
-    .validation-message.active {
-      display: block;
+    /* Fix input zoom on iOS */
+    input, select, textarea {
+      font-size: 16px !important;
     }
     
-    .pwa-install-button {
-      background-color: var(--brand);
-      color: #fff;
-      font-weight: 600;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: none; /* Initially hidden */
-    }
-
-    .save-message {
-      color: var(--brand);
-      font-size: 0.9rem;
-      margin-top: 10px;
-      opacity: 0;
-      transition: opacity 0.3s ease-in-out;
+    /* Custom scrollbar for property list */
+    .property-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
     
-    .save-message.show {
-      opacity: 1;
+    .property-scroll::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
     }
-
-    /* New styles for improved mobile experience */
-    .photo-preview-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
+    
+    .property-scroll::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
     }
-
-    .photo-preview {
-      position: relative;
-      width: 100px;
-      height: 100px;
+    
+    /* PWA install button animation */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
-
-    .photo-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    .photo-preview .remove-photo {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background-color: var(--danger);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-
-    .chart-container {
-      position: relative;
-      height: 400px;
-      width: 100%;
-      margin-top: 20px;
-    }
-
-    .notes-section {
-      margin-top: 20px;
-    }
-
-    .notes-section textarea {
-      width: 100%;
-      min-height: 100px;
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1rem;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      resize: vertical;
-    }
-
-    /* Improved mobile responsiveness */
-    @media (max-width: 768px) {
-      .app-container {
-        padding: 16px;
-        margin: 10px;
-      }
-
-      header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: flex-start;
-      }
-
-      nav {
-        flex-wrap: wrap;
-        justify-content: center;
-        width: 100%;
-      }
-
-      .nav-button {
-        flex: 1 1 auto;
-        min-width: 100px;
-      }
-
-      .results-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      }
-
-      .button-container {
-        flex-direction: column;
-      }
-
-      .button {
-        width: 100%;
-      }
-
-      .reports-list li {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .reports-list li > div {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .proforma-table-container {
-        overflow-x: auto;
-      }
-
-      .comparison-table {
-        font-size: 0.9rem;
-      }
-
-      .comparison-table th, .comparison-table td {
-        padding: 8px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .results-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .tabs {
-        gap: 0;
-      }
-
-      .tab-button {
-        padding: 8px 10px;
-        font-size: 0.9rem;
-      }
+    
+    .pulse-animation {
+      animation: pulse 2s infinite;
     }
   </style>
-<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-xl sm:text-2xl font-bold text-green-600 flex items-center gap-2">
+        <span class="text-2xl">🏠</span>
+        <span>PropCheck</span>
+      </h1>
+      <div id="userInfo" class="text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-none"></div>
+    </div>
+  </header>
 
-<body>
-  <div id="g_id_onload"
-       data-client_id="845244585117-91f86q131m5u6p67mks3038q9916q88o.apps.googleusercontent.com"
-       data-auto_prompt="false"
-       data-callback="handleCredentialResponse">
-  </div>
-  <main class="app-container">
-    <header>
-      <div class="logo-container">
-        <img class="logo" src="https://placehold.co/100x100/2ecc71/ffffff?text=PC" alt="PropCheck Logo">
-        <h1>PropCheck</h1>
-      </div>
-      <nav>
-        <button class="nav-button active" data-page="calculator">Calculator</button>
-        <button class="nav-button" data-page="analysis">Analysis</button>
-        <button class="nav-button" data-page="compare">Compare</button>
-        <button class="nav-button" data-page="reports">Reports</button>
-        <button class="nav-button" id="darkModeBtn">Dark Mode</button>
-        <button class="pwa-install-button" id="pwaInstallBtn">Download App</button>
-      </nav>
-      <div class="g_id_signin"
-           data-type="standard"
-           data-size="large"
-           data-theme="outline"
-           data-text="sign_in_with"
-           data-shape="rectangular"
-           data-logo_alignment="left">
-      </div>
-    </header>
-    <section class="main-content">
-      <div id="calculator-page" class="page active">
-        <div class="card">
-          <h2>Property Details</h2>
-          <div class="input-group">
-            <label for="property-name">Property Name</label>
-            <input type="text" id="property-name" placeholder="e.g., 123 Maple St">
+  <main class="container mx-auto px-4 py-4 sm:py-6 max-w-6xl">
+    <!-- Google Sign-In Section -->
+    <section id="authSection" class="mb-6">
+      <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+        <div class="flex flex-col items-center space-y-4">
+          <p class="text-gray-600 text-center">Sign in to save and sync your properties across devices</p>
+          
+          <!-- Google Sign-In Button Container -->
+          <div id="g_button_container" class="w-full max-w-xs"></div>
+          
+          <!-- Hidden div for Google Sign-In -->
+          <div id="g_id_onload"
+               data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
+               data-callback="handleCredentialResponse"
+               data-auto_prompt="false"
+               style="display: none;">
           </div>
-          <div class="input-group">
-            <label for="purchase-price">Purchase Price ($)</label>
-            <input type="number" id="purchase-price" placeholder="500000" />
-            <span class="validation-message" id="price-validation">Purchase price is required.</span>
-          </div>
-          <div class="input-group">
-            <label for="down-payment">Down Payment ($) or (%)</label>
-            <input type="text" id="down-payment" placeholder="e.g., 100000 or 20%" />
-            <span class="validation-message" id="down-payment-validation">Down payment must be a valid dollar amount or percentage.</span>
-          </div>
-          <div class="input-group">
-            <label for="interest-rate">Interest Rate (%)</label>
-            <input type="number" step="0.01" id="interest-rate" placeholder="5" />
-          </div>
-          <div class="input-group">
-            <label for="amortization">Amortization (years)</label>
-            <input type="number" id="amortization" placeholder="25" />
-          </div>
-          <div class="input-group">
-            <label for="closing-costs">Closing Costs ($) or (%)</label>
-            <input type="text" id="closing-costs" placeholder="e.g., 10000 or 2%" />
-          </div>
-          <div class="input-group">
-            <label for="cmhc-insured">Is CMHC Insured?</label>
-            <select id="cmhc-insured">
-              <option value="false">No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-        </div>
-        <div class="card">
-          <h2>Income & Expenses</h2>
-          <div class="input-group">
-            <label for="monthly-rent">Monthly Rent ($)</label>
-            <input type="number" id="monthly-rent" placeholder="2500" />
-            <span class="validation-message" id="rent-validation">Monthly rent is required.</span>
-          </div>
-          <div class="input-group">
-            <label for="property-tax">Property Tax ($/yr)</label>
-            <input type="number" id="property-tax" placeholder="3000" />
-          </div>
-          <div class="input-group">
-            <label for="insurance">Insurance ($/yr)</label>
-            <input type="number" id="insurance" placeholder="1200" />
-          </div>
-          <div class="input-group">
-            <label for="strata-fees">Strata Fees ($/mo)</label>
-            <input type="number" id="strata-fees" placeholder="350" />
-          </div>
-          <div class="input-group">
-            <label for="utility-costs">Utility Costs ($/mo)</label>
-            <input type="number" id="utility-costs" placeholder="150" />
-          </div>
-          <div class="input-group">
-            <label for="maintenance-costs">Maintenance Costs (%)</label>
-            <input type="number" id="maintenance-costs" placeholder="10" />
-          </div>
-          <div class="input-group">
-            <label for="vacancy-rate">Vacancy Rate (%)</label>
-            <input type="number" id="vacancy-rate" placeholder="5" />
-          </div>
-          <div class="input-group">
-            <label for="capex-budget">CapEx Budget ($/yr)</label>
-            <input type="number" id="capex-budget" placeholder="1000" />
-          </div>
-          <div class="input-group">
-            <label for="property-photos">Property Photos</label>
-            <input type="file" id="property-photos" accept="image/*" multiple>
-            <div class="photo-preview-container" id="photo-preview-container"></div>
-          </div>
-          <div class="notes-section input-group">
-            <label for="property-notes">Property Notes</label>
-            <textarea id="property-notes" placeholder="Add any notes about this property..."></textarea>
-          </div>
-        </div>
-        <div class="button-container">
-          <button class="button primary" id="calculate-btn">Calculate</button>
-          <button class="button light" id="save-btn">Save Property</button>
-          <div id="save-message" class="save-message"></div>
-        </div>
-      </div>
-      <div id="analysis-page" class="page">
-        <div class="card">
-          <div class="tabs">
-            <button class="tab-button active" data-tab="summary">Summary</button>
-            <button class="tab-button" data-tab="breakdown">Breakdown</button>
-            <button class="tab-button" data-tab="stress-test">Stress Test</button>
-            <button class="tab-button" data-tab="proforma">Pro Forma</button>
-            <button class="tab-button" data-tab="sensitivity">Sensitivity Analysis</button>
-            <button class="tab-button" data-tab="cashflow">Cash Flow</button>
-          </div>
-          <div id="summary-tab" class="tab-content active">
-            <h2>Summary</h2>
-            <div id="summary-content" class="results-grid"></div>
-          </div>
-          <div id="breakdown-tab" class="tab-content">
-            <h2>Monthly Expense Breakdown</h2>
-            <table class="expense-breakdown-table">
-              <thead>
-                <tr>
-                  <th>Expense</th>
-                  <th>Amount ($)</th>
-                </tr>
-              </thead>
-              <tbody id="expense-breakdown-body"></tbody>
-            </table>
-          </div>
-          <div id="stress-test-tab" class="tab-content">
-            <h2>Stress Test</h2>
-            <div class="input-group">
-              <label for="stress-test-rate">Stress Interest Rate (%)</label>
-              <input type="number" step="0.1" id="stress-test-rate" placeholder="6.5" />
-            </div>
-            <div id="stress-test-results" class="stress-test-container"></div>
-          </div>
-          <div id="proforma-tab" class="tab-content">
-            <h2>10-Year Pro Forma</h2>
-            <div class="input-group">
-              <label for="rent-growth">Annual Rent Growth (%)</label>
-              <input type="number" step="0.1" id="rent-growth" placeholder="2.5">
-            </div>
-            <div class="input-group">
-              <label for="expense-inflation">Annual Expense Inflation (%)</label>
-              <input type="number" step="0.1" id="expense-inflation" placeholder="2">
-            </div>
-            <div class="input-group">
-              <label for="appreciation-rate">Annual Appreciation Rate (%)</label>
-              <input type="number" step="0.1" id="appreciation-rate" placeholder="3">
-            </div>
-            <div class="proforma-table-container" style="overflow-x:auto;">
-              <table class="expense-breakdown-table" id="proforma-table">
-                <thead>
-                  <tr>
-                    <th>Year</th>
-                    <th>Gross Income</th>
-                    <th>Total Expenses</th>
-                    <th>NOI</th>
-                    <th>Cash Flow</th>
-                    <th>Property Value</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          <div id="sensitivity-tab" class="tab-content">
-            <h2>Sensitivity Analysis</h2>
-            <div class="chart-container">
-              <canvas id="sensitivity-chart"></canvas>
-            </div>
-          </div>
-          <div id="cashflow-tab" class="tab-content">
-            <h2>Cash Flow Visualization</h2>
-            <div class="chart-container">
-              <canvas id="cashflow-chart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="compare-page" class="page">
-        <div class="card">
-          <h2>Compare Saved Properties</h2>
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Property</th>
-                <th>Cap Rate</th>
-                <th>CoC ROI</th>
-                <th>Total Cash Flow</th>
-                <th>NOI</th>
-                <th>Price/SqFt</th>
-              </tr>
-            </thead>
-            <tbody id="comparison-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-      <div id="reports-page" class="page">
-        <div class="card">
-          <h2>Saved Properties</h2>
-          <ul id="saved-properties-list" class="reports-list"></ul>
+          
+          <button id="signOutBtn" class="hidden px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+            Sign Out
+          </button>
         </div>
       </div>
     </section>
+
+    <!-- Calculator Section -->
+    <section class="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4">Property Calculator</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Purchase Price ($)</label>
+          <input id="price" type="number" placeholder="e.g., 500000" 
+                 class="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Monthly Rent ($)</label>
+          <input id="rent" type="number" placeholder="e.g., 2500" 
+                 class="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Down Payment (%)</label>
+          <input id="downPayment" type="number" value="20" min="0" max="100" 
+                 class="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Interest Rate (%)</label>
+          <input id="interestRate" type="number" value="5.5" step="0.1" min="0" max="30" 
+                 class="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+      </div>
+      
+      <!-- Results Section -->
+      <div id="results" class="hidden mt-6 p-4 bg-green-50 rounded-lg">
+        <h3 class="font-semibold text-green-800 mb-3">Quick Analysis</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm text-gray-600">Monthly Payment</p>
+            <p id="monthlyPayment" class="text-lg font-bold text-gray-800">$0</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Cash Flow</p>
+            <p id="cashFlow" class="text-lg font-bold">$0</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Cap Rate</p>
+            <p id="capRate" class="text-lg font-bold text-gray-800">0%</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Cash on Cash</p>
+            <p id="cashOnCash" class="text-lg font-bold text-gray-800">0%</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4 flex flex-col sm:flex-row gap-3">
+        <button id="calcButton" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium w-full sm:w-auto">
+          Calculate
+        </button>
+        <button id="saveProperty" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          💾 Save Property
+        </button>
+      </div>
+    </section>
+
+    <!-- Saved Properties Section -->
+    <section class="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg sm:text-xl font-semibold">Saved Properties</h2>
+        <button id="clearAll" class="text-sm text-red-600 hover:text-red-700 hidden">Clear All</button>
+      </div>
+      
+      <div id="propertiesList" class="property-scroll max-h-96 overflow-y-auto space-y-3">
+        <p class="text-gray-500 text-center py-8">No saved properties yet. Calculate and save your first property!</p>
+      </div>
+    </section>
+
+    <!-- PWA Install Section -->
+    <section id="installSection" class="hidden mb-6">
+      <button id="installBtn" class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg hover:from-green-700 hover:to-green-600 transition font-medium flex items-center justify-center gap-2 pulse-animation">
+        <span class="text-xl">📲</span>
+        <span>Install PropCheck App</span>
+      </button>
+    </section>
+
+    <!-- Ad Section -->
+    <section class="mb-6">
+      <div class="bg-white p-4 rounded-lg shadow-sm">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-6166342215834701"
+             data-ad-slot="1234567890"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+      </div>
+    </section>
   </main>
-  <div style="text-align: center; margin-top: 20px;">
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-6166342215834701"
-         data-ad-slot="9876543210"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t mt-12">
+    <div class="container mx-auto px-4 py-4 text-center text-sm text-gray-600">
+      <p>© 2024 PropCheck. Real Estate Investment Calculator</p>
+    </div>
+  </footer>
 
   <script>
-    window.jsPDF = window.jspdf.jsPDF;
-    const CMHC_RATES = {
-      95: 4.0, 90: 3.1, 85: 2.8, 80: 0
-    };
-    let currentProperty = {};
-    let savedProperties = JSON.parse(localStorage.getItem('savedProperties')) || [];
-    let sensitivityChart;
-    let cashflowChart;
-    let uploadedPhotos = [];
-    let deferredPrompt;
+    // State management
+    let currentUser = null;
+    let currentProperty = null;
+    let savedProperties = [];
+    let deferredPrompt = null;
 
-    // Google Sign-In callback function
-    function handleCredentialResponse(response) {
-      console.log("Google Sign-In response:", response);
-      // Here you would typically send the credential to your server for verification
-      // For this client-side app, we'll just log it
-      const data = parseJwt(response.credential);
-      console.log("User data:", data);
-      // You could save user data to localStorage or use it for personalization
-    }
-
-    // Helper function to parse JWT token from Google Sign-In
-    function parseJwt(token) {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize theme based on local storage
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.body.setAttribute('data-theme', savedTheme);
-
-      document.querySelectorAll('.nav-button').forEach(button => {
-        button.addEventListener('click', (event) => {
-          document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
-          event.target.classList.add('active');
-          document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-          const pageId = event.target.getAttribute('data-page') + '-page';
-          document.getElementById(pageId).classList.add('active');
-          if (pageId === 'analysis-page') {
-            document.querySelector('.tab-button.active')?.click();
-          }
-        });
-      });
-
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', (event) => {
-          document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-          event.target.classList.add('active');
-          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-          const tabId = event.target.getAttribute('data-tab') + '-tab';
-          document.getElementById(tabId).classList.add('active');
-          if (tabId === 'breakdown-tab') updateExpenseBreakdown();
-          if (tabId === 'proforma-tab') updateProFormaTable();
-          if (tabId === 'sensitivity-tab') createSensitivityChart();
-          if (tabId === 'cashflow-tab') createCashflowChart();
-        });
-      });
-
-      document.getElementById('calculate-btn').addEventListener('click', calculateFinancials);
-      document.getElementById('save-btn').addEventListener('click', saveProperty);
-      document.getElementById('stress-test-rate').addEventListener('input', updateStressTest);
-      document.getElementById('darkModeBtn').addEventListener('click', toggleDarkMode);
-      document.getElementById('property-photos').addEventListener('change', handlePhotoUpload);
-
-      // PWA functionality
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service worker registered.', reg))
-          .catch(err => console.log('Service worker registration failed.', err));
+    // Initialize Google Sign-In
+    window.onload = function() {
+      // Load saved properties from localStorage
+      const stored = localStorage.getItem('propcheck_properties');
+      if (stored) {
+        savedProperties = JSON.parse(stored);
+        updatePropertiesList();
       }
-      
-      const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        pwaInstallBtn.style.display = 'inline-block';
-      });
 
-      pwaInstallBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted') {
-            console.log('User accepted the install prompt.');
-            gtag('event', 'pwa_install');
-          } else {
-            console.log('User dismissed the install prompt.');
-          }
-          deferredPrompt = null;
-          pwaInstallBtn.style.display = 'none';
+      // Initialize Google Sign-In after a delay
+      setTimeout(() => {
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+          google.accounts.id.initialize({
+            client_id: '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com',
+            callback: handleCredentialResponse
+          });
+          
+          // Render the button
+          google.accounts.id.renderButton(
+            document.getElementById('g_button_container'),
+            {
+              theme: 'outline',
+              size: 'large',
+              width: 280,
+              text: 'signin_with',
+              shape: 'rectangular'
+            }
+          );
         }
-      });
+      }, 100);
       
-      window.addEventListener('appinstalled', (e) => {
-        pwaInstallBtn.style.display = 'none';
-      });
-
-      // Initialize AdSense ads on page load
-      window.addEventListener('load', () => {
+      // Initialize AdSense
+      try {
         (adsbygoogle = window.adsbygoogle || []).push({});
-      });
+      } catch (e) {
+        console.log('AdSense initialization error:', e);
+      }
+    };
 
-      // Load saved properties
-      updateSavedPropertiesList();
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    }
+
+    // PWA Install
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installSection').classList.remove('hidden');
     });
 
-    function toggleDarkMode() {
-      const currentTheme = document.body.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.body.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-    }
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('PWA installed');
+        gtag('event', 'pwa_install', { method: 'button' });
+      }
+      
+      deferredPrompt = null;
+      document.getElementById('installSection').classList.add('hidden');
+    });
 
-    function handlePhotoUpload(event) {
-      const files = event.target.files;
-      const previewContainer = document.getElementById('photo-preview-container');
-      // uploadedPhotos = [];
-
-      for (const file of files) {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            uploadedPhotos.push(e.target.result);
-            const photoPreview = document.createElement('div');
-            photoPreview.className = 'photo-preview';
-            
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-photo';
-            removeBtn.innerHTML = '×';
-            removeBtn.onclick = () => {
-              const index = uploadedPhotos.indexOf(e.target.result);
-              if (index !== -1) {
-                uploadedPhotos.splice(index, 1);
-              }
-              photoPreview.remove();
-            };
-            
-            photoPreview.appendChild(img);
-            photoPreview.appendChild(removeBtn);
-            previewContainer.appendChild(photoPreview);
-          };
-          reader.readAsDataURL(file);
-        }
+    // Handle Google Sign-In
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
       }
     }
 
-    function calculateFinancials() {
-      const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
-      const monthlyRent = parseFloat(document.getElementById('monthly-rent').value);
-      const propertyName = document.getElementById('property-name').value || 'New Property';
-      const downPaymentInput = document.getElementById('down-payment').value;
-      const interestRate = parseFloat(document.getElementById('interest-rate').value) / 100;
-      const amortization = parseFloat(document.getElementById('amortization').value) * 12;
-      const cmhcInsured = document.getElementById('cmhc-insured').value === 'true';
-      const propertyTax = parseFloat(document.getElementById('property-tax').value);
-      const insurance = parseFloat(document.getElementById('insurance').value);
-      const strataFees = parseFloat(document.getElementById('strata-fees').value);
-      const utilityCosts = parseFloat(document.getElementById('utility-costs').value);
-      const maintenanceCosts = parseFloat(document.getElementById('maintenance-costs').value) / 100;
-      const vacancyRate = parseFloat(document.getElementById('vacancy-rate').value) / 100;
-      const capexBudget = parseFloat(document.getElementById('capex-budget').value);
-      const closingCostsInput = document.getElementById('closing-costs').value;
-      const propertyNotes = document.getElementById('property-notes').value;
+    function handleCredentialResponse(response) {
+      const userData = parseJwt(response.credential);
+      if (!userData) return;
+      
+      currentUser = userData;
+      document.getElementById('userInfo').textContent = userData.email;
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('signOutBtn').classList.remove('hidden');
+      
+      gtag('event', 'login', { method: 'google' });
+    }
 
-      document.getElementById('price-validation').classList.remove('active');
-      document.getElementById('rent-validation').classList.remove('active');
-      document.getElementById('down-payment-validation').classList.remove('active');
+    // Make it globally accessible
+    window.handleCredentialResponse = handleCredentialResponse;
 
-      if (isNaN(purchasePrice) || purchasePrice <= 0) {
-        document.getElementById('price-validation').classList.add('active');
-        return;
-      }
-      if (isNaN(monthlyRent) || monthlyRent <= 0) {
-        document.getElementById('rent-validation').classList.add('active');
-        return;
-      }
+    // Sign Out
+    document.getElementById('signOutBtn').onclick = () => {
+      google.accounts.id.disableAutoSelect();
+      currentUser = null;
+      document.getElementById('userInfo').textContent = '';
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('signOutBtn').classList.add('hidden');
+      location.reload();
+    };
 
-      let downPayment;
-      if (downPaymentInput.includes('%')) {
-        downPayment = purchasePrice * (parseFloat(downPaymentInput) / 100);
-      } else {
-        downPayment = parseFloat(downPaymentInput);
-      }
-
-      if (isNaN(downPayment) || downPayment < purchasePrice * 0.05) {
-        document.getElementById('down-payment-validation').textContent = 'Down payment must be at least 5% of the purchase price.';
-        document.getElementById('down-payment-validation').classList.add('active');
+    // Calculator Logic
+    document.getElementById('calcButton').onclick = () => {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const rent = parseFloat(document.getElementById('rent').value) || 0;
+      const downPaymentPercent = parseFloat(document.getElementById('downPayment').value) || 20;
+      const interestRate = parseFloat(document.getElementById('interestRate').value) || 5.5;
+      
+      if (!price || !rent) {
+        alert('Please enter both purchase price and monthly rent');
         return;
       }
       
-      let closingCosts;
-      if (closingCostsInput.includes('%')) {
-        closingCosts = purchasePrice * (parseFloat(closingCostsInput) / 100);
-      } else {
-        closingCosts = parseFloat(closingCostsInput) || 0;
-      }
-
-      const mortgageAmount = purchasePrice - downPayment;
-      const cmhcRate = cmhcInsured ? (CMHC_RATES[Math.round((downPayment / purchasePrice) * 100)] || 0) / 100 : 0;
-      const cmhcFee = mortgageAmount * cmhcRate;
-      const totalLoanAmount = mortgageAmount + cmhcFee;
-      const monthlyInterestRate = interestRate / 12;
-      const mortgagePayment = totalLoanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, amortization)) / (Math.pow(1 + monthlyInterestRate, amortization) - 1);
+      // Calculate mortgage details
+      const downPayment = price * (downPaymentPercent / 100);
+      const loanAmount = price - downPayment;
+      const monthlyRate = interestRate / 100 / 12;
+      const numPayments = 30 * 12; // 30-year mortgage
       
-      const monthlyExpenses = (propertyTax / 12) + (insurance / 12) + (maintenanceCosts * monthlyRent) + strataFees + utilityCosts + (capexBudget / 12);
-      const totalMonthlyExpenses = monthlyExpenses + mortgagePayment;
-      const grossMonthlyIncome = monthlyRent;
-      const netOperatingIncome = (grossMonthlyIncome * 12) - (propertyTax + insurance + (maintenanceCosts * monthlyRent * 12) + (strataFees * 12) + (utilityCosts * 12) + capexBudget);
-      const annualCashFlow = (grossMonthlyIncome * 12) - (totalMonthlyExpenses * 12) - (grossMonthlyIncome * 12 * vacancyRate);
-      const capRate = (netOperatingIncome / purchasePrice) * 100;
-      const totalInvestment = downPayment + closingCosts;
-      const cocRoi = (annualCashFlow / totalInvestment) * 100;
+      // Monthly payment calculation
+      const monthlyPayment = monthlyRate > 0 
+        ? loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+          (Math.pow(1 + monthlyRate, numPayments) - 1)
+        : loanAmount / numPayments;
       
+      // Simple cash flow (rent minus mortgage)
+      const cashFlow = rent - monthlyPayment;
+      
+      // Cap rate (annual NOI / price)
+      const annualNOI = rent * 12 * 0.7; // Assume 70% NOI for simplicity
+      const capRate = (annualNOI / price) * 100;
+      
+      // Cash on cash return
+      const annualCashFlow = cashFlow * 12;
+      const cashOnCash = downPayment > 0 ? (annualCashFlow / downPayment) * 100 : 0;
+      
+      // Store current property
       currentProperty = {
-        name: propertyName,
-        purchasePrice,
-        downPayment,
-        interestRate: interestRate * 100,
-        amortization: amortization / 12,
-        monthlyRent,
-        propertyTax,
-        insurance,
-        strataFees,
-        utilityCosts,
-        maintenanceCosts: maintenanceCosts * 100,
-        vacancyRate: vacancyRate * 100,
-        capexBudget,
-        closingCosts,
-        cmhcFee,
-        mortgagePayment,
-        totalMonthlyExpenses,
-        grossMonthlyIncome: grossMonthlyIncome,
-        netOperatingIncome,
-        annualCashFlow,
+        price,
+        rent,
+        downPayment: downPaymentPercent,
+        interestRate,
+        monthlyPayment,
+        cashFlow,
         capRate,
-        totalInvestment,
-        cocRoi,
-        uploadedPhotos,
-        propertyNotes
+        cashOnCash,
+        timestamp: new Date().toISOString()
       };
       
-      updateSummary();
-      updateStressTest();
-      document.querySelector('.nav-button[data-page="analysis"]').click();
-    }
+      // Display results
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('monthlyPayment').textContent = `$${monthlyPayment.toFixed(0).toLocaleString()}`;
+      document.getElementById('cashFlow').textContent = `$${cashFlow.toFixed(0).toLocaleString()}`;
+      document.getElementById('cashFlow').className = cashFlow >= 0 
+        ? 'text-lg font-bold text-green-600' 
+        : 'text-lg font-bold text-red-600';
+      document.getElementById('capRate').textContent = `${capRate.toFixed(2)}%`;
+      document.getElementById('cashOnCash').textContent = `${cashOnCash.toFixed(2)}%`;
+      
+      // Enable save button
+      document.getElementById('saveProperty').disabled = false;
+      
+      gtag('event', 'calculate_property', {
+        value: price,
+        currency: 'USD'
+      });
+    };
 
-    function updateSummary() {
-      const resultsGrid = document.getElementById('summary-content');
-      resultsGrid.innerHTML = `
-        <div class="result-item">
-          <span>Cap Rate</span>
-          <span>${currentProperty.capRate.toFixed(2)}%</span>
-        </div>
-        <div class="result-item">
-          <span>CoC ROI</span>
-          <span>${currentProperty.cocRoi.toFixed(2)}%</span>
-        </div>
-        <div class="result-item">
-          <span>Annual Cash Flow</span>
-          <span>$${currentProperty.annualCashFlow.toFixed(2)}</span>
-        </div>
-        <div class="result-item">
-          <span>Net Operating Income</span>
-          <span>$${currentProperty.netOperatingIncome.toFixed(2)}</span>
-        </div>
-        <div class="result-item">
-          <span>Total Monthly Pmt</span>
-          <span>$${currentProperty.totalMonthlyExpenses.toFixed(2)}</span>
-        </div>
-        <div class="result-item">
-          <span>Total Investment</span>
-          <span>$${currentProperty.totalInvestment.toFixed(2)}</span>
-        </div>
-      `;
-    }
-
-    function updateExpenseBreakdown() {
-      const breakdownBody = document.getElementById('expense-breakdown-body');
-      const p = currentProperty;
-      breakdownBody.innerHTML = `
-        <tr><td>Mortgage Payment</td><td>$${p.mortgagePayment.toFixed(2)}</td></tr>
-        <tr><td>Property Tax (Monthly)</td><td>$${(p.propertyTax / 12).toFixed(2)}</td></tr>
-        <tr><td>Insurance (Monthly)</td><td>$${(p.insurance / 12).toFixed(2)}</td></tr>
-        <tr><td>Strata Fees</td><td>$${p.strataFees.toFixed(2)}</td></tr>
-        <tr><td>Utility Costs</td><td>$${p.utilityCosts.toFixed(2)}</td></tr>
-        <tr><td>Maintenance (Est.)</td><td>$${(p.monthlyRent * p.maintenanceCosts / 100).toFixed(2)}</td></tr>
-        <tr><td>CapEx Budget (Monthly)</td><td>$${(p.capexBudget / 12).toFixed(2)}</td></tr>
-        <tr><th>Total Monthly Expenses</th><th>$${p.totalMonthlyExpenses.toFixed(2)}</th></tr>
-        <tr><td>Vacancy (Est.)</td><td>$${(p.monthlyRent * p.vacancyRate / 100).toFixed(2)}</td></tr>
-      `;
-    }
-
-    function updateStressTest() {
-      const stressRateInput = document.getElementById('stress-test-rate');
-      const stressRate = parseFloat(stressRateInput.value) / 100;
-      const resultsContainer = document.getElementById('stress-test-results');
-      if (isNaN(stressRate) || !currentProperty.purchasePrice) {
-        resultsContainer.innerHTML = 'Enter an interest rate to run a stress test.';
+    // Save Property
+    document.getElementById('saveProperty').onclick = () => {
+      if (!currentProperty) {
+        alert('Please calculate a property first');
         return;
       }
       
-      const p = currentProperty;
-      const mortgageAmount = p.purchasePrice - p.downPayment;
-      const cmhcFee = (p.cmhcFee > 0) ? (mortgageAmount * (p.cmhcFee / p.purchasePrice)) : 0;
-      const totalLoanAmount = mortgageAmount + cmhcFee;
-      const monthlyInterestRate = stressRate / 12;
-      const newMortgagePayment = totalLoanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, p.amortization * 12)) / (Math.pow(1 + monthlyInterestRate, p.amortization * 12) - 1);
+      const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
+      if (!name) return;
       
-      const newTotalMonthlyExpenses = p.totalMonthlyExpenses - p.mortgagePayment + newMortgagePayment;
-      const newAnnualCashFlow = (p.grossMonthlyIncome * 12) - (newTotalMonthlyExpenses * 12) - (p.grossMonthlyIncome * 12 * (p.vacancyRate / 100));
-
-      resultsContainer.innerHTML = `
-        <div class="stress-test-item">
-          <span>New Mortgage Payment</span>
-          <span>$${newMortgagePayment.toFixed(2)}</span>
-        </div>
-        <div class="stress-test-item">
-          <span>New Total Monthly Pmt</span>
-          <span>$${newTotalMonthlyExpenses.toFixed(2)}</span>
-        </div>
-        <div class="stress-test-item">
-          <span>New Annual Cash Flow</span>
-          <span>$${newAnnualCashFlow.toFixed(2)}</span>
-        </div>
-      `;
-    }
-
-    function updateProFormaTable() {
-      const p = currentProperty;
-      const rentGrowth = parseFloat(document.getElementById('rent-growth').value) / 100 || 0;
-      const expenseInflation = parseFloat(document.getElementById('expense-inflation').value) / 100 || 0;
-      const appreciationRate = parseFloat(document.getElementById('appreciation-rate').value) / 100 || 0;
+      currentProperty.name = name;
+      currentProperty.id = Date.now().toString();
+      savedProperties.push({...currentProperty});
       
-      const tableBody = document.querySelector('#proforma-table tbody');
-      tableBody.innerHTML = '';
-
-      let grossIncome = p.grossMonthlyIncome * 12;
-      let expenses = p.totalMonthlyExpenses * 12 - p.mortgagePayment;
-      let propertyValue = p.purchasePrice;
-      const mortgagePayment = p.mortgagePayment;
-
-      for (let year = 1; year <= 10; year++) {
-        let netOperatingIncome = grossIncome - expenses;
-        let cashFlow = netOperatingIncome - (mortgagePayment * 12) - (grossIncome * p.vacancyRate / 100);
-        
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${year}</td>
-          <td>$${grossIncome.toFixed(2)}</td>
-          <td>$${expenses.toFixed(2)}</td>
-          <td>$${netOperatingIncome.toFixed(2)}</td>
-          <td>$${cashFlow.toFixed(2)}</td>
-          <td>$${propertyValue.toFixed(2)}</td>
-        `;
-        tableBody.appendChild(row);
-
-        grossIncome *= (1 + rentGrowth);
-        expenses *= (1 + expenseInflation);
-        propertyValue *= (1 + appreciationRate);
-      }
-    }
-
-    function createSensitivityChart() {
-      const ctx = document.getElementById('sensitivity-chart').getContext('2d');
-      if (sensitivityChart) {
-        sensitivityChart.destroy();
-      }
-
-      const rates = [3, 4, 5, 6, 7, 8];
-      const cashFlows = rates.map(rate => {
-        const p = currentProperty;
-        const mortgageAmount = p.purchasePrice - p.downPayment;
-        const cmhcFee = (p.cmhcFee > 0) ? (mortgageAmount * (p.cmhcFee / p.purchasePrice)) : 0;
-        const totalLoanAmount = mortgageAmount + cmhcFee;
-        const monthlyInterestRate = (rate / 100) / 12;
-        const newMortgagePayment = totalLoanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, p.amortization * 12)) / (Math.pow(1 + monthlyInterestRate, p.amortization * 12) - 1);
-        const newTotalMonthlyExpenses = p.totalMonthlyExpenses - p.mortgagePayment + newMortgagePayment;
-        return ((p.grossMonthlyIncome * 12) - (newTotalMonthlyExpenses * 12) - (p.grossMonthlyIncome * 12 * (p.vacancyRate / 100))).toFixed(2);
-      });
-
-      sensitivityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: rates.map(r => `${r}%`),
-          datasets: [{
-            label: 'Annual Cash Flow vs. Interest Rate',
-            data: cashFlows,
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.1,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              title: {
-                display: true,
-                text: 'Annual Cash Flow ($)'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Interest Rate'
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function createCashflowChart() {
-      const ctx = document.getElementById('cashflow-chart').getContext('2d');
-      if (cashflowChart) {
-        cashflowChart.destroy();
-      }
-
-      const years = Array.from({length: 10}, (_, i) => i + 1);
-      const rentGrowth = 0.025;
-      const expenseInflation = 0.02;
-      const appreciationRate = 0.03;
+      // Save to localStorage
+      localStorage.setItem('propcheck_properties', JSON.stringify(savedProperties));
       
-      const p = currentProperty;
-      let grossIncome = p.grossMonthlyIncome * 12;
-      let expenses = p.totalMonthlyExpenses * 12 - p.mortgagePayment;
-      let propertyValue = p.purchasePrice;
-      const mortgagePayment = p.mortgagePayment;
-      const cashFlows = [];
+      updatePropertiesList();
+      
+      // Reset save button
+      document.getElementById('saveProperty').disabled = true;
+      
+      gtag('event', 'save_property');
+    };
 
-      for (let year = 1; year <= 10; year++) {
-        let netOperatingIncome = grossIncome - expenses;
-        let cashFlow = netOperatingIncome - (mortgagePayment * 12) - (grossIncome * p.vacancyRate / 100);
-        cashFlows.push(cashFlow);
-        
-        grossIncome *= (1 + rentGrowth);
-        expenses *= (1 + expenseInflation);
-        propertyValue *= (1 + appreciationRate);
-      }
-
-      cashflowChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: years,
-          datasets: [{
-            label: 'Annual Cash Flow',
-            data: cashFlows,
-            backgroundColor: 'rgba(46, 204, 113, 0.7)',
-            borderColor: 'rgba(46, 204, 113, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Cash Flow ($)'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Year'
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function saveProperty() {
-      if (Object.keys(currentProperty).length === 0) {
+    // Update Properties List
+    function updatePropertiesList() {
+      const container = document.getElementById('propertiesList');
+      
+      if (savedProperties.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No saved properties yet. Calculate and save your first property!</p>';
+        document.getElementById('clearAll').classList.add('hidden');
         return;
       }
       
-      const newProperty = { ...currentProperty, id: Date.now() };
-      savedProperties.push(newProperty);
-      localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
-      updateSavedPropertiesList();
+      document.getElementById('clearAll').classList.remove('hidden');
       
-      // Show save confirmation message
-      const saveMessage = document.getElementById('save-message');
-      saveMessage.textContent = 'Property saved successfully!';
-      saveMessage.classList.add('show');
-      setTimeout(() => {
-        saveMessage.classList.remove('show');
-      }, 3000);
-    }
-
-    function updateSavedPropertiesList() {
-      const list = document.getElementById('saved-properties-list');
-      list.innerHTML = '';
-      savedProperties.forEach(prop => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${prop.name} - Cap Rate: ${prop.capRate.toFixed(2)}%, CoC ROI: ${prop.cocRoi.toFixed(2)}%</span>
-          <div>
-            <button class="button light" onclick="generateReport(${prop.id})">Report</button>
-            <button class="button light" onclick="exportToCSV(${prop.id})">Export CSV</button>
-            <button class="button light" onclick="removeProperty(${prop.id})">Remove</button>
+      container.innerHTML = savedProperties.map(prop => `
+        <div class="p-4 border rounded-lg hover:bg-gray-50 transition">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-800">${prop.name}</h3>
+              <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <span class="text-gray-600">Price: <strong>$${prop.price.toLocaleString()}</strong></span>
+                <span class="text-gray-600">Rent: <strong>$${prop.rent.toLocaleString()}</strong></span>
+                <span class="text-gray-600">Payment: <strong>$${prop.monthlyPayment.toFixed(0)}</strong></span>
+                <span class="${prop.cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}">
+                  Cash Flow: <strong>$${prop.cashFlow.toFixed(0)}</strong>
+                </span>
+              </div>
+            </div>
+            <button onclick="deleteProperty('${prop.id}')" class="ml-4 text-red-500 hover:text-red-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
-        `;
-        list.appendChild(li);
-      });
-      updateComparisonTable();
+        </div>
+      `).join('');
     }
-    
-    function removeProperty(id) {
+
+    // Delete Property
+    window.deleteProperty = (id) => {
+      if (!confirm('Delete this property?')) return;
+      
       savedProperties = savedProperties.filter(p => p.id !== id);
-      localStorage.setItem('savedProperties', JSON.stringify(savedProperties));
-      updateSavedPropertiesList();
-    }
+      localStorage.setItem('propcheck_properties', JSON.stringify(savedProperties));
+      updatePropertiesList();
+    };
 
-    function updateComparisonTable() {
-      const tableBody = document.getElementById('comparison-table-body');
-      tableBody.innerHTML = '';
-      savedProperties.forEach(prop => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${prop.name}</td>
-          <td>${prop.capRate.toFixed(2)}%</td>
-          <td>${prop.cocRoi.toFixed(2)}%</td>
-          <td>$${prop.annualCashFlow.toFixed(2)}</td>
-          <td>$${prop.netOperatingIncome.toFixed(2)}</td>
-          <td>$${(prop.purchasePrice / 1000).toFixed(2)}/k sqft</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    function generateReport(id) {
-      const prop = savedProperties.find(p => p.id === id);
-      if (!prop) {
-        console.error('Property not found.');
-        return;
-      }
-
-      const doc = new jsPDF();
-      let y = 20;
-
-      doc.setFontSize(16);
-      doc.text("Property Underwriting Report", 14, y);
-      y += 10;
-      doc.setFontSize(12);
-      doc.text(`Property Name: ${prop.name}`, 14, y);
-      y += 10;
-      doc.text(`Purchase Price: $${prop.purchasePrice.toLocaleString()}`, 14, y);
-      y += 10;
-
-      // Add notes if they exist
-      if (prop.propertyNotes) {
-        doc.text(`Notes: ${prop.propertyNotes}`, 14, y);
-        y += 10;
-      }
-
-      // Add photos
-      if (prop.uploadedPhotos && prop.uploadedPhotos.length > 0) {
-        doc.text("Property Photos:", 14, y);
-        y += 5;
-        let x = 14;
-        prop.uploadedPhotos.forEach(photoDataUrl => {
-          doc.addImage(photoDataUrl, 'JPEG', x, y, 50, 50);
-          x += 60;
-          if (x > 180) { // New row for photos
-            x = 14;
-            y += 60;
-          }
-        });
-        y += 60;
-      }
-
-      doc.autoTable({
-        startY: y,
-        head: [['Metric', 'Value']],
-        body: [
-          ['Total Investment', `$${prop.totalInvestment.toLocaleString()}`],
-          ['Annual Cash Flow', `$${prop.annualCashFlow.toFixed(2)}`],
-          ['Net Operating Income', `$${prop.netOperatingIncome.toFixed(2)}`],
-          ['Cap Rate', `${prop.capRate.toFixed(2)}%`],
-          ['CoC ROI', `${prop.cocRoi.toFixed(2)}%`]
-        ],
-        theme: 'striped',
-        styles: { fontSize: 10, cellPadding: 3 },
-        headStyles: { fillColor: [46, 204, 113] }
-      });
-
-      y = doc.autoTable.previous.finalY + 10;
-      doc.text("10-Year Pro Forma", 14, y);
+    // Clear All Properties
+    document.getElementById('clearAll').onclick = () => {
+      if (!confirm('Delete all saved properties?')) return;
       
-      const proformaData = getProFormaDataForPdf(prop);
-      doc.autoTable({
-        startY: y + 5,
-        head: [['Year', 'Gross Income', 'Total Expenses', 'NOI', 'Cash Flow', 'Property Value']],
-        body: proformaData,
-        theme: 'striped',
-        styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [46, 204, 113] }
+      savedProperties = [];
+      localStorage.removeItem('propcheck_properties');
+      updatePropertiesList();
+    };
+
+    // Prevent form submission on Enter key
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('calcButton').click();
+        }
       });
-
-      doc.save(`PropCheck_Report_${prop.name}.pdf`);
-    }
-
-    function exportToCSV(id) {
-      const prop = savedProperties.find(p => p.id === id);
-      if (!prop) {
-        console.error('Property not found.');
-        return;
-      }
-
-      // Create CSV content
-      let csvContent = "Property Underwriting Report\n";
-      csvContent += `Property Name: ${prop.name}\n`;
-      csvContent += `Purchase Price: $${prop.purchasePrice.toLocaleString()}\n\n`;
-
-      csvContent += "Metric,Value\n";
-      csvContent += `Total Investment,$${prop.totalInvestment.toLocaleString()}\n`;
-      csvContent += `Annual Cash Flow,$${prop.annualCashFlow.toFixed(2)}\n`;
-      csvContent += `Net Operating Income,$${prop.netOperatingIncome.toFixed(2)}\n`;
-      csvContent += `Cap Rate,${prop.capRate.toFixed(2)}%\n`;
-      csvContent += `CoC ROI,${prop.cocRoi.toFixed(2)}%\n\n`;
-
-      csvContent += "10-Year Pro Forma\n";
-      csvContent += "Year,Gross Income,Total Expenses,NOI,Cash Flow,Property Value\n";
-      
-      const proformaData = getProFormaDataForPdf(prop);
-      proformaData.forEach(row => {
-        csvContent += row.join(",") + "\n";
-      });
-
-      // Create download link
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `PropCheck_Report_${prop.name}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function getProFormaDataForPdf(prop) {
-      const data = [];
-      const rentGrowth = 0.025; // Default for report
-      const expenseInflation = 0.02; // Default for report
-      const appreciationRate = 0.03; // Default for report
-      
-      let grossIncome = prop.grossMonthlyIncome * 12;
-      let expenses = (prop.totalMonthlyExpenses * 12) - prop.mortgagePayment;
-      let propertyValue = prop.purchasePrice;
-      const mortgagePayment = prop.mortgagePayment;
-
-      for (let year = 1; year <= 10; year++) {
-        let netOperatingIncome = grossIncome - expenses;
-        let cashFlow = netOperatingIncome - (mortgagePayment * 12) - (grossIncome * prop.vacancyRate / 100);
-        
-        data.push([
-          year,
-          `$${grossIncome.toFixed(0)}`,
-          `$${expenses.toFixed(0)}`,
-          `$${netOperatingIncome.toFixed(0)}`,
-          `$${cashFlow.toFixed(0)}`,
-          `$${propertyValue.toFixed(0)}`
-        ]);
-
-        grossIncome *= (1 + rentGrowth);
-        expenses *= (1 + expenseInflation);
-        propertyValue *= (1 + appreciationRate);
-      }
-      return data;
-    }
+    });
   </script>
 </body>
 </html>
