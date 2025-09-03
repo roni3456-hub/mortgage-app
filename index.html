@@ -589,19 +589,6 @@
     const installBtn = document.getElementById('installBtn');
     const homeInstallBtn = document.getElementById('homeInstallBtn');
     
-    // Loading State Management
-    function setLoading(isLoading) {
-      if (isLoading) {
-        appContainer.classList.add('loading');
-        loadingSpinner.classList.remove('hidden');
-        loginScreen.style.display = 'none';
-        mainApp.style.display = 'none';
-      } else {
-        appContainer.classList.remove('loading');
-        loadingSpinner.classList.add('hidden');
-      }
-    }
-    
     // User Authentication
     function signInAnonymously() {
       auth.signInAnonymously()
@@ -610,14 +597,12 @@
         })
         .catch((error) => {
           console.error("Anonymous sign-in failed:", error);
-          setLoading(false);
           alert('Failed to connect to backend. Please try again later.');
         });
     }
 
-    let isAuthChecked = false;
     auth.onAuthStateChanged(user => {
-      setLoading(false);
+      // This listener now handles the initial loading state correctly
       if (user) {
         currentUser = user;
         userId = user.uid;
@@ -646,19 +631,12 @@
         loginScreen.style.display = 'flex';
         mainApp.style.display = 'none';
         userArea.style.display = 'none';
-        if (!isAuthChecked) {
-          const initialToken = localStorage.getItem('__initial_auth_token');
-          if (initialToken) {
-            auth.signInWithCustomToken(initialToken)
-              .catch(() => {
-                signInAnonymously();
-              });
-          } else {
-            signInAnonymously();
-          }
-          isAuthChecked = true;
-        }
+        signInAnonymously();
       }
+      
+      // Remove loading state once the authentication status is confirmed
+      appContainer.classList.remove('loading');
+      loadingSpinner.classList.add('hidden');
     });
 
     // Google Sign-In Callback
