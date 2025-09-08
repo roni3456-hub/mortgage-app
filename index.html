@@ -1305,22 +1305,38 @@
       const studentLoan = +document.getElementById('studentLoan').value || 0;
       const otherLoans = +document.getElementById('otherLoans').value || 0;
       
-      // HELOC/LOC calculations (Canadian rules)
+      // Line of Credit calculations following Canadian lending rules
       const locLimit = +document.getElementById('locLimit').value || 0;
+      const locBalance = +document.getElementById('locBalance').value || 0;
       const helocLimit = +document.getElementById('helocLimit').value || 0;
+      const helocBalance = +document.getElementById('helocBalance').value || 0;
+      const otherSecuredLoc = +document.getElementById('otherSecuredLoc').value || 0;
       
-      // For HELOCs over $50,000, use 3% of limit
+      let locPayment = 0;
       let helocPayment = 0;
-      if (helocLimit > 50000) {
-        helocPayment = helocLimit * 0.03;
-      } else if (helocLimit > 0) {
-        helocPayment = helocLimit * 0.03; // Still 3% for smaller HELOCs
+      let otherSecuredPayment = 0;
+      
+      // Unsecured LOC treatment
+      if (locLimit < 50000) {
+        // Under $50k: Use actual balance
+        locPayment = locBalance * 0.03;
+      } else {
+        // $50k and over: Use full limit
+        locPayment = locLimit * 0.03;
       }
       
-      // For regular LOCs, use 3% of limit
-      const locPayment = locLimit * 0.03;
+      // HELOC treatment (secured, so always use full limit)
+      if (helocLimit > 0) {
+        helocPayment = helocLimit * 0.03;
+      }
       
-      const totalDebtPayments = carPayment + creditCardPayment + studentLoan + otherLoans + helocPayment + locPayment;
+      // Other secured LOC (always use full limit)
+      if (otherSecuredLoc > 0) {
+        otherSecuredPayment = otherSecuredLoc * 0.03;
+      }
+      
+      const totalDebtPayments = carPayment + creditCardPayment + studentLoan + otherLoans + 
+                                locPayment + helocPayment + otherSecuredPayment;
       
       // Get property details
       const qualPrice = +document.getElementById('qualPrice').value || 0;
@@ -1420,7 +1436,7 @@
       document.getElementById('maxMortgage').textContent = money(maxMortgage);
       document.getElementById('requiredIncome').textContent = money(requiredIncome);
       
-      // Recommendations
+      // Recommendations with specific LOC details
       let recommendations = '<h4>Recommendations:</h4><ul>';
       
       if (!qualified) {
@@ -1450,9 +1466,32 @@
         recommendations += '<li>You may qualify for better terms with multiple lenders</li>';
       }
       
-      // Special note about HELOCs
-      if (helocLimit > 50000) {
-        recommendations += `<li><strong>Note:</strong> Your HELOC over $50,000 requires ${money(helocPayment)}/month in qualification (3% of limit)</li>`;
+      // Detailed LOC impact explanation
+      if (locLimit > 0 || helocLimit > 0 || otherSecuredLoc > 0) {
+        recommendations += '<li><strong>Line of Credit Impact on Qualification:</strong><ul>';
+        
+        if (locLimit > 0) {
+          if (locLimit < 50000) {
+            recommendations += `<li>Unsecured LOC (${money(locLimit)} limit): Using actual balance of ${money(locBalance)} = ${money(locPayment)}/month</li>`;
+          } else {
+            recommendations += `<li>Unsecured LOC (${money(locLimit)} limit): Using full limit = ${money(locPayment)}/month (regardless of ${money(locBalance)} balance)</li>`;
+          }
+        }
+        
+        if (helocLimit > 0) {
+          recommendations += `<li>HELOC (${money(helocLimit)} limit): Using full limit = ${money(helocPayment)}/month (secured LOC always uses limit)</li>`;
+        }
+        
+        if (otherSecuredLoc > 0) {
+          recommendations += `<li>Other Secured LOC (${money(otherSecuredLoc)} limit): Using full limit = ${money(otherSecuredPayment)}/month</li>`;
+        }
+        
+        recommendations += '</ul></li>';
+        
+        // Advice on improving qualification with LOCs
+        if (locLimit >= 50000 && locBalance < locLimit * 0.5) {
+          recommendations += `<li>💡 Consider reducing your unsecured LOC limit to under $50,000 if you don't need the full ${money(locLimit)}. This could save ${money((locLimit - 49000) * 0.03)}/month in qualification calculations.</li>`;
+        }
       }
       
       recommendations += '</ul>';
