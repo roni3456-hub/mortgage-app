@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PropCheck – RE Calculator & Underwriting Tool</title>
+  <title>PropCheck — RE Calculator & Underwriting Tool</title>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
@@ -18,8 +18,8 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6166342215834701"
      crossorigin="anonymous"></script>
 
-  <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google Identity Services - Script loads and automatically calls onGoogleLibraryLoad when ready -->
+  <script src="https://accounts.google.com/gsi/client" async onload="onGoogleLibraryLoad()"></script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="site.webmanifest" />
@@ -70,6 +70,7 @@
     
     .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
     .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
+    .card h4{margin:20px 0 16px 0;color:var(--text);font-size:1.1rem}
     
     .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
     .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
@@ -80,6 +81,7 @@
     .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
                                         border:1px solid var(--border);font-size:15px}
     .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
+    .form-group small{display:block;color:var(--muted);margin-top:4px;font-size:13px}
     
     .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
                  padding:20px;border-radius:12px;margin-top:20px}
@@ -91,6 +93,7 @@
     .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
     .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
     .alert-danger{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
+    .alert-info{background:#d1ecf1;border:1px solid #bee5eb;color:#0c5460}
     
     .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px}
     .tab{padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;
@@ -100,6 +103,21 @@
     .comparison-table{width:100%;border-collapse:collapse;margin-top:20px}
     .comparison-table th,.comparison-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
     .comparison-table th{background:#f8f9fa;font-weight:600}
+    
+    /* Qualification Status */
+    .qualification-status{padding:12px;border-radius:8px;margin:16px 0;display:flex;align-items:center;gap:12px}
+    .qualification-status.qualified{background:#d4edda;border:1px solid #c3e6cb}
+    .qualification-status.warning{background:#fff3cd;border:1px solid #ffeaa7}
+    .qualification-status.failed{background:#f8d7da;border:1px solid #f5c6cb}
+    .qualification-icon{font-size:24px}
+    
+    /* Ratio Bars */
+    .ratio-bar{height:30px;background:#f0f0f0;border-radius:15px;position:relative;overflow:hidden;margin:8px 0}
+    .ratio-fill{height:100%;transition:width 0.3s;display:flex;align-items:center;padding:0 12px;
+                color:#fff;font-weight:600}
+    .ratio-fill.good{background:var(--success)}
+    .ratio-fill.warning{background:var(--warning)}
+    .ratio-fill.danger{background:var(--danger)}
     
     @media(max-width:768px){
       .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
@@ -124,7 +142,7 @@
   </style>
 </head>
 <body>
-  <!-- LOGIN SCREEN -->
+<!-- LOGIN SCREEN -->
   <main id="loginScreen" class="center-screen">
     <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
       <div class="login-card">
@@ -143,6 +161,7 @@
              data-client_id="539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false"
+             data-itp_support="true"
              style="display:none;"></div>
       </div>
       
@@ -170,6 +189,7 @@
           <a href="#" class="nav-link" data-page="compare">Compare</a>
           <a href="#" class="nav-link" data-page="reports">Reports</a>
           <a href="#" class="nav-link" data-page="market">Market Data</a>
+          <a href="#" class="nav-link" data-page="qualification">Qualification</a>
         </div>
         <div class="user-menu">
           <button id="installBtn" class="btn-secondary btn-small" style="display:none;">➕ Install</button>
@@ -304,7 +324,170 @@
         </div>
       </div>
 
-      <!-- ANALYSIS PAGE -->
+      <!-- QUALIFICATION PAGE (NEW) -->
+      <div id="qualificationPage" class="page">
+        <div class="card">
+          <h3>🏦 Mortgage Qualification Analysis</h3>
+          
+          <div class="alert alert-info">
+            This calculator uses Canadian mortgage qualification rules including stress testing and proper treatment of lines of credit.
+          </div>
+          
+          <!-- Income Section -->
+          <h4>Income Information</h4>
+          <div class="grid grid-3">
+            <div class="form-group">
+              <label>Annual Employment Income ($)</label>
+              <input id="employmentIncome" type="number" placeholder="e.g. 120000">
+            </div>
+            <div class="form-group">
+              <label>Other Income ($)</label>
+              <input id="otherIncome" type="number" placeholder="e.g. 10000">
+            </div>
+            <div class="form-group">
+              <label>Co-borrower Income ($)</label>
+              <input id="coborrowIncome" type="number" placeholder="e.g. 80000">
+            </div>
+          </div>
+          
+          <!-- Debts Section -->
+          <h4>Monthly Debt Obligations</h4>
+          <div class="alert alert-warning">
+            <strong>Line of Credit Rules:</strong><br>
+            • <strong>Unsecured LOC under $50,000:</strong> 3% of actual balance<br>
+            • <strong>Unsecured LOC $50,000+:</strong> 3% of full limit<br>
+            • <strong>Secured HELOC:</strong> 3% of full limit (regardless of balance)
+          </div>
+          
+          <div class="grid grid-3">
+            <div class="form-group">
+              <label>Car Payment ($)</label>
+              <input id="carPayment" type="number" placeholder="e.g. 450">
+            </div>
+            <div class="form-group">
+              <label>Credit Cards Min ($)</label>
+              <input id="creditCardPayment" type="number" placeholder="e.g. 200">
+            </div>
+            <div class="form-group">
+              <label>Student Loan ($)</label>
+              <input id="studentLoan" type="number" placeholder="e.g. 300">
+            </div>
+            <div class="form-group">
+              <label>Unsecured LOC Limit ($)</label>
+              <input id="locLimit" type="number" placeholder="e.g. 30000">
+            </div>
+            <div class="form-group">
+              <label>Unsecured LOC Balance ($)</label>
+              <input id="locBalance" type="number" placeholder="e.g. 5000">
+            </div>
+            <div class="form-group">
+              <label>HELOC Limit ($)</label>
+              <input id="helocLimit" type="number" placeholder="e.g. 100000">
+            </div>
+          </div>
+          
+          <!-- Property Details -->
+          <h4>Property Being Qualified</h4>
+          <div class="grid grid-3">
+            <div class="form-group">
+              <label>Purchase Price ($)</label>
+              <input id="qualPrice" type="number" placeholder="e.g. 750000">
+            </div>
+            <div class="form-group">
+              <label>Down Payment ($)</label>
+              <input id="qualDown" type="number" placeholder="e.g. 150000">
+            </div>
+            <div class="form-group">
+              <label>Interest Rate (%)</label>
+              <input id="qualRate" type="number" value="5.5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Property Tax (annual $)</label>
+              <input id="qualTax" type="number" placeholder="e.g. 8500">
+            </div>
+            <div class="form-group">
+              <label>Heating (monthly $)</label>
+              <input id="qualHeat" type="number" value="150">
+            </div>
+            <div class="form-group">
+              <label>Condo Fees (monthly $)</label>
+              <input id="qualCondo" type="number" value="0">
+            </div>
+          </div>
+          
+          <button id="qualifyButton" class="btn btn-primary">Analyze Qualification</button>
+          
+          <!-- Qualification Results -->
+          <div id="qualificationResults" style="display:none;margin-top:24px;">
+            <div class="qualification-status" id="qualStatus">
+              <div class="qualification-icon" id="qualIcon">✓</div>
+              <div>
+                <strong id="qualMessage">Qualification Status</strong>
+                <div id="qualDetails" style="font-size:14px;margin-top:4px;"></div>
+              </div>
+            </div>
+            
+            <!-- Debt Service Ratios -->
+            <h4 style="margin-top:24px">Debt Service Ratios</h4>
+            
+            <div style="margin-bottom:20px;">
+              <strong>GDS (Gross Debt Service)</strong> - Housing costs only
+              <div class="ratio-bar">
+                <div class="ratio-fill" id="gdsBar" style="width:0%">
+                  <span id="gdsValue">0%</span>
+                </div>
+              </div>
+              <small>Maximum allowed: 39% (32% preferred)</small>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+              <strong>TDS (Total Debt Service)</strong> - All debt payments
+              <div class="ratio-bar">
+                <div class="ratio-fill" id="tdsBar" style="width:0%">
+                  <span id="tdsValue">0%</span>
+                </div>
+              </div>
+              <small>Maximum allowed: 44%</small>
+            </div>
+            
+            <div class="alert alert-info" style="margin-top:20px;">
+              <strong>Stress Test Rate:</strong> <span id="stressTestRate">0%</span><br>
+              Qualification uses the higher of your rate + 2% or 5.25%
+            </div>
+            
+            <!-- Maximum Affordability -->
+            <div class="card" style="margin-top:20px;">
+              <h4>Maximum Affordability</h4>
+              <div class="grid grid-3">
+                <div class="metric">
+                  <div class="metric-value" id="maxPurchase">$0</div>
+                  <div class="metric-label">Max Purchase Price</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value" id="maxMortgage">$0</div>
+                  <div class="metric-label">Max Mortgage</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value" id="requiredIncome">$0</div>
+                  <div class="metric-label">Income Needed</div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="qualRecommendations" style="margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <!-- AdSense Ad Unit -->
+        <div style="text-align:center;margin:24px 0;">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-6166342215834701"
+               data-ad-slot="1234567890"
+               data-ad-format="auto"></ins>
+        </div>
+      </div>
+ <!-- ANALYSIS PAGE -->
       <div id="analysisPage" class="page">
         <div class="card">
           <h3>📊 Stress Testing & Scenarios</h3>
@@ -518,8 +701,7 @@
       </div>
     </div>
   </div>
-
-  <script>
+<script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     
     // Global state
@@ -527,14 +709,14 @@
     let savedProperties = [];
     let currentUser = null;
 
-    // Login functionality
+    // Login functionality - EXACT FROM YOUR ORIGINAL
     guestButton.onclick = () => { 
       loginScreen.style.display='none'; 
       mainApp.style.display='block';
       gtag('event', 'login', {method: 'guest'});
     };
 
-    // Homepage PWA install button
+    // Homepage PWA install button - EXACT FROM YOUR ORIGINAL
     document.getElementById('homeInstallBtn').onclick = async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -544,7 +726,6 @@
         }
         deferredPrompt = null;
       } else {
-        // Fallback for browsers that don't support install prompt
         alert('To install this app:\n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap menu → Add to Home Screen\nDesktop: Look for install icon in address bar');
       }
     };
@@ -575,34 +756,38 @@
     // Make handleCredentialResponse available globally for Google to call
     window.handleCredentialResponse = handleCredentialResponse;
 
+    // Google Sign-in initialization - FIXED VERSION
+    window.onGoogleLibraryLoad = function() {
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: handleCredentialResponse
+        });
+        
+        google.accounts.id.renderButton(
+          document.getElementById('g_button_target'),
+          {
+            theme: 'outline',
+            size: 'large',
+            width: 280,
+            text: 'signin_with',
+            shape: 'rectangular'
+          }
+        );
+        console.log('Google Sign-In button rendered successfully');
+      } else {
+        console.error('Google library loaded but google.accounts.id not available');
+      }
+    }
+
     window.onload = function(){
-      // Wait a bit for Google library to load, then initialize
-      setTimeout(function() {
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-          google.accounts.id.initialize({
-            client_id: CLIENT_ID,
-            callback: handleCredentialResponse
-          });
-          
-          google.accounts.id.renderButton(
-            document.getElementById('g_button_target'),
-            {
-              theme: 'outline',
-              size: 'large',
-              width: 280,
-              text: 'signin_with',
-              shape: 'rectangular'
-            }
-          );
-        } else {
-          console.log('Google Sign-In library not loaded');
-          // Fallback - show a manual button
-          document.getElementById('g_button_target').innerHTML = '<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="alert(\'Google Sign-In not available\')">Sign in with Google (Loading...)</button>';
-        }
-      }, 500);
-      
       // Initialize AdSense
       (adsbygoogle = window.adsbygoogle || []).push({});
+      
+      // Also check if Google library already loaded
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        onGoogleLibraryLoad();
+      }
     }
 
     signOut.onclick=()=>{
@@ -614,15 +799,20 @@
       gtag('event', 'logout');
     };
 
-    // Navigation
+    // Navigation - ORIGINAL
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
       
-      document.getElementById(pageId + 'Page').classList.add('active');
-      document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
-      document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`).classList.add('active');
+      const page = document.getElementById(pageId + 'Page');
+      if (page) page.classList.add('active');
+      
+      const navLink = document.querySelector(`[data-page="${pageId}"]`);
+      if (navLink) navLink.classList.add('active');
+      
+      const mobileLink = document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`);
+      if (mobileLink) mobileLink.classList.add('active');
       
       gtag('event', 'page_view', {page_title: pageId});
     }
@@ -634,7 +824,7 @@
       };
     });
 
-    // Calculator functions
+    // Calculator functions - ORIGINAL
     function money(n){return '$'+Number(n).toLocaleString('en-CA', {minimumFractionDigits: 0, maximumFractionDigits: 0});}
     function pct(n){return Number(n).toFixed(2)+'%';}
 
@@ -728,7 +918,7 @@
       });
     };
 
-    // CMHC checkbox handler
+    // CMHC checkbox handler - ORIGINAL
     document.getElementById('cmhcRequired').onchange = function() {
       const downPercent = +down.value || 20;
       this.checked = downPercent < 20;
@@ -740,7 +930,7 @@
       document.getElementById('cmhcRequired').checked = downPercent < 20;
     };
 
-    // Save property functionality
+    // Save property functionality - ORIGINAL
     document.getElementById('saveProperty').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
@@ -803,7 +993,189 @@
       }
     }
 
-    // Stress Testing
+    // Qualification Calculator - NEW WITH PROPER LOC RULES
+    document.getElementById('qualifyButton').onclick = () => {
+      const employmentIncome = +document.getElementById('employmentIncome').value || 0;
+      const otherIncome = +document.getElementById('otherIncome').value || 0;
+      const coborrowIncome = +document.getElementById('coborrowIncome').value || 0;
+      const totalIncome = employmentIncome + otherIncome + coborrowIncome;
+      
+      const carPayment = +document.getElementById('carPayment').value || 0;
+      const creditCardPayment = +document.getElementById('creditCardPayment').value || 0;
+      const studentLoan = +document.getElementById('studentLoan').value || 0;
+      
+      // Line of Credit calculations with proper Canadian rules
+      const locLimit = +document.getElementById('locLimit').value || 0;
+      const locBalance = +document.getElementById('locBalance').value || 0;
+      const helocLimit = +document.getElementById('helocLimit').value || 0;
+      
+      let locPayment = 0;
+      let helocPayment = 0;
+      
+      // Unsecured LOC treatment
+      if (locLimit < 50000) {
+        // Under $50k: Use actual balance
+        locPayment = locBalance * 0.03;
+      } else {
+        // $50k and over: Use full limit
+        locPayment = locLimit * 0.03;
+      }
+      
+      // HELOC treatment (secured, always use full limit)
+      if (helocLimit > 0) {
+        helocPayment = helocLimit * 0.03;
+      }
+      
+      const totalDebtPayments = carPayment + creditCardPayment + studentLoan + locPayment + helocPayment;
+      
+      // Property details
+      const qualPrice = +document.getElementById('qualPrice').value || 0;
+      const qualDown = +document.getElementById('qualDown').value || 0;
+      const qualRate = +document.getElementById('qualRate').value || 5.5;
+      const qualTax = +document.getElementById('qualTax').value || 0;
+      const qualHeat = +document.getElementById('qualHeat').value || 150;
+      const qualCondo = +document.getElementById('qualCondo').value || 0;
+      
+      if (!totalIncome || !qualPrice) {
+        alert('Please enter income and property details.');
+        return;
+      }
+      
+      // Calculate stress test rate
+      const stressTestRate = Math.max(qualRate + 2, 5.25);
+      const monthlyStressRate = stressTestRate / 100 / 12;
+      
+      // Calculate mortgage payment at stress test rate
+      const mortgageAmount = qualPrice - qualDown;
+      const term = 25 * 12;
+      const stressPayment = mortgageAmount * (monthlyStressRate * Math.pow(1 + monthlyStressRate, term)) / (Math.pow(1 + monthlyStressRate, term) - 1);
+      
+      // Housing costs
+      const monthlyTax = qualTax / 12;
+      const totalHousingCosts = stressPayment + monthlyTax + qualHeat + qualCondo;
+      
+      // Calculate ratios
+      const monthlyIncome = totalIncome / 12;
+      const gds = (totalHousingCosts / monthlyIncome) * 100;
+      const tds = ((totalHousingCosts + totalDebtPayments) / monthlyIncome) * 100;
+      
+      // Determine qualification status
+      let qualified = false;
+      let status = '';
+      let message = '';
+      let details = '';
+      
+      if (gds <= 32 && tds <= 40) {
+        qualified = true;
+        status = 'qualified';
+        message = '✓ Fully Qualified';
+        details = 'You meet all standard qualification criteria with room to spare.';
+      } else if (gds <= 39 && tds <= 44) {
+        qualified = true;
+        status = 'warning';
+        message = '⚠ Qualified with Conditions';
+        details = 'You qualify but are at the upper limits. Strong credit and employment history required.';
+      } else {
+        qualified = false;
+        status = 'failed';
+        message = '✗ Does Not Qualify';
+        details = `GDS: ${gds.toFixed(1)}% (max 39%), TDS: ${tds.toFixed(1)}% (max 44%)`;
+      }
+      
+      // Update UI
+      const qualStatus = document.getElementById('qualStatus');
+      qualStatus.className = 'qualification-status ' + status;
+      document.getElementById('qualIcon').textContent = qualified ? '✓' : '✗';
+      document.getElementById('qualMessage').textContent = message;
+      document.getElementById('qualDetails').textContent = details;
+      
+      // Update ratio bars
+      const gdsBar = document.getElementById('gdsBar');
+      gdsBar.style.width = Math.min(gds, 100) + '%';
+      gdsBar.className = 'ratio-fill ' + (gds <= 32 ? 'good' : gds <= 39 ? 'warning' : 'danger');
+      document.getElementById('gdsValue').textContent = gds.toFixed(1) + '%';
+      
+      const tdsBar = document.getElementById('tdsBar');
+      tdsBar.style.width = Math.min(tds, 100) + '%';
+      tdsBar.className = 'ratio-fill ' + (tds <= 40 ? 'good' : tds <= 44 ? 'warning' : 'danger');
+      document.getElementById('tdsValue').textContent = tds.toFixed(1) + '%';
+      
+      document.getElementById('stressTestRate').textContent = stressTestRate.toFixed(2) + '%';
+      
+      // Calculate maximum affordability
+      const maxGDS = 0.39;
+      const maxTDS = 0.44;
+      
+      const maxHousingFromGDS = (monthlyIncome * maxGDS);
+      const maxHousingFromTDS = (monthlyIncome * maxTDS) - totalDebtPayments;
+      const maxHousing = Math.min(maxHousingFromGDS, maxHousingFromTDS);
+      
+      const maxMortgagePayment = maxHousing - monthlyTax - qualHeat - qualCondo;
+      
+      let maxMortgage = 0;
+      if (monthlyStressRate > 0) {
+        maxMortgage = maxMortgagePayment * (Math.pow(1 + monthlyStressRate, term) - 1) / (monthlyStressRate * Math.pow(1 + monthlyStressRate, term));
+      }
+      
+      const maxPurchase = maxMortgage + qualDown;
+      const requiredIncome = totalHousingCosts / maxGDS * 12;
+      
+      document.getElementById('maxPurchase').textContent = money(maxPurchase);
+      document.getElementById('maxMortgage').textContent = money(maxMortgage);
+      document.getElementById('requiredIncome').textContent = money(requiredIncome);
+      
+      // Recommendations with LOC details
+      let recommendations = '<h4>Recommendations:</h4><ul>';
+      
+      if (!qualified) {
+        const incomeShortfall = requiredIncome - totalIncome;
+        if (incomeShortfall > 0) {
+          recommendations += `<li>Increase income by ${money(incomeShortfall)}/year</li>`;
+        }
+        if (totalDebtPayments > monthlyIncome * 0.10) {
+          recommendations += `<li>Reduce monthly debt payments by ${money(totalDebtPayments - monthlyIncome * 0.10)}</li>`;
+        }
+        recommendations += `<li>Consider a less expensive property under ${money(maxPurchase)}</li>`;
+      } else if (status === 'warning') {
+        recommendations += '<li>Maintain excellent credit score (680+)</li>';
+        recommendations += '<li>Ensure stable employment history (2+ years)</li>';
+      }
+      
+      // LOC impact explanation
+      if (locLimit > 0 || helocLimit > 0) {
+        recommendations += '<li><strong>Line of Credit Impact:</strong><ul>';
+        
+        if (locLimit > 0) {
+          if (locLimit < 50000) {
+            recommendations += `<li>Unsecured LOC (${money(locLimit)} limit): Using balance of ${money(locBalance)} = ${money(locPayment)}/month</li>`;
+          } else {
+            recommendations += `<li>Unsecured LOC (${money(locLimit)} limit): Using full limit = ${money(locPayment)}/month (regardless of ${money(locBalance)} balance)</li>`;
+            if (locBalance < locLimit * 0.5) {
+              recommendations += `<li>💡 Consider reducing LOC limit to under $50,000 to save ${money((locLimit - 49000) * 0.03)}/month in qualification</li>`;
+            }
+          }
+        }
+        
+        if (helocLimit > 0) {
+          recommendations += `<li>HELOC (${money(helocLimit)} limit): Using full limit = ${money(helocPayment)}/month</li>`;
+        }
+        
+        recommendations += '</ul></li>';
+      }
+      
+      recommendations += '</ul>';
+      document.getElementById('qualRecommendations').innerHTML = recommendations;
+      
+      document.getElementById('qualificationResults').style.display = 'block';
+      
+      gtag('event', 'qualification_analysis', {
+        qualified: qualified,
+        gds: gds,
+        tds: tds
+      });
+    };
+
+    // Stress Testing - ORIGINAL
     document.getElementById('runStressTest').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
@@ -854,7 +1226,7 @@
       document.getElementById('stressResults').style.display = 'block';
     };
 
-    // Rent Analysis
+    // Rent Analysis - ORIGINAL
     document.getElementById('runRentAnalysis').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
@@ -885,7 +1257,7 @@
       document.getElementById('rentResults').style.display = 'block';
     };
 
-    // Tab functionality
+    // Tab functionality - ORIGINAL
     document.querySelectorAll('.tab').forEach(tab => {
       tab.onclick = () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -896,7 +1268,7 @@
       };
     });
 
-    // Comparison functionality
+    // Comparison functionality - ORIGINAL
     document.getElementById('addProperty').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first, then come back to add it to comparison.');
@@ -955,7 +1327,7 @@
       }
     };
 
-    // Reports functionality
+    // Reports functionality - ORIGINAL
     document.getElementById('generateSummary').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
@@ -1055,7 +1427,7 @@ Average Cap Rate: ${pct(avgCapRate)}
 Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     };
 
-    // Market data functionality
+    // Market data functionality - ORIGINAL
     document.getElementById('loadMarketData').onclick = () => {
       const city = document.getElementById('citySelect').value;
       const propType = document.getElementById('propertyType').value;
@@ -1070,7 +1442,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       }, 500);
     };
 
-    // Expense breakdown for analysis page
+    // Expense breakdown for analysis page - ORIGINAL
     function updateExpenseBreakdown() {
       if (!currentProperty.price) {
         document.getElementById('expenseBreakdown').innerHTML = '<div class="alert alert-warning">Calculate a property first to see expense breakdown.</div>';
@@ -1136,7 +1508,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       setTimeout(updateSavedPropertiesList, 100);
     });
 
-    // PWA functionality
+    // PWA functionality - ORIGINAL
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
