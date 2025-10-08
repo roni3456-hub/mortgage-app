@@ -1543,7 +1543,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
 /* ======== PropCheck → Google Drive (isolated block) ======== */
 (function () {
   // IMPORTANT: keep this separate from any backtick templates in other scripts.
-  // Uses your existing CLIENT_ID and currentUser from the global scope.
+  // Uses existing globals: CLIENT_ID, currentUser, currentProperty.
 
   const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
   const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
@@ -1682,41 +1682,31 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
 })();
 </script>
 
-</body>
-</html>
 
+<script>
+// ======== PropCheck: Logo click returns to sign-in screen (no reload) ========
+window.addEventListener('load', function () {
+  var logo = document.querySelector('.logo');
+  var loginScreen = document.getElementById('loginScreen');
+  var mainApp = document.getElementById('mainApp');
 
-    // PWA functionality - ORIGINAL
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-    
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
+  if (logo && loginScreen && mainApp) {
+    logo.addEventListener('click', function (e) {
       e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-flex';
+      // Optional: clear transient state but keep cached properties
+      try { window.currentUser = null; } catch(_) {}
+      // Hide app, show login screen
+      mainApp.style.display = 'none';
+      loginScreen.style.display = 'block';
+      // If you show/hide Google button dynamically elsewhere, you can re-run that here if needed.
+      // Example analytics (optional):
+      try { gtag('event', 'navigate_home_from_logo'); } catch(_) {}
+      // Scroll to top for a clean view
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    
-    installBtn.onclick = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installBtn.style.display='none';
-          gtag('event', 'pwa_install');
-        }
-        deferredPrompt = null;
-      }
-    };
-
-    // Initialize AdSense ads on page load
-    window.addEventListener('load', () => {
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    });
-  </script>
-</body>
-</html>
+  }
+});
+</script>
 
 </body>
 </html>
