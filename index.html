@@ -1541,18 +1541,19 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   </script>
 
 <script>
-/* ===== PropCheck → Google Drive (delegated click, strong diagnostics) ===== */
+/* ===== PropCheck → Google Drive (Fix4: auth even if currentUser missing) ===== */
 (function () {
   const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
   const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
   let gapiLoaded = false, tokenClient = null, driveAccessToken = null;
 
-  function diag(msg) { try { console.log('[PropCheck Drive]', msg); } catch(_) {} }
+  function log(){ try{ console.log.apply(console, arguments);}catch(_){} }
+  function alertErr(e){ alert('Drive upload failed: ' + (e && e.message ? e.message : e)); }
 
   function ensureTokenClient() {
     if (tokenClient) return;
-    if (!window.CLIENT_ID) { throw new Error('Missing CLIENT_ID global'); }
-    if (!window.google || !google.accounts || !google.accounts.oauth2) { throw new Error('GIS not loaded'); }
+    if (!window.CLIENT_ID) throw new Error('Missing CLIENT_ID global');
+    if (!window.google || !google.accounts || !google.accounts.oauth2) throw new Error('Google Identity Services not loaded');
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: DRIVE_SCOPES,
@@ -1561,9 +1562,9 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
         if (resp && resp.access_token) {
           driveAccessToken = resp.access_token;
           if (window.gapi && gapi.client) gapi.client.setToken({ access_token: driveAccessToken });
-          diag('Received access token');
+          log('[PropCheck Drive] access token acquired');
         } else {
-          diag('No access token in response');
+          log('[PropCheck Drive] no access token in callback', resp);
         }
       }
     });
@@ -1572,11 +1573,13 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   function ensureGapi() {
     if (gapiLoaded) return Promise.resolve();
     return new Promise((res) => {
-      if (!window.gapi || !gapi.load) { res(); return; }
+      if (!window.gapi || !gapi.load) return res();
       gapi.load('client', async () => {
-        await gapi.client.init({ apiKey: API_KEY });
-        gapiLoaded = true;
-        diag('gapi client initialized');
+        try {
+          await gapi.client.init({ apiKey: API_KEY });
+          gapiLoaded = true;
+          log('[PropCheck Drive] gapi client ready');
+        } catch (e) { console.warn('gapi init error', e); }
         res();
       });
     });
@@ -1585,13 +1588,10 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   async function ensureDriveAuth() {
     ensureTokenClient();
     if (!driveAccessToken) {
-      diag('Requesting access token...');
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
+        let t = setTimeout(() => reject(new Error('Timeout getting access token')), 4000);
         tokenClient.requestAccessToken({ prompt: '' });
-        (function wait() {
-          if (driveAccessToken) return resolve();
-          setTimeout(wait, 50);
-        })();
+        (function wait(){ if (driveAccessToken) { clearTimeout(t); return resolve(); } setTimeout(wait, 50); })();
       });
     }
     await ensureGapi();
@@ -1621,15 +1621,14 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   }
 
   async function savePropertyJsonToDrive(prop) {
-    if (!window.currentUser) throw new Error('Not signed in with Google');
-    if (!window.gapi) throw new Error('gapi not loaded');
+    if (!window.gapi) throw new Error('Google API client not loaded');
     await ensureDriveAuth();
 
     const rootId = await driveFindOrCreateFolder('PropCheck', 'root');
     const dealsId = await driveFindOrCreateFolder('Deals', rootId);
 
     const toSave = Object.assign({}, prop || {}, {
-      savedBy: currentUser ? { name: currentUser.name, email: currentUser.email } : null,
+      savedBy: (window.currentUser ? { name: currentUser.name, email: currentUser.email } : null),
       savedAt: new Date().toISOString()
     });
 
@@ -1642,19 +1641,16 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     return meta.result;
   }
 
-  // Delegated click handler: captures dynamically-rendered buttons
   document.addEventListener('click', async function (e) {
     const btn = e.target.closest('#saveProperty');
     if (!btn) return;
-    diag('Intercepted Save click');
     try {
-      if (!window.currentUser) { diag('No currentUser; skip Drive'); return; }
-      if (!window.currentProperty || !window.currentProperty.price) { diag('No currentProperty; skip Drive'); return; }
+      if (!window.currentProperty || !window.currentProperty.price) return;
       const res = await savePropertyJsonToDrive(window.currentProperty);
       if (res && res.name) alert('Also uploaded to Drive: ' + res.name);
     } catch (err) {
       console.warn('Drive upload failed:', err);
-      alert('Drive upload failed: ' + (err && err.message ? err.message : err));
+      alertErr(err);
     }
   });
 })();
@@ -1680,4 +1676,5 @@ window.addEventListener('load', function () {
 
 </body>
 </html>
+
 
