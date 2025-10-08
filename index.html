@@ -140,6 +140,7 @@
       .main{padding-bottom:80px}
     }
   </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
@@ -1540,10 +1541,9 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
   </script>
 
 <script>
-/* ======== PropCheck → Google Drive (isolated block) ======== */
+/* ======== PropCheck → Google Drive (isolated block v2) ======== */
 (function () {
-  // IMPORTANT: keep this separate from any backtick templates in other scripts.
-  // Uses existing globals: CLIENT_ID, currentUser, currentProperty.
+  // Uses existing globals: CLIENT_ID, currentUser, currentProperty
 
   const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
   const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
@@ -1554,6 +1554,9 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
 
   function ensureTokenClient() {
     if (tokenClient) return;
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      throw new Error('Google Identity Services not loaded.');
+    }
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: typeof CLIENT_ID !== 'undefined' ? CLIENT_ID : '',
       scope: DRIVE_SCOPES,
@@ -1561,7 +1564,9 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       callback: (resp) => {
         if (resp && resp.access_token) {
           driveAccessToken = resp.access_token;
-          gapi.client.setToken({ access_token: driveAccessToken });
+          if (window.gapi && gapi.client) {
+            gapi.client.setToken({ access_token: driveAccessToken });
+          }
         }
       }
     });
@@ -1569,8 +1574,8 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
 
   function ensureGapi() {
     if (gapiLoaded) return Promise.resolve();
-    return new Promise(res => {
-      if (typeof gapi === 'undefined' || !gapi.load) { res(); return; }
+    return new Promise((res) => {
+      if (!window.gapi || !gapi.load) { res(); return; }
       gapi.load('client', async () => {
         await gapi.client.init({ apiKey: API_KEY });
         gapiLoaded = true;
@@ -1583,10 +1588,10 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     ensureTokenClient();
     if (!driveAccessToken) {
       await new Promise((resolve) => {
-        tokenClient.requestAccessToken({ prompt: '' });
+        tokenClient.requestAccessToken({ prompt: '' }); // may show consent
         (function wait() {
           if (driveAccessToken) return resolve();
-          setTimeout(wait, 100);
+          setTimeout(wait, 50);
         })();
       });
     }
@@ -1625,9 +1630,7 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
 
   async function savePropertyJsonToDrive(prop) {
     if (!window.currentUser) throw new Error('Not signed in with Google.');
-    if (!window.gapi || !window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-      throw new Error('Google libraries not loaded yet.');
-    }
+    if (!window.gapi) throw new Error('Google API client not loaded.');
 
     await ensureDriveAuth();
 
@@ -1655,29 +1658,25 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     return meta.result;
   }
 
-  // Extend existing Save button behavior
+  // Add a separate click listener so we don't depend on overriding your handler
   window.addEventListener('load', function () {
     var btn = document.getElementById('saveProperty');
     if (!btn) return;
 
-    var originalHandler = btn.onclick || null;
-
-    btn.onclick = async function (evt) {
-      if (originalHandler) {
-        try { originalHandler.call(this, evt); } catch (e) { console.warn('Original save handler error:', e); }
-      }
-
+    btn.addEventListener('click', async function () {
       try {
-        if (window.currentUser && window.currentProperty && window.currentProperty.price) {
-          var res = await savePropertyJsonToDrive(window.currentProperty);
-          if (res && res.name) {
-            alert('Also uploaded to Drive: ' + res.name);
-          }
+        if (!window.currentUser) { return; } // only for signed-in Google users
+        if (!window.currentProperty || !window.currentProperty.price) { return; } // nothing to save
+
+        var res = await savePropertyJsonToDrive(window.currentProperty);
+        if (res && res.name) {
+          alert('Also uploaded to Drive: ' + res.name);
         }
       } catch (e) {
         console.warn('Drive upload failed:', e);
+        alert('Drive upload failed: ' + (e && e.message ? e.message : e));
       }
-    };
+    });
   });
 })();
 </script>
@@ -1693,15 +1692,9 @@ window.addEventListener('load', function () {
   if (logo && loginScreen && mainApp) {
     logo.addEventListener('click', function (e) {
       e.preventDefault();
-      // Optional: clear transient state but keep cached properties
       try { window.currentUser = null; } catch(_) {}
-      // Hide app, show login screen
       mainApp.style.display = 'none';
       loginScreen.style.display = 'block';
-      // If you show/hide Google button dynamically elsewhere, you can re-run that here if needed.
-      // Example analytics (optional):
-      try { gtag('event', 'navigate_home_from_logo'); } catch(_) {}
-      // Scroll to top for a clean view
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
@@ -1710,3 +1703,4 @@ window.addEventListener('load', function () {
 
 </body>
 </html>
+
