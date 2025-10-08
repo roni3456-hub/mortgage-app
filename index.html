@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — RE Calculator & Underwriting Tool</title>
 
-  <script src="https://apis.google.com/js/api.js" async defer></script>
-
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
   <script>
@@ -142,6 +140,7 @@
       .main{padding-bottom:80px}
     }
   </style>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
 <!-- LOGIN SCREEN -->
@@ -706,116 +705,7 @@
 <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     
-    
-
-// === Google Drive minimal helpers (incremental auth; uses existing sign-in) ===
-const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
-const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
-
-let gapiLoaded = false;
-let tokenClient = null;
-let driveAccessToken = null;
-
-async function ensureGapi() {
-  if (gapiLoaded) return;
-  await new Promise(res => gapi.load('client', res));
-  await gapi.client.init({ apiKey: API_KEY });
-  gapiLoaded = true;
-}
-
-function ensureTokenClient() {
-  if (tokenClient) return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: DRIVE_SCOPES,
-    prompt: '',
-    callback: (resp) => {
-      if (resp && resp.access_token) {
-        driveAccessToken = resp.access_token;
-        gapi.client.setToken({ access_token: driveAccessToken });
-      }
-    }
-  });
-}
-
-async function ensureDriveAuth() {
-  ensureTokenClient();
-  if (!driveAccessToken) {
-    await new Promise((resolve) => {
-      tokenClient.requestAccessToken({ prompt: '' });
-      const wait = () => {
-        if (driveAccessToken) return resolve();
-        setTimeout(wait, 100);
-      };
-      wait();
-    });
-  }
-  await ensureGapi();
-}
-
-async function driveFindOrCreateFolder(name, parentId = 'root') {
-  const q = [
-    `name = '${String(name).replaceAll("'","\\'")}'`,
-    `mimeType = 'application/vnd.google-apps.folder'`,
-    `'${parentId}' in parents`,
-    'trashed = false'
-  ].join(' and ');
-  const res = await gapi.client.drive.files.list({ q, fields: 'files(id,name)' });
-  if (res.result.files && res.result.files.length) return res.result.files[0].id;
-
-  const created = await gapi.client.drive.files.create({
-    resource: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
-    fields: 'id'
-  });
-  return created.result.id;
-}
-
-function toMultipartBody(metadata, blob) {
-  const boundary = '-------propcheck_' + Math.random().toString(36).slice(2);
-  const delimiter = `\r\n--${boundary}\r\n`;
-  const closeDelim = `\r\n--${boundary}--`;
-  const meta = new Blob([ 'Content-Type: application/json; charset=UTF-8\r\n\r\n', JSON.stringify(metadata) ]);
-  const body = new Blob([
-    delimiter, meta, '\r\n',
-    delimiter, `Content-Type: ${blob.type || 'application/octet-stream'}\r\n\r\n`, blob,
-    closeDelim
-  ], { type: `multipart/related; boundary=${boundary}` });
-  return { type: body.type, body };
-}
-
-function defaultDealFilename(prop) {
-  const base = (prop.name || 'Property').toString().trim().slice(0, 80);
-  const date = new Date().toISOString().slice(0,10);
-  return `${base} - ${date}.json`;
-}
-
-async function savePropertyJsonToDrive(prop) {
-  if (!currentUser) throw new Error('Not signed in with Google.');
-
-  await ensureDriveAuth();
-
-  const rootId = await driveFindOrCreateFolder('PropCheck', 'root');
-  const dealsId = await driveFindOrCreateFolder('Deals', rootId);
-
-  const toSave = { ...prop, savedBy: { name: currentUser.name, email: currentUser.email }, savedAt: new Date().toISOString() };
-  const blob = new Blob([ JSON.stringify(toSave, null, 2) ], { type: 'application/json' });
-
-  const metadata = { name: defaultDealFilename(prop), mimeType: 'application/json', parents: [dealsId] };
-  const mp = toMultipartBody(metadata, blob);
-
-  const upload = await gapi.client.request({
-    path: '/upload/drive/v3/files',
-    method: 'POST',
-    params: { uploadType: 'multipart' },
-    headers: { 'Content-Type': mp.type },
-    body: mp.body
-  });
-
-  const meta = await gapi.client.drive.files.get({ fileId: upload.result.id, fields: 'id,name,webViewLink' });
-  return meta.result;
-}
-
-// Global state
+    // Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
@@ -1042,31 +932,20 @@ async function savePropertyJsonToDrive(prop) {
     };
 
     // Save property functionality - ORIGINAL
-    document.getElementById('saveProperty').onclick = async () => {
+    document.getElementById('saveProperty').onclick = () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
       
       const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
-      if (!name) return;
-
-      currentProperty.name = name;
-      savedProperties.push({...currentProperty});
-      updateSavedPropertiesList();
-
-      if (currentUser) {
-        try {
-          const driveRes = await savePropertyJsonToDrive(currentProperty);
-          alert(`Property saved successfully!\n\nAlso uploaded to Drive:\n${driveRes.name}`);
-        } catch (e) {
-          console.warn('Drive upload failed:', e);
-          alert('Property saved locally. (Drive upload failed — you can try again after signing in.)');
-        }
-      } else {
-        alert('Property saved successfully! (Sign in with Google to also save to Drive.)');
+      if (name) {
+        currentProperty.name = name;
+        savedProperties.push({...currentProperty});
+        updateSavedPropertiesList();
+        alert('Property saved successfully!');
+        gtag('event', 'save_property');
       }
-      gtag('event', 'save_property');
     };
 
     function updateSavedPropertiesList() {
@@ -1461,8 +1340,6 @@ async function savePropertyJsonToDrive(prop) {
         <html>
         <head>
           <title>Property Investment Report - ${currentProperty.name || 'Property Analysis'}</title>
-
-  <script src="https://apis.google.com/js/api.js" async defer></script>
           <style>
             body{font-family:Arial,sans-serif;margin:40px;line-height:1.6}
             .header{text-align:center;border-bottom:2px solid #2ecc71;padding-bottom:20px;margin-bottom:30px}
@@ -1631,6 +1508,183 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
     document.querySelector('[data-page="reports"]').addEventListener('click', () => {
       setTimeout(updateSavedPropertiesList, 100);
     });
+
+    // PWA functionality - ORIGINAL
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+    
+    installBtn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display='none';
+          gtag('event', 'pwa_install');
+        }
+        deferredPrompt = null;
+      }
+    };
+
+    // Initialize AdSense ads on page load
+    window.addEventListener('load', () => {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    });
+  </script>
+
+<script>
+/* ======== PropCheck → Google Drive (isolated block) ======== */
+(function () {
+  // IMPORTANT: keep this separate from any backtick templates in other scripts.
+  // Uses your existing CLIENT_ID and currentUser from the global scope.
+
+  const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
+  const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+
+  let gapiLoaded = false;
+  let tokenClient = null;
+  let driveAccessToken = null;
+
+  function ensureTokenClient() {
+    if (tokenClient) return;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: typeof CLIENT_ID !== 'undefined' ? CLIENT_ID : '',
+      scope: DRIVE_SCOPES,
+      prompt: '',
+      callback: (resp) => {
+        if (resp && resp.access_token) {
+          driveAccessToken = resp.access_token;
+          gapi.client.setToken({ access_token: driveAccessToken });
+        }
+      }
+    });
+  }
+
+  function ensureGapi() {
+    if (gapiLoaded) return Promise.resolve();
+    return new Promise(res => {
+      if (typeof gapi === 'undefined' || !gapi.load) { res(); return; }
+      gapi.load('client', async () => {
+        await gapi.client.init({ apiKey: API_KEY });
+        gapiLoaded = true;
+        res();
+      });
+    });
+  }
+
+  async function ensureDriveAuth() {
+    ensureTokenClient();
+    if (!driveAccessToken) {
+      await new Promise((resolve) => {
+        tokenClient.requestAccessToken({ prompt: '' });
+        (function wait() {
+          if (driveAccessToken) return resolve();
+          setTimeout(wait, 100);
+        })();
+      });
+    }
+    await ensureGapi();
+  }
+
+  async function driveFindOrCreateFolder(name, parentId) {
+    var q = "name = '" + String(name).replace(/'/g, "\\'") + "' and mimeType = 'application/vnd.google-apps.folder' and '" + parentId + "' in parents and trashed = false";
+    const res = await gapi.client.drive.files.list({ q, fields: 'files(id,name)' });
+    if (res.result.files && res.result.files.length) return res.result.files[0].id;
+    const created = await gapi.client.drive.files.create({
+      resource: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
+      fields: 'id'
+    });
+    return created.result.id;
+  }
+
+  function toMultipartBody(metadata, blob) {
+    var boundary = 'propcheck_' + Math.random().toString(36).slice(2);
+    var delimiter = '\r\n--' + boundary + '\r\n';
+    var closeDelim = '\r\n--' + boundary + '--';
+    var meta = new Blob(['Content-Type: application/json; charset=UTF-8\r\n\r\n', JSON.stringify(metadata)]);
+    var body = new Blob([
+      delimiter, meta, '\r\n',
+      delimiter, 'Content-Type: ' + (blob.type || 'application/octet-stream') + '\r\n\r\n', blob,
+      closeDelim
+    ], { type: 'multipart/related; boundary=' + boundary });
+    return { type: body.type, body: body };
+  }
+
+  function defaultDealFilename(prop) {
+    var base = (prop && prop.name ? String(prop.name) : 'Property').trim().slice(0, 80);
+    var date = new Date().toISOString().slice(0,10);
+    return base + ' - ' + date + '.json';
+  }
+
+  async function savePropertyJsonToDrive(prop) {
+    if (!window.currentUser) throw new Error('Not signed in with Google.');
+    if (!window.gapi || !window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+      throw new Error('Google libraries not loaded yet.');
+    }
+
+    await ensureDriveAuth();
+
+    var rootId = await driveFindOrCreateFolder('PropCheck', 'root');
+    var dealsId = await driveFindOrCreateFolder('Deals', rootId);
+
+    var toSave = Object.assign({}, prop || {}, {
+      savedBy: window.currentUser ? { name: currentUser.name, email: currentUser.email } : null,
+      savedAt: new Date().toISOString()
+    });
+
+    var blob = new Blob([ JSON.stringify(toSave, null, 2) ], { type: 'application/json' });
+    var metadata = { name: defaultDealFilename(prop), mimeType: 'application/json', parents: [dealsId] };
+    var mp = toMultipartBody(metadata, blob);
+
+    var upload = await gapi.client.request({
+      path: '/upload/drive/v3/files',
+      method: 'POST',
+      params: { uploadType: 'multipart' },
+      headers: { 'Content-Type': mp.type },
+      body: mp.body
+    });
+
+    var meta = await gapi.client.drive.files.get({ fileId: upload.result.id, fields: 'id,name,webViewLink' });
+    return meta.result;
+  }
+
+  // Extend existing Save button behavior
+  window.addEventListener('load', function () {
+    var btn = document.getElementById('saveProperty');
+    if (!btn) return;
+
+    var originalHandler = btn.onclick || null;
+
+    btn.onclick = async function (evt) {
+      if (originalHandler) {
+        try { originalHandler.call(this, evt); } catch (e) { console.warn('Original save handler error:', e); }
+      }
+
+      try {
+        if (window.currentUser && window.currentProperty && window.currentProperty.price) {
+          var res = await savePropertyJsonToDrive(window.currentProperty);
+          if (res && res.name) {
+            alert('Also uploaded to Drive: ' + res.name);
+          }
+        }
+      } catch (e) {
+        console.warn('Drive upload failed:', e);
+      }
+    };
+  });
+})();
+</script>
+
+</body>
+</html>
+
 
     // PWA functionality - ORIGINAL
     if ('serviceWorker' in navigator) {
