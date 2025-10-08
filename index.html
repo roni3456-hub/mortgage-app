@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — RE Calculator & Underwriting Tool</title>
 
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRQW949FW1"></script>
   <script>
@@ -704,7 +706,116 @@
 <script>
     const CLIENT_ID = '539986611116-pcmidtvp5sqip212fulevn5ig7cvcv5i.apps.googleusercontent.com';
     
-    // Global state
+    
+
+// === Google Drive minimal helpers (incremental auth; uses existing sign-in) ===
+const API_KEY = 'AIzaSyCNEg2v7riXUZ_UdjqpkGT56wzMkw-gRxs';
+const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+
+let gapiLoaded = false;
+let tokenClient = null;
+let driveAccessToken = null;
+
+async function ensureGapi() {
+  if (gapiLoaded) return;
+  await new Promise(res => gapi.load('client', res));
+  await gapi.client.init({ apiKey: API_KEY });
+  gapiLoaded = true;
+}
+
+function ensureTokenClient() {
+  if (tokenClient) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: DRIVE_SCOPES,
+    prompt: '',
+    callback: (resp) => {
+      if (resp && resp.access_token) {
+        driveAccessToken = resp.access_token;
+        gapi.client.setToken({ access_token: driveAccessToken });
+      }
+    }
+  });
+}
+
+async function ensureDriveAuth() {
+  ensureTokenClient();
+  if (!driveAccessToken) {
+    await new Promise((resolve) => {
+      tokenClient.requestAccessToken({ prompt: '' });
+      const wait = () => {
+        if (driveAccessToken) return resolve();
+        setTimeout(wait, 100);
+      };
+      wait();
+    });
+  }
+  await ensureGapi();
+}
+
+async function driveFindOrCreateFolder(name, parentId = 'root') {
+  const q = [
+    `name = '${String(name).replaceAll("'","\\'")}'`,
+    `mimeType = 'application/vnd.google-apps.folder'`,
+    `'${parentId}' in parents`,
+    'trashed = false'
+  ].join(' and ');
+  const res = await gapi.client.drive.files.list({ q, fields: 'files(id,name)' });
+  if (res.result.files && res.result.files.length) return res.result.files[0].id;
+
+  const created = await gapi.client.drive.files.create({
+    resource: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
+    fields: 'id'
+  });
+  return created.result.id;
+}
+
+function toMultipartBody(metadata, blob) {
+  const boundary = '-------propcheck_' + Math.random().toString(36).slice(2);
+  const delimiter = `\r\n--${boundary}\r\n`;
+  const closeDelim = `\r\n--${boundary}--`;
+  const meta = new Blob([ 'Content-Type: application/json; charset=UTF-8\r\n\r\n', JSON.stringify(metadata) ]);
+  const body = new Blob([
+    delimiter, meta, '\r\n',
+    delimiter, `Content-Type: ${blob.type || 'application/octet-stream'}\r\n\r\n`, blob,
+    closeDelim
+  ], { type: `multipart/related; boundary=${boundary}` });
+  return { type: body.type, body };
+}
+
+function defaultDealFilename(prop) {
+  const base = (prop.name || 'Property').toString().trim().slice(0, 80);
+  const date = new Date().toISOString().slice(0,10);
+  return `${base} - ${date}.json`;
+}
+
+async function savePropertyJsonToDrive(prop) {
+  if (!currentUser) throw new Error('Not signed in with Google.');
+
+  await ensureDriveAuth();
+
+  const rootId = await driveFindOrCreateFolder('PropCheck', 'root');
+  const dealsId = await driveFindOrCreateFolder('Deals', rootId);
+
+  const toSave = { ...prop, savedBy: { name: currentUser.name, email: currentUser.email }, savedAt: new Date().toISOString() };
+  const blob = new Blob([ JSON.stringify(toSave, null, 2) ], { type: 'application/json' });
+
+  const metadata = { name: defaultDealFilename(prop), mimeType: 'application/json', parents: [dealsId] };
+  const mp = toMultipartBody(metadata, blob);
+
+  const upload = await gapi.client.request({
+    path: '/upload/drive/v3/files',
+    method: 'POST',
+    params: { uploadType: 'multipart' },
+    headers: { 'Content-Type': mp.type },
+    body: mp.body
+  });
+
+  const meta = await gapi.client.drive.files.get({ fileId: upload.result.id, fields: 'id,name,webViewLink' });
+  return meta.result;
+}
+
+// Global state
     let currentProperty = {};
     let savedProperties = [];
     let currentUser = null;
@@ -931,20 +1042,31 @@
     };
 
     // Save property functionality - ORIGINAL
-    document.getElementById('saveProperty').onclick = () => {
+    document.getElementById('saveProperty').onclick = async () => {
       if (!currentProperty.price) {
         alert('Please calculate a property first.');
         return;
       }
       
       const name = prompt('Enter a name for this property:', `Property ${savedProperties.length + 1}`);
-      if (name) {
-        currentProperty.name = name;
-        savedProperties.push({...currentProperty});
-        updateSavedPropertiesList();
-        alert('Property saved successfully!');
-        gtag('event', 'save_property');
+      if (!name) return;
+
+      currentProperty.name = name;
+      savedProperties.push({...currentProperty});
+      updateSavedPropertiesList();
+
+      if (currentUser) {
+        try {
+          const driveRes = await savePropertyJsonToDrive(currentProperty);
+          alert(`Property saved successfully!\n\nAlso uploaded to Drive:\n${driveRes.name}`);
+        } catch (e) {
+          console.warn('Drive upload failed:', e);
+          alert('Property saved locally. (Drive upload failed — you can try again after signing in.)');
+        }
+      } else {
+        alert('Property saved successfully! (Sign in with Google to also save to Drive.)');
       }
+      gtag('event', 'save_property');
     };
 
     function updateSavedPropertiesList() {
@@ -1339,6 +1461,8 @@
         <html>
         <head>
           <title>Property Investment Report - ${currentProperty.name || 'Property Analysis'}</title>
+
+  <script src="https://apis.google.com/js/api.js" async defer></script>
           <style>
             body{font-family:Arial,sans-serif;margin:40px;line-height:1.6}
             .header{text-align:center;border-bottom:2px solid #2ecc71;padding-bottom:20px;margin-bottom:30px}
@@ -1537,5 +1661,8 @@ Portfolio Cash-on-Cash: ${pct(portfolioCOC)}`);
       (adsbygoogle = window.adsbygoogle || []).push({});
     });
   </script>
+</body>
+</html>
+
 </body>
 </html>
