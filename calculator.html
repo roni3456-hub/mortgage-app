@@ -235,9 +235,39 @@
       return o;
     }
 
-    // --------------- Save to Drive ---------------
-    $("saveDriveBtn").addEventListener("click", async () => {
+    // ---- Helpers to reuse PCDrive token and avoid popups ----
+    async function ensureDriveReadyInteractive() {
+      if (PCDrive.isReady()) return true;          // already have a token
+      await PCDrive.signIn();                      // user gesture: one-time consent if needed
+      return PCDrive.isReady();
+    }
+
+    async function ensureGapiReady(){
+      // Wait for gapi to be present
+      await new Promise((resolve, reject)=>{
+        const t0 = Date.now();
+        (function poll(){
+          if (window.gapi && gapi.client) return resolve();
+          if (Date.now()-t0 > 10000) return reject(new Error("gapi not loaded"));
+          setTimeout(poll, 50);
+        })();
+      });
+      // Load Drive discovery if not yet loaded (safe no-op if already loaded)
       try{
+        await gapi.client.init({
+          apiKey: (window.PC_CONFIG||{}).GOOGLE_DRIVE_API_KEY,
+          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+        });
+      }catch(_){}
+    }
+
+    // --------------- Save to Drive ---------------
+    document.getElementById("saveDriveBtn").addEventListener("click", async () => {
+      try{
+        // Make sure Drive is ready (prompts once if needed)
+        const ok = await ensureDriveReadyInteractive();
+        if (!ok) return alert("Please sign in to Google to save.");
+
         const deal = collectDeal();
         const res = await PCDrive.saveDealToDrive(deal);
         alert("✅ Saved to Drive: " + (res?.name || "Deal JSON"));
@@ -247,48 +277,8 @@
     });
 
     // --------------- Load from Drive (simple picker) ---------------
-    const pickerCard = $("drivePickerCard");
-    const filesSelect = $("driveFiles");
-
-    async function ensureGapiReady(){
-      // Wait for gapi to be loaded by <script> tag
-      await new Promise((resolve, reject)=>{
-        const t0 = Date.now();
-        (function poll(){
-          if (window.gapi && gapi.client) return resolve();
-          if (Date.now()-t0 > 10000) return reject(new Error("gapi not loaded"));
-          setTimeout(poll, 50);
-        })();
-      });
-      // If not inited with discovery yet, init quickly (safe if already inited)
-      try{
-        await gapi.client.init({
-          apiKey: (window.PC_CONFIG||{}).GOOGLE_DRIVE_API_KEY,
-          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-        });
-      }catch(_){}
-    }
-
-    async function obtainTokenIfNeeded(){
-      // If drive.js already set a token, gapi keeps it. If not, ask for one.
-      const scopes = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
-      await new Promise(async (resolve, reject)=>{
-        const tc = google.accounts.oauth2.initTokenClient({
-          client_id: (window.PC_CONFIG||{}).GOOGLE_OAUTH_CLIENT_ID,
-          scope: scopes,
-          callback: (r)=> r?.access_token ? (gapi.client.setToken({access_token:r.access_token}), resolve()) : reject(new Error("No access token"))
-        });
-        try{ tc.requestAccessToken({prompt:""}); }catch(e){ /* ignore */ }
-        setTimeout(async ()=>{
-          // If silent failed, prompt for consent
-          try{
-            tc.requestAccessToken({prompt:"consent"});
-          }catch(e){ return reject(e); }
-          // give it time to return
-          setTimeout(()=>resolve(), 1500);
-        }, 1200);
-      });
-    }
+    const pickerCard = document.getElementById("drivePickerCard");
+    const filesSelect = document.getElementById("driveFiles");
 
     async function getFolderIdByName(name, parentId){
       const q =
@@ -307,8 +297,8 @@
     }
 
     async function listDeals(){
+      await ensureDriveReadyInteractive();   // ensures we have a token without redundant popups
       await ensureGapiReady();
-      await obtainTokenIfNeeded();
 
       const propId = await getFolderIdByName("PropCheck", "root");
       const dealsId = await getFolderIdByName("Deals", propId);
@@ -356,7 +346,7 @@
       alert("✅ Loaded from Drive.");
     }
 
-    $("loadDriveBtn").addEventListener("click", async ()=>{
+    document.getElementById("loadDriveBtn").addEventListener("click", async ()=>{
       try{
         await listDeals();
         pickerCard.classList.remove("hidden");
@@ -365,8 +355,8 @@
         alert("❌ " + (e?.message || e));
       }
     });
-    $("applyDriveBtn").addEventListener("click", loadSelectedFile);
-    $("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
+    document.getElementById("applyDriveBtn").addEventListener("click", loadSelectedFile);
+    document.getElementById("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
   </script>
 
   <!-- Silent Drive re-auth + chip updater -->
