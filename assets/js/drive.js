@@ -1,4 +1,4 @@
-// PropCheck → Google Drive uploader (GIS/gapi init + RESUMABLE upload; no multipart)
+// PropCheck → Google Drive uploader (resumable, then force-move into PropCheck/Deals)
 (function () {
   const SCOPES =
     "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
@@ -51,7 +51,6 @@
 
   async function ensureGapiInit() {
     if (gapiReady) return;
-    // wait for gapi script
     await new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
@@ -60,7 +59,6 @@
         setTimeout(poll, 50);
       })();
     });
-    // init client + Drive discovery
     await new Promise((resolve, reject) => {
       gapi.load("client", async () => {
         try {
@@ -160,15 +158,21 @@
     return created.id;
   }
 
+  async function getOrCreatePropcheckTree() {
+    const propId = await findOrCreateFolder("PropCheck", "root");
+    const dealsId = await findOrCreateFolder("Deals", propId);
+    return { propId, dealsId };
+  }
+
   function defaultFilename(deal) {
     const base = (deal && (deal.title || "Property")).trim().slice(0, 80) || "Property";
     const date = new Date().toISOString().slice(0, 10);
     return `${base} - ${date}.json`;
   }
 
-  // ---------- RESUMABLE UPLOAD (no multipart) ----------
+  // ---------- RESUMABLE UPLOAD ----------
   async function startResumableSession(metadata, contentLength) {
-    const initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink";
+    const initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,parents,webViewLink";
 
     const res = await fetch(initUrl, {
       method: "POST",
@@ -194,12 +198,12 @@
   async function uploadJsonResumable(obj, dealsFolderId) {
     const filename = defaultFilename(obj);
     const payload = new TextEncoder().encode(JSON.stringify(obj, null, 2));
+
+    // Include intended parent in the metadata
     const metadata = { name: filename, parents: [dealsFolderId], mimeType: "application/json" };
 
-    // 1) Init session
     const sessionUrl = await startResumableSession(metadata, payload.byteLength);
 
-    // 2) Upload bytes with PUT
     const res = await fetch(sessionUrl, {
       method: "PUT",
       headers: {
@@ -214,18 +218,52 @@
       throw new Error(`Resumable upload failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
     }
 
-    // The final PUT returns the file resource
+    return await res.json(); // { id, name, parents?, webViewLink? }
+  }
+
+  async function ensureInDeals(fileId, dealsId) {
+    // Get current parents
+    const file = await gapiCall(() =>
+      gapi.client.drive.files.get({ fileId, fields: "id,name,parents" })
+    );
+    const parents = file.parents || [];
+    if (parents.includes(dealsId)) return file;
+
+    // Move: add dealsId, remove existing parents (if any)
+    const remove = parents.length ? parents.join(",") : undefined;
+    const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+    url.searchParams.set("addParents", dealsId);
+    if (remove) url.searchParams.set("removeParents", remove);
+    url.searchParams.set("fields", "id,name,parents,webViewLink");
+
+    const res = await fetch(url.toString(), {
+      method: "PATCH",
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "application/json; charset=UTF-8"
+      },
+      body: JSON.stringify({})
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(()=> "");
+      throw new Error(`Move failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
+    }
     return await res.json();
   }
 
   async function uploadJsonToDrive(obj) {
     await ensureDriveAuthFromClick();
 
-    // Ensure /PropCheck/Deals exists
-    const propcheckId = await findOrCreateFolder("PropCheck", "root");
-    const dealsId = await findOrCreateFolder("Deals", propcheckId);
+    // Ensure folders exist
+    const { dealsId } = await getOrCreatePropcheckTree();
 
-    return await uploadJsonResumable(obj, dealsId);
+    // Upload
+    const uploaded = await uploadJsonResumable(obj, dealsId);
+
+    // Some environments ignore parents during upload; enforce the parent after
+    const finalFile = await ensureInDeals(uploaded.id, dealsId);
+
+    return finalFile;
   }
 
   // ---------- Public API ----------
@@ -235,7 +273,7 @@
       const enriched = Object.assign({}, deal, { savedAt: new Date().toISOString() });
       try {
         const res = await uploadJsonToDrive(enriched);
-        return res; // { id, name, webViewLink }
+        return res; // { id, name, parents, webViewLink }
       } catch (e) {
         const msg = e?.message || asStr(e);
         throw new Error("Drive save failed: " + msg);
