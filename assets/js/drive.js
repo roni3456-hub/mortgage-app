@@ -1,4 +1,4 @@
-// PropCheck → Google Drive uploader (GIS/gapi init + fetch multipart with Blob body)
+// PropCheck → Google Drive uploader (GIS/gapi init + RESUMABLE upload; no multipart)
 (function () {
   const SCOPES =
     "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
@@ -51,6 +51,7 @@
 
   async function ensureGapiInit() {
     if (gapiReady) return;
+    // wait for gapi script
     await new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
@@ -59,6 +60,7 @@
         setTimeout(poll, 50);
       })();
     });
+    // init client + Drive discovery
     await new Promise((resolve, reject) => {
       gapi.load("client", async () => {
         try {
@@ -158,24 +160,62 @@
     return created.id;
   }
 
-  function makeMultipartBlob(metadataObj, jsonObj) {
-    // Proper CRLF and trailing CRLF after the closing boundary
-    const boundary = "propcheck_" + Math.random().toString(36).slice(2);
-    const pre = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`;
-    const mid = `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n`;
-    const end = `\r\n--${boundary}--\r\n`;
+  function defaultFilename(deal) {
+    const base = (deal && (deal.title || "Property")).trim().slice(0, 80) || "Property";
+    const date = new Date().toISOString().slice(0, 10);
+    return `${base} - ${date}.json`;
+  }
 
-    const blob = new Blob(
-      [
-        pre,
-        JSON.stringify(metadataObj),
-        mid,
-        JSON.stringify(jsonObj),
-        end
-      ],
-      { type: "multipart/related; boundary=" + boundary }
-    );
-    return { blob, boundary };
+  // ---------- RESUMABLE UPLOAD (no multipart) ----------
+  async function startResumableSession(metadata, contentLength) {
+    const initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink";
+
+    const res = await fetch(initUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": "application/json",
+        "X-Upload-Content-Length": String(contentLength)
+      },
+      body: JSON.stringify(metadata)
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(()=> "");
+      throw new Error(`Resumable init failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
+    }
+
+    const sessionUrl = res.headers.get("Location");
+    if (!sessionUrl) throw new Error("Resumable init failed: missing upload session URL");
+    return sessionUrl;
+  }
+
+  async function uploadJsonResumable(obj, dealsFolderId) {
+    const filename = defaultFilename(obj);
+    const payload = new TextEncoder().encode(JSON.stringify(obj, null, 2));
+    const metadata = { name: filename, parents: [dealsFolderId], mimeType: "application/json" };
+
+    // 1) Init session
+    const sessionUrl = await startResumableSession(metadata, payload.byteLength);
+
+    // 2) Upload bytes with PUT
+    const res = await fetch(sessionUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": String(payload.byteLength)
+      },
+      body: payload
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(()=> "");
+      throw new Error(`Resumable upload failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
+    }
+
+    // The final PUT returns the file resource
+    return await res.json();
   }
 
   async function uploadJsonToDrive(obj) {
@@ -185,35 +225,7 @@
     const propcheckId = await findOrCreateFolder("PropCheck", "root");
     const dealsId = await findOrCreateFolder("Deals", propcheckId);
 
-    const metadata = { name: defaultFilename(obj), mimeType: "application/json", parents: [dealsId] };
-    const { blob, boundary } = makeMultipartBlob(metadata, obj);
-
-    // Upload with fetch using a Blob body (prevents string auto text/plain)
-    const res = await fetch(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + accessToken,
-          "Content-Type": "multipart/related; boundary=" + boundary,
-          "Accept": "application/json"
-        },
-        body: blob
-      }
-    );
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status} ${res.statusText || ""} ${text}`.trim());
-    }
-    const file = await res.json();
-    return file;
-  }
-
-  function defaultFilename(deal) {
-    const base = (deal && (deal.title || "Property")).trim().slice(0, 80) || "Property";
-    const date = new Date().toISOString().slice(0, 10);
-    return `${base} - ${date}.json`;
+    return await uploadJsonResumable(obj, dealsId);
   }
 
   // ---------- Public API ----------
@@ -223,7 +235,7 @@
       const enriched = Object.assign({}, deal, { savedAt: new Date().toISOString() });
       try {
         const res = await uploadJsonToDrive(enriched);
-        return res; // { id, name, webViewLink? }
+        return res; // { id, name, webViewLink }
       } catch (e) {
         const msg = e?.message || asStr(e);
         throw new Error("Drive save failed: " + msg);
@@ -231,5 +243,6 @@
     }
   };
 })();
+
 
 
