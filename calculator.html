@@ -9,46 +9,158 @@
   <script src="assets/js/state.js"></script>
 </head>
 <body>
-  <nav class="top container">
-    <a class="logo" href="index.html">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 3l9 8-1.5 1.5L18 10.2V20h-5v-5H11v5H6v-9.8L4.5 12.5 3 11z'/%3E%3C/svg%3E" alt="home"/>
-      <span>PropCheck</span>
-    </a>
-    <div class="links">
-      <a href="calculator.html">Calculator</a>
-      <a href="reports.html">Reports</a>
-      <a href="analysis.html">Analysis</a>
+  <header class="pc-hero">
+    <nav class="pc-nav container">
+      <a class="pc-logo" href="index.html">
+        <span class="pc-logo-emoji">🏠</span>
+        <span class="pc-logo-text">PropCheck</span>
+      </a>
+      <div class="pc-links">
+        <a href="calculator.html" class="active">Calculator</a>
+        <a href="reports.html">Report</a>
+        <a href="analysis.html">Analysis</a>
+      </div>
+    </nav>
+    <div class="pc-hero-title container">
+      <h1>Underwrite a Property</h1>
+      <p class="muted">Fast Canadian property underwriting for real estate investors</p>
     </div>
-  </nav>
+  </header>
 
   <main class="container">
-    <div class="card">
-      <h2>Property Calculator</h2>
-      <div class="field">
-        <label>Property Name</label>
-        <input id="dealTitle" placeholder="e.g., 123 Main St" />
-      </div>
-      <div class="row">
-        <div class="field" style="flex:1 1 200px">
+    <div class="pc-card pc-card-large">
+
+      <!-- Property Overview -->
+      <h2 class="pc-section"><span>📋</span> Property Overview</h2>
+      <div class="grid">
+        <div class="field">
+          <label>Property Name</label>
+          <input id="dealTitle" placeholder="e.g., 123 Main St" />
+        </div>
+        <div class="field">
           <label>Purchase Price</label>
           <input id="purchasePrice" type="number" inputmode="decimal" placeholder="500000" />
         </div>
-        <div class="field" style="flex:1 1 200px">
+        <div class="field">
+          <label>Closing Costs</label>
+          <input id="closingCosts" type="number" inputmode="decimal" placeholder="8000" />
+        </div>
+        <div class="field">
+          <label>Renovation Budget</label>
+          <input id="renoBudget" type="number" inputmode="decimal" placeholder="15000" />
+        </div>
+      </div>
+
+      <!-- Financing -->
+      <h2 class="pc-section"><span>🏦</span> Financing</h2>
+      <div class="grid">
+        <div class="field">
+          <label>Down Payment %</label>
+          <input id="downPct" type="number" inputmode="decimal" placeholder="20" />
+        </div>
+        <div class="field">
+          <label>Interest Rate %</label>
+          <input id="ratePct" type="number" inputmode="decimal" placeholder="5.25" />
+        </div>
+        <div class="field">
+          <label>Amortization (years)</label>
+          <input id="amortYears" type="number" inputmode="numeric" placeholder="25" />
+        </div>
+        <div class="field">
+          <label>Term (years)</label>
+          <input id="termYears" type="number" inputmode="numeric" placeholder="5" />
+        </div>
+      </div>
+
+      <!-- Income -->
+      <h2 class="pc-section"><span>💸</span> Income</h2>
+      <div class="grid">
+        <div class="field">
           <label>Monthly Rent</label>
           <input id="monthlyRent" type="number" inputmode="decimal" placeholder="2800" />
         </div>
+        <div class="field">
+          <label>Other Monthly Income</label>
+          <input id="otherIncome" type="number" inputmode="decimal" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Vacancy %</label>
+          <input id="vacancyPct" type="number" inputmode="decimal" placeholder="3" />
+        </div>
       </div>
-      <div class="row" style="margin-top:8px">
-        <button id="saveProperty" class="btn btn-primary">Save</button>
+
+      <!-- Expenses -->
+      <h2 class="pc-section"><span>🧾</span> Operating Expenses</h2>
+      <div class="grid">
+        <div class="field"><label>Property Tax (annual)</label><input id="taxAnnual" type="number" inputmode="decimal" placeholder="3500" /></div>
+        <div class="field"><label>Insurance (annual)</label><input id="insAnnual" type="number" inputmode="decimal" placeholder="1200" /></div>
+        <div class="field"><label>Utilities (monthly)</label><input id="utilsMonthly" type="number" inputmode="decimal" placeholder="0" /></div>
+        <div class="field"><label>Maintenance % of Rent</label><input id="maintPct" type="number" inputmode="decimal" placeholder="5" /></div>
+        <div class="field"><label>CapEx % of Rent</label><input id="capexPct" type="number" inputmode="decimal" placeholder="5" /></div>
+        <div class="field"><label>Management % of Rent</label><input id="mgmtPct" type="number" inputmode="decimal" placeholder="8" /></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button id="saveProperty" class="pc-btn pc-btn-primary">Save</button>
+        <a class="pc-btn pc-btn-outline" href="reports.html">View Report</a>
+        <a class="pc-btn pc-btn-outline" href="analysis.html">View Analysis</a>
       </div>
     </div>
-    <div class="footer-note">Data persists across pages via localStorage.</div>
   </main>
 
+  <footer class="container pc-footer">v1 multipage — styled to match original PropCheck</footer>
+
   <script>
-    function toNum(id){ const el=document.getElementById(id); const n=Number((el.value||'').trim()); return Number.isFinite(n)?n:0; }
-    function collect(){ return { title:document.getElementById('dealTitle').value.trim(), purchasePrice:toNum('purchasePrice'), monthlyRent:toNum('monthlyRent'), updatedAt:new Date().toISOString() }; }
-    function hydrate(d){ if(!d) return; document.getElementById('dealTitle').value=d.title||''; document.getElementById('purchasePrice').value=d.purchasePrice??''; document.getElementById('monthlyRent').value=d.monthlyRent??''; }
+    // helpers
+    function n(id){ const el=document.getElementById(id); const v=(el.value||'').trim(); const x=Number(v); return Number.isFinite(x)?x:0; }
+    function collect(){
+      return {
+        title: document.getElementById('dealTitle').value.trim(),
+        // overview
+        purchasePrice: n('purchasePrice'),
+        closingCosts: n('closingCosts'),
+        renoBudget: n('renoBudget'),
+        // financing
+        downPct: n('downPct'),
+        ratePct: n('ratePct'),
+        amortYears: n('amortYears'),
+        termYears: n('termYears'),
+        // income
+        monthlyRent: n('monthlyRent'),
+        otherIncome: n('otherIncome'),
+        vacancyPct: n('vacancyPct'),
+        // expenses
+        taxAnnual: n('taxAnnual'),
+        insAnnual: n('insAnnual'),
+        utilsMonthly: n('utilsMonthly'),
+        maintPct: n('maintPct'),
+        capexPct: n('capexPct'),
+        mgmtPct: n('mgmtPct'),
+        updatedAt: new Date().toISOString()
+      };
+    }
+    function hydrate(d){
+      if(!d) return;
+      const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value = (val ?? '') };
+      set('dealTitle', d.title);
+      set('purchasePrice', d.purchasePrice);
+      set('closingCosts', d.closingCosts);
+      set('renoBudget', d.renoBudget);
+      set('downPct', d.downPct);
+      set('ratePct', d.ratePct);
+      set('amortYears', d.amortYears);
+      set('termYears', d.termYears);
+      set('monthlyRent', d.monthlyRent);
+      set('otherIncome', d.otherIncome);
+      set('vacancyPct', d.vacancyPct);
+      set('taxAnnual', d.taxAnnual);
+      set('insAnnual', d.insAnnual);
+      set('utilsMonthly', d.utilsMonthly);
+      set('maintPct', d.maintPct);
+      set('capexPct', d.capexPct);
+      set('mgmtPct', d.mgmtPct);
+    }
 
     hydrate(PCState.getDeal());
 
@@ -56,9 +168,10 @@
       const d = collect();
       if(!d.title && !d.purchasePrice){ alert('Add a name or price first.'); return; }
       PCState.setDeal(d);
-      alert('Saved. Open Reports/Analysis to see the same data.');
+      alert('Saved. Open Report/Analysis to see the same data.');
     });
   </script>
 </body>
 </html>
+
 
