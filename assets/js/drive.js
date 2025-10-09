@@ -1,4 +1,4 @@
-// PropCheck → Google Drive uploader with full error parsing & robust init
+// PropCheck → Google Drive uploader (robust GIS/gapi init, fetch-based multipart upload)
 (function () {
   const SCOPES =
     "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
@@ -7,32 +7,29 @@
   let accessToken = null;
   let tokenClient = null;
 
-  // ------------ small utils ------------
+  // ---------- utils ----------
   const log = (...a) => { try { console.log("[PCDrive]", ...a); } catch {} };
   const asStr = (v) => (typeof v === "string" ? v : JSON.stringify(v));
+
   function parseGapiError(e) {
     try {
-      // gapi errors can be in several shapes; normalize them
       if (!e) return "Unknown error";
       if (e.result && e.result.error) {
         const er = e.result.error;
-        if (er.message) return `${er.code || ""} ${er.status || ""} ${er.message}`.trim();
-        return asStr(er);
+        return (er.code ? er.code + " " : "") + (er.status ? er.status + " " : "") + (er.message || asStr(er));
       }
       if (e.body && typeof e.body === "string") {
         const j = JSON.parse(e.body);
-        if (j && j.error && (j.error.message || j.error_description)) {
-          return (j.error.message || j.error_description);
-        }
+        if (j?.error?.message) return j.error.message;
+        if (j?.error_description) return j.error_description;
         return asStr(j);
       }
       if (e.message) return e.message;
       if (e.statusText) return e.statusText;
       return asStr(e);
-    } catch {
-      return asStr(e);
-    }
+    } catch { return asStr(e); }
   }
+
   function toJson(res) {
     if (!res) return null;
     if (res.result) return res.result;
@@ -42,12 +39,12 @@
     return null;
   }
 
-  // ------------ load GIS / gapi ------------
+  // ---------- load GIS / gapi ----------
   function waitForGIS(ms = 10000) {
     return new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
-        if (window.google && google.accounts && google.accounts.oauth2) return resolve();
+        if (window.google?.accounts?.oauth2) return resolve();
         if (Date.now() - t0 > ms) return reject(new Error("Google Identity Services not loaded"));
         setTimeout(poll, 50);
       })();
@@ -56,11 +53,11 @@
 
   async function ensureGapiInit() {
     if (gapiReady) return;
-    // wait for gapi script tag to exist
+    // wait for gapi script
     await new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
-        if (window.gapi && gapi.load) return resolve();
+        if (window.gapi?.load) return resolve();
         if (Date.now() - t0 > 10000) return reject(new Error("Google API client not loaded"));
         setTimeout(poll, 50);
       })();
@@ -76,9 +73,7 @@
           gapiReady = true;
           log("gapi client ready (Drive discovery loaded)");
           resolve();
-        } catch (e) {
-          reject(e);
-        }
+        } catch (e) { reject(e); }
       });
     });
   }
@@ -101,10 +96,7 @@
       return new Promise((resolve, reject) => {
         let settled = false;
         const timer = setTimeout(() => {
-          if (!settled) {
-            settled = true;
-            reject(new Error("Timed out waiting for token"));
-          }
+          if (!settled) { settled = true; reject(new Error("Timed out waiting for token")); }
         }, timeoutMs);
 
         tokenClient.callback = (resp) => {
@@ -120,15 +112,8 @@
           }
         };
 
-        try {
-          tokenClient.requestAccessToken({ prompt: promptValue });
-        } catch (e) {
-          clearTimeout(timer);
-          if (!settled) {
-            settled = true;
-            reject(e);
-          }
-        }
+        try { tokenClient.requestAccessToken({ prompt: promptValue }); }
+        catch (e) { clearTimeout(timer); if (!settled) { settled = true; reject(e); } }
       });
     }
 
@@ -149,14 +134,10 @@
     if (!accessToken) await obtainAccessTokenFromUserGesture();
   }
 
-  // ------------ Drive helpers ------------
+  // ---------- Drive helpers ----------
   async function gapiCall(fn) {
-    try {
-      const res = await fn();
-      return toJson(res);
-    } catch (e) {
-      throw new Error(parseGapiError(e));
-    }
+    try { return toJson(await fn()); }
+    catch (e) { throw new Error(parseGapiError(e)); }
   }
 
   async function findOrCreateFolder(name, parentId) {
@@ -181,23 +162,57 @@
     return created.id;
   }
 
-  function makeMultipart(metadata, blob) {
+  function buildMultipartBody(metadataObj, jsonObj) {
+    // Build as a plain string to avoid Blob edge cases in some environments
     const boundary = "propcheck_" + Math.random().toString(36).slice(2);
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const closeDelim = "\r\n--" + boundary + "--";
-    const metaPart = new Blob([
-      "Content-Type: application/json; charset=UTF-8\r\n\r\n",
-      JSON.stringify(metadata),
-    ]);
+    const delimiter = "--" + boundary + "\r\n";
+    const closeDelim = "--" + boundary + "--";
 
-    return {
-      type: "multipart/related; boundary=" + boundary,
-      body: new Blob([
-        delimiter, metaPart, "\r\n", delimiter,
-        "Content-Type: " + (blob.type || "application/json") + "\r\n\r\n",
-        blob, closeDelim
-      ]),
-    };
+    const metaPart =
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+      JSON.stringify(metadataObj) + "\r\n";
+
+    const dataPart =
+      "Content-Type: application/json\r\n\r\n" +
+      JSON.stringify(jsonObj) + "\r\n";
+
+    const body =
+      delimiter + metaPart +
+      delimiter + dataPart +
+      closeDelim;
+
+    return { body, contentType: "multipart/related; boundary=" + boundary };
+  }
+
+  async function uploadJsonToDrive(obj) {
+    await ensureDriveAuthFromClick();
+
+    // Ensure /PropCheck/Deals exists
+    const propcheckId = await findOrCreateFolder("PropCheck", "root");
+    const dealsId = await findOrCreateFolder("Deals", propcheckId);
+
+    const metadata = { name: defaultFilename(obj), mimeType: "application/json", parents: [dealsId] };
+    const { body, contentType } = buildMultipartBody(metadata, obj);
+
+    // Upload with fetch (most reliable for multipart)
+    const res = await fetch(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + accessToken,
+          "Content-Type": contentType
+        },
+        body
+      }
+    );
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status} ${res.statusText || ""} ${text}`.trim());
+    }
+    const file = await res.json();
+    return file;
   }
 
   function defaultFilename(deal) {
@@ -206,45 +221,20 @@
     return `${base} - ${date}.json`;
   }
 
-  async function uploadJsonToDrive(obj) {
-    await ensureDriveAuthFromClick();
-
-    const propcheckId = await findOrCreateFolder("PropCheck", "root");
-    const dealsId = await findOrCreateFolder("Deals", propcheckId);
-
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-    const meta = { name: defaultFilename(obj), mimeType: "application/json", parents: [dealsId] };
-    const mp = makeMultipart(meta, blob);
-
-    const up = await gapiCall(() =>
-      gapi.client.request({
-        path: "/upload/drive/v3/files",
-        method: "POST",
-        params: { uploadType: "multipart" },
-        headers: { "Content-Type": mp.type },
-        body: mp.body,
-      })
-    );
-
-    if (!up || !up.id) throw new Error("Upload failed");
-
-    const file = await gapiCall(() =>
-      gapi.client.drive.files.get({ fileId: up.id, fields: "id,name,webViewLink" })
-    );
-    return file;
-  }
-
-  // ------------ Public API ------------
+  // ---------- Public API ----------
   window.PCDrive = {
     async saveDealToDrive(deal) {
       if (!deal || typeof deal !== "object") throw new Error("No deal to save");
       const enriched = Object.assign({}, deal, { savedAt: new Date().toISOString() });
       try {
         const res = await uploadJsonToDrive(enriched);
-        return res; // { id, name, webViewLink }
+        return res; // { id, name, webViewLink? }
       } catch (e) {
-        throw new Error("Drive save failed: " + parseGapiError(e));
+        // Surface detailed server response if present
+        const msg = e?.message || asStr(e);
+        throw new Error("Drive save failed: " + msg);
       }
-    },
+    }
   };
 })();
+
