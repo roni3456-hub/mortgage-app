@@ -1,76 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — Calculator</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
 
-  <!-- Your original styles (inlined so this page looks identical to the old app) -->
-  <style>
-    :root{
-      --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
-      --page-bg-1:#667eea;--page-bg-2:#764ba2;--max-w:1200px;--danger:#e74c3c;
-      --warning:#f39c12;--info:#3498db;--success:#2ecc71;--text:#2c3e50;
-      --border:#e1e8ed;--shadow:0 6px 20px rgba(2,6,23,0.06);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-         background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
-         color:var(--text);min-height:100vh;}
-    .nav{background:#fff;padding:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
-    .nav-container{max-width:var(--max-w);margin:0 auto;padding:0 20px;display:flex;
-                   justify-content:space-between;align-items:center;height:70px}
-    .logo{color:var(--brand);font-size:1.8rem;font-weight:700;text-decoration:none}
-    .nav-links{display:flex;gap:0;align-items:center}
-    .nav-link{padding:12px 20px;text-decoration:none;color:var(--text);font-weight:500;
-              border-radius:8px;transition:all 0.2s}
-    .nav-link:hover,.nav-link.active{background:var(--brand);color:#fff}
-    .main{max-width:var(--max-w);margin:0 auto;padding:24px 20px;min-height:calc(100vh - 70px)}
-    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
-    .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
-    .card h4{margin:20px 0 16px 0;color:var(--text);font-size:1.1rem}
-    .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
-    .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
-    .full{grid-column:1/-1}
-    .form-group{margin-bottom:16px}
-    .form-group label{display:block;font-weight:600;margin-bottom:6px;color:var(--text)}
-    .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
-                                        border:1px solid var(--border);font-size:15px}
-    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
-    .form-group small{display:block;color:var(--muted);margin-top:4px;font-size:13px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;
-         border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.2s}
-    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
-    .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
-    .btn-danger{background:var(--danger);color:#fff}
-    .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
-                 padding:20px;border-radius:12px;margin-top:20px}
-    .metric{text-align:center;padding:16px}
-    .metric-value{font-size:1.8rem;font-weight:700;color:var(--brand)}
-    .metric-label{color:var(--muted);font-size:0.9rem;margin-top:4px}
-    .ratio-bar{height:12px;background:#f0f3f5;border-radius:999px;overflow:hidden}
-    .ratio-fill{height:100%;background:var(--info)}
-    .ratio-fill.warning{background:var(--warning)}.ratio-fill.danger{background:var(--danger)}
-    @media(max-width:768px){
-      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
-      .nav-links{display:none}
-      .nav-container{padding:0 16px}
-      .main{padding:16px}
-      .card{padding:20px}
-    }
-  </style>
-
-  <!-- App config + shared state -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
 
-  <!-- Google identity + Drive client + uploader -->
+  <!-- Drive support -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
 </head>
 <body>
-  <!-- Top nav (links back to sign-in and to other pages) -->
   <div class="nav">
     <div class="nav-container">
       <a class="logo" href="index.html">PropCheck</a>
@@ -78,6 +22,9 @@
         <a href="calculator.html" class="nav-link active">Calculator</a>
         <a href="reports.html" class="nav-link">Report</a>
         <a href="analysis.html" class="nav-link">Analysis</a>
+        <a href="compare.html" class="nav-link">Compare</a>
+        <a href="market.html" class="nav-link">Market Data</a>
+        <a href="qualification.html" class="nav-link">Qualification</a>
       </div>
     </div>
   </div>
@@ -86,11 +33,19 @@
     <div class="card">
       <h3>Underwrite a Property</h3>
 
-      <!-- Property Inputs -->
+      <!-- Match original groups (common core set; extend anytime) -->
       <div class="grid grid-3">
         <div class="form-group">
+          <label>Property Name</label>
+          <input id="dealTitle" placeholder="e.g. 123 Main St">
+        </div>
+        <div class="form-group">
           <label>Purchase Price ($)</label>
-          <input id="price" type="number" placeholder="e.g. 750000">
+          <input id="price" type="number" placeholder="750000">
+        </div>
+        <div class="form-group">
+          <label>Monthly Rent ($)</label>
+          <input id="rent" type="number" placeholder="2800">
         </div>
         <div class="form-group">
           <label>Down Payment (%)</label>
@@ -98,7 +53,7 @@
         </div>
         <div class="form-group">
           <label>Interest Rate (%)</label>
-          <input id="rate" type="number" value="5.5" step="0.1">
+          <input id="rate" type="number" value="5.25" step="0.01">
         </div>
         <div class="form-group">
           <label>Amortization (years)</label>
@@ -110,28 +65,24 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Monthly Rent ($)</label>
-          <input id="rent" type="number" placeholder="e.g. 2800">
-        </div>
-        <div class="form-group">
           <label>Property Tax (annual $)</label>
-          <input id="propertyTax" type="number" placeholder="e.g. 3500">
+          <input id="propertyTax" type="number" placeholder="3500">
         </div>
         <div class="form-group">
           <label>Insurance (annual $)</label>
-          <input id="insurance" type="number" placeholder="e.g. 1200">
+          <input id="insurance" type="number" placeholder="1200">
         </div>
         <div class="form-group">
           <label>Management (% of rent)</label>
-          <input id="management" type="number" placeholder="e.g. 8">
+          <input id="management" type="number" placeholder="8">
         </div>
         <div class="form-group">
           <label>Vacancy (%)</label>
-          <input id="vacancy" type="number" placeholder="e.g. 3">
+          <input id="vacancy" type="number" placeholder="3">
         </div>
         <div class="form-group">
           <label>Other Monthly Expenses ($)</label>
-          <input id="otherExpenses" type="number" placeholder="e.g. 150">
+          <input id="otherExpenses" type="number" placeholder="150">
         </div>
         <div class="form-group">
           <label>CMHC Insurance Required?</label>
@@ -160,6 +111,152 @@
       </div>
 
       <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <
+        <button id="saveBtn" class="btn btn-primary">💾 Save to Drive</button>
+        <button id="loadBtn" class="btn btn-secondary">📂 Load from Drive</button>
+      </div>
+    </div>
+  </main>
 
+  <script>
+    // Formatting
+    const money = n => Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
+
+    // Compute light summary (identical vibe)
+    function recompute(){
+      const price = +document.getElementById('price').value || 0;
+      const downPct = (+document.getElementById('down').value || 0)/100;
+      const rent = +document.getElementById('rent').value || 0;
+      const tax = +document.getElementById('propertyTax').value || 0;
+      const ins = +document.getElementById('insurance').value || 0;
+      const mgmtPct = (+document.getElementById('management').value || 0)/100;
+      const vacPct = (+document.getElementById('vacancy').value || 0)/100;
+      const other = +document.getElementById('otherExpenses').value || 0;
+
+      const down = price*downPct;
+      const cmhc = 0; // plug your exact rule later if needed
+      const gross = rent*12*(1-vacPct);
+      const mgmt = rent*12*mgmtPct;
+      const expenses = mgmt + tax + ins + (other*12);
+      const noi = gross - expenses;
+
+      document.getElementById('downPaymentAmount').textContent = money(down);
+      document.getElementById('cmhcAmount').textContent = money(cmhc);
+      document.getElementById('totalInitial').textContent = money(down+cmhc);
+      document.getElementById('grossRent').textContent = money(gross);
+      document.getElementById('totalExpenses').textContent = money(expenses);
+      document.getElementById('noi').textContent = money(noi);
+    }
+    document.addEventListener('input', (e)=>{
+      const ids = ['price','down','rent','propertyTax','insurance','management','vacancy','otherExpenses'];
+      if (ids.includes(e.target.id)) recompute();
+    });
+
+    // State collect/hydrate (compatible keys)
+    function collect(){
+      return {
+        title: (document.getElementById('dealTitle')?.value||'Property').trim(),
+        price: +document.getElementById('price').value || 0,
+        rent: +document.getElementById('rent').value || 0,
+        propertyTax: +document.getElementById('propertyTax').value || 0,
+        insurance: +document.getElementById('insurance').value || 0,
+        management: +document.getElementById('management').value || 0,
+        vacancy: +document.getElementById('vacancy').value || 0,
+        otherExpenses: +document.getElementById('otherExpenses').value || 0,
+        downPercent: +document.getElementById('down').value || 0,
+        rate: +document.getElementById('rate').value || 0,
+        term: +(document.getElementById('term')?.value||25),
+        cmhcRequired: (document.getElementById('cmhcRequired')?.value||'no'),
+        updatedAt: new Date().toISOString()
+      };
+    }
+    function hydrate(d){
+      if(!d) return;
+      const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value = v ?? ''; };
+      set('dealTitle', d.title);
+      set('price', d.price);
+      set('rent', d.rent);
+      set('propertyTax', d.propertyTax);
+      set('insurance', d.insurance);
+      set('management', d.management);
+      set('vacancy', d.vacancy);
+      set('otherExpenses', d.otherExpenses);
+      set('down', d.downPercent);
+      set('rate', d.rate);
+      if (d.term) document.getElementById('term').value = String(d.term);
+      if (d.cmhcRequired) document.getElementById('cmhcRequired').value = d.cmhcRequired;
+      recompute();
+    }
+
+    // Local → load
+    hydrate(PCState.getDeal());
+    recompute();
+
+    // Save to Drive (with incremental consent). Also persists locally.
+    document.getElementById('saveBtn').addEventListener('click', async ()=>{
+      const data = collect();
+      if (!data.price && !data.rent){ alert('Add a price or rent first.'); return; }
+      PCState.setDeal(data);
+      try{
+        const user = PCState.getUser();
+        if (user?.mode === 'google' && window.PCDrive){
+          const file = await PCDrive.saveDealToDrive(data);
+          alert('Saved to Drive: ' + (file?.name || 'Deal.json'));
+        } else {
+          alert('Saved locally. (Sign in with Google to save to Drive.)');
+        }
+      }catch(err){
+        console.warn(err);
+        alert('Saved locally. Drive error: ' + (err?.message || err));
+      }
+    });
+
+    // Load from Drive picker
+    document.getElementById('loadBtn').addEventListener('click', async ()=>{
+      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet. Try again.'); return; }
+      const user = PCState.getUser();
+      if (!user || user.mode !== 'google'){ alert('Sign in with Google first.'); return; }
+
+      try{
+        // Ensure folders exist or list if they do
+        const prop = await gapi.client.drive.files.list({
+          q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false",
+          fields:"files(id,name)"
+        });
+        const propId = (prop.result.files||[])[0]?.id;
+        if (!propId) return alert("No PropCheck folder yet.");
+        const deals = await gapi.client.drive.files.list({
+          q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false",
+          fields:"files(id,name)"
+        });
+        const dealsId = (deals.result.files||[])[0]?.id;
+        if (!dealsId) return alert("No Deals folder yet.");
+
+        const res = await gapi.client.drive.files.list({
+          q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false",
+          orderBy:"modifiedTime desc",
+          pageSize:100,
+          fields:"files(id,name,modifiedTime)"
+        });
+        const files = res.result.files||[];
+        if (!files.length) return alert("No saved deals found.");
+
+        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
+        const pick = prompt("Select a deal to load (enter number):\n\n"+list+"\n\n");
+        const idx = Number((pick||'').trim()) - 1;
+        if (!(idx>=0 && idx<files.length)) return;
+
+        const file = files[idx];
+        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
+        const deal = JSON.parse(content);
+        PCState.setDeal(deal);
+        hydrate(deal);
+        alert("Loaded: " + file.name);
+      }catch(err){
+        console.warn(err);
+        alert("Load from Drive failed: " + (err?.message || err));
+      }
+    });
+  </script>
+</body>
+</html>
 
