@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PropCheck — Sign in</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<nav class="top container">
+  <a class="logo" href="index.html">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 3l9 8-1.5 1.5L18 10.2V20h-5v-5H11v5H6v-9.8L4.5 12.5 3 11z'/%3E%3C/svg%3E" alt="home"/>
+    <span>PropCheck</span>
+  </a>
+  <div class="links">
+    <a href="calculator.html">Calculator</a>
+    <a href="reports.html">Reports</a>
+    <a href="analysis.html">Analysis</a>
+  </div>
+</nav>
+
+  <main class="container">
+    <div class="card center" style="max-width:520px">
+      <h1 class="title">PropCheck</h1>
+      <div class="subtitle">Fast Canadian property underwriting for real estate investors</div>
+
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <button id="guestBtn" class="btn btn-primary">Continue as Guest</button>
+      </div>
+      <div class="subtitle" style="margin:8px 0">or</div>
+      <div id="g_btn_target" class="row" style="min-height:44px;justify-content:center"></div>
+    </div>
+  </main>
+
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // Render Google button
+    window.addEventListener('load', ()=>{
+      const t = document.getElementById('g_btn_target');
+      if (window.google) PCAuth.initGoogleButton(t);
+    });
+    // Guest path
+    document.getElementById('guestBtn').addEventListener('click', ()=>{ PCState.setUser({mode:'guest'}); window.location.href='calculator.html'; });
+  </script>
+</body>
+</html>
