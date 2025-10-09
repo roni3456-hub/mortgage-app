@@ -1,261 +1,367 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>PropCheck — Calculator</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
 
+  <!-- App icons & PWA -->
+  <link rel="manifest" href="site.webmanifest"/>
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png"/>
+  <meta name="theme-color" content="#2ecc71"/>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css"/>
+
+  <!-- Config + Google Identity + GAPI + Drive helper -->
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/state.js"></script>
-
-  <!-- Drive support -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
 </head>
 <body>
-  <div class="nav">
+  <!-- Nav -->
+  <nav class="nav">
     <div class="nav-container">
-      <a class="logo" href="index.html">PropCheck</a>
+      <a href="index.html" class="logo" title="Back to Home">PropCheck</a>
       <div class="nav-links">
-        <a href="calculator.html" class="nav-link active">Calculator</a>
-        <a href="reports.html" class="nav-link">Report</a>
-        <a href="analysis.html" class="nav-link">Analysis</a>
-        <a href="compare.html" class="nav-link">Compare</a>
-        <a href="market.html" class="nav-link">Market Data</a>
-        <a href="qualification.html" class="nav-link">Qualification</a>
+        <a class="nav-link active" href="calculator.html">Calculator</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+        <a class="nav-link" href="analysis.html">Analysis</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="market.html">Market</a>
+        <a class="nav-link" href="qualification.html">Qualification</a>
       </div>
     </div>
-  </div>
+  </nav>
 
   <main class="main">
     <div class="card">
-      <h3>Underwrite a Property</h3>
+      <h2 class="title">Underwriting Calculator</h2>
+      <p class="subtitle">Enter assumptions below — metrics update automatically.</p>
 
-      <!-- Match original groups (common core set; extend anytime) -->
       <div class="grid grid-3">
         <div class="form-group">
-          <label>Property Name</label>
-          <input id="dealTitle" placeholder="e.g. 123 Main St">
+          <label for="title">Property Name</label>
+          <input id="title" type="text" placeholder="e.g., 123 Main St, Toronto"/>
         </div>
         <div class="form-group">
-          <label>Purchase Price ($)</label>
-          <input id="price" type="number" placeholder="750000">
+          <label for="purchasePrice">Purchase Price ($)</label>
+          <input id="purchasePrice" type="number" min="0" step="1000" value="500000"/>
         </div>
         <div class="form-group">
-          <label>Monthly Rent ($)</label>
-          <input id="rent" type="number" placeholder="2800">
+          <label for="downPaymentPct">Down Payment (%)</label>
+          <input id="downPaymentPct" type="number" min="0" max="100" step="0.1" value="20"/>
+        </div>
+
+        <div class="form-group">
+          <label for="interestRate">Interest Rate (%)</label>
+          <input id="interestRate" type="number" min="0" step="0.01" value="5.50"/>
         </div>
         <div class="form-group">
-          <label>Down Payment (%)</label>
-          <input id="down" type="number" value="20" min="5" max="100">
+          <label for="amortYears">Amortization (years)</label>
+          <input id="amortYears" type="number" min="1" step="1" value="25"/>
         </div>
         <div class="form-group">
-          <label>Interest Rate (%)</label>
-          <input id="rate" type="number" value="5.25" step="0.01">
+          <label for="rentMonthly">Gross Rent ($/mo)</label>
+          <input id="rentMonthly" type="number" min="0" step="50" value="2500"/>
+        </div>
+
+        <div class="form-group">
+          <label for="taxesAnnual">Taxes ($/yr)</label>
+          <input id="taxesAnnual" type="number" min="0" step="100" value="3600"/>
         </div>
         <div class="form-group">
-          <label>Amortization (years)</label>
-          <select id="term">
-            <option value="25">25 years</option>
-            <option value="30">30 years</option>
-            <option value="20">20 years</option>
-            <option value="15">15 years</option>
-          </select>
+          <label for="insuranceAnnual">Insurance ($/yr)</label>
+          <input id="insuranceAnnual" type="number" min="0" step="50" value="1200"/>
         </div>
         <div class="form-group">
-          <label>Property Tax (annual $)</label>
-          <input id="propertyTax" type="number" placeholder="3500">
+          <label for="utilitiesMonthly">Utilities ($/mo)</label>
+          <input id="utilitiesMonthly" type="number" min="0" step="25" value="200"/>
+        </div>
+
+        <div class="form-group">
+          <label for="vacancyRate">Vacancy (%)</label>
+          <input id="vacancyRate" type="number" min="0" max="100" step="0.5" value="3"/>
         </div>
         <div class="form-group">
-          <label>Insurance (annual $)</label>
-          <input id="insurance" type="number" placeholder="1200">
+          <label for="repairsPct">Repairs & Maintenance (% of rent)</label>
+          <input id="repairsPct" type="number" min="0" max="100" step="0.5" value="5"/>
         </div>
         <div class="form-group">
-          <label>Management (% of rent)</label>
-          <input id="management" type="number" placeholder="8">
+          <label for="managementPct">Management (% of rent)</label>
+          <input id="managementPct" type="number" min="0" max="100" step="0.5" value="8"/>
+        </div>
+
+        <div class="form-group">
+          <label for="capexPct">CapEx (% of rent)</label>
+          <input id="capexPct" type="number" min="0" max="100" step="0.5" value="5"/>
         </div>
         <div class="form-group">
-          <label>Vacancy (%)</label>
-          <input id="vacancy" type="number" placeholder="3">
+          <label for="otherMonthly">Other Expenses ($/mo)</label>
+          <input id="otherMonthly" type="number" min="0" step="25" value="0"/>
         </div>
         <div class="form-group">
-          <label>Other Monthly Expenses ($)</label>
-          <input id="otherExpenses" type="number" placeholder="150">
-        </div>
-        <div class="form-group">
-          <label>CMHC Insurance Required?</label>
-          <select id="cmhcRequired">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-          <small>Set to Yes if down payment &lt; 20% for insured mortgage.</small>
+          <label for="closingCosts">Closing Costs ($)</label>
+          <input id="closingCosts" type="number" min="0" step="500" value="5000"/>
         </div>
       </div>
 
-      <h4>Investment Summary</h4>
-      <div class="grid grid-2">
-        <div>
-          <strong>Initial Investment:</strong><br>
-          Down Payment: <span id="downPaymentAmount">$0</span><br>
-          CMHC Insurance: <span id="cmhcAmount">$0</span><br>
-          <strong>Total: <span id="totalInitial">$0</span></strong>
+      <div class="actions">
+        <button id="saveDriveBtn" class="btn btn-primary">💾 Save to Google Drive</button>
+        <button id="loadDriveBtn" class="btn btn-secondary">📂 Load from Google Drive</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="card">
+      <h3 class="title">Key Metrics</h3>
+      <div class="kpi-row">
+        <div class="metric">
+          <div class="metric-value" id="kpiCashFlow">$0</div>
+          <div class="metric-label">Monthly Cash Flow</div>
         </div>
-        <div>
-          <strong>Annual Numbers:</strong><br>
-          Gross Rent: <span id="grossRent">$0</span><br>
-          Total Expenses: <span id="totalExpenses">$0</span><br>
-          Net Operating Income: <span id="noi">$0</span>
+        <div class="metric">
+          <div class="metric-value" id="kpiNOI">$0</div>
+          <div class="metric-label">NOI (Annual)</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="kpiCapRate">0%</div>
+          <div class="metric-label">Cap Rate</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="kpiCOC">0%</div>
+          <div class="metric-label">Cash-on-Cash</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="kpiDSCR">0.00</div>
+          <div class="metric-label">DSCR</div>
         </div>
       </div>
+    </div>
 
-      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="saveBtn" class="btn btn-primary">💾 Save to Drive</button>
-        <button id="loadBtn" class="btn btn-secondary">📂 Load from Drive</button>
+    <!-- Simple file picker for Drive loads -->
+    <div id="drivePickerCard" class="card hidden">
+      <h3 class="title">Load from Google Drive</h3>
+      <p class="muted">Choose a saved deal from <strong>Drive → PropCheck → Deals</strong>.</p>
+      <div class="form-group">
+        <label for="driveFiles">Saved Files</label>
+        <select id="driveFiles"></select>
+      </div>
+      <div class="actions">
+        <button id="applyDriveBtn" class="btn btn-primary">Load Selected</button>
+        <button id="cancelDriveBtn" class="btn btn-secondary">Cancel</button>
       </div>
     </div>
   </main>
 
   <script>
-    // Formatting
-    const money = n => Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
+    // --------------- Calculator logic ---------------
+    const $ = (id) => document.getElementById(id);
+    const fields = [
+      "title","purchasePrice","downPaymentPct","interestRate","amortYears","rentMonthly",
+      "taxesAnnual","insuranceAnnual","utilitiesMonthly","vacancyRate","repairsPct",
+      "managementPct","capexPct","otherMonthly","closingCosts"
+    ];
 
-    // Compute light summary (identical vibe)
-    function recompute(){
-      const price = +document.getElementById('price').value || 0;
-      const downPct = (+document.getElementById('down').value || 0)/100;
-      const rent = +document.getElementById('rent').value || 0;
-      const tax = +document.getElementById('propertyTax').value || 0;
-      const ins = +document.getElementById('insurance').value || 0;
-      const mgmtPct = (+document.getElementById('management').value || 0)/100;
-      const vacPct = (+document.getElementById('vacancy').value || 0)/100;
-      const other = +document.getElementById('otherExpenses').value || 0;
+    function valNum(id){ return parseFloat($(id).value || "0") || 0; }
 
-      const down = price*downPct;
-      const cmhc = 0; // plug your exact rule later if needed
-      const gross = rent*12*(1-vacPct);
-      const mgmt = rent*12*mgmtPct;
-      const expenses = mgmt + tax + ins + (other*12);
-      const noi = gross - expenses;
+    function formatMoney(n){ return n.toLocaleString(undefined,{style:"currency",currency:"USD"}); }
+    function pct(n){ return (n*100).toFixed(2) + "%"; }
 
-      document.getElementById('downPaymentAmount').textContent = money(down);
-      document.getElementById('cmhcAmount').textContent = money(cmhc);
-      document.getElementById('totalInitial').textContent = money(down+cmhc);
-      document.getElementById('grossRent').textContent = money(gross);
-      document.getElementById('totalExpenses').textContent = money(expenses);
-      document.getElementById('noi').textContent = money(noi);
+    function monthlyPayment(principal, annualRatePct, years){
+      if (principal <= 0) return 0;
+      const r = (annualRatePct/100)/12;
+      const n = years*12;
+      if (r === 0) return principal/n;
+      return principal * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n)-1);
     }
-    document.addEventListener('input', (e)=>{
-      const ids = ['price','down','rent','propertyTax','insurance','management','vacancy','otherExpenses'];
-      if (ids.includes(e.target.id)) recompute();
-    });
 
-    // State collect/hydrate (compatible keys)
-    function collect(){
-      return {
-        title: (document.getElementById('dealTitle')?.value||'Property').trim(),
-        price: +document.getElementById('price').value || 0,
-        rent: +document.getElementById('rent').value || 0,
-        propertyTax: +document.getElementById('propertyTax').value || 0,
-        insurance: +document.getElementById('insurance').value || 0,
-        management: +document.getElementById('management').value || 0,
-        vacancy: +document.getElementById('vacancy').value || 0,
-        otherExpenses: +document.getElementById('otherExpenses').value || 0,
-        downPercent: +document.getElementById('down').value || 0,
-        rate: +document.getElementById('rate').value || 0,
-        term: +(document.getElementById('term')?.value||25),
-        cmhcRequired: (document.getElementById('cmhcRequired')?.value||'no'),
-        updatedAt: new Date().toISOString()
+    function recalc(){
+      const price = valNum("purchasePrice");
+      const dpPct = valNum("downPaymentPct")/100;
+      const dp = price * dpPct;
+      const loan = Math.max(0, price - dp);
+      const rate = valNum("interestRate");
+      const years = valNum("amortYears");
+
+      const rent = valNum("rentMonthly");
+      const taxes = valNum("taxesAnnual")/12;
+      const ins = valNum("insuranceAnnual")/12;
+      const utils = valNum("utilitiesMonthly");
+      const vac = rent * (valNum("vacancyRate")/100);
+      const repairs = rent * (valNum("repairsPct")/100);
+      const mgmt = rent * (valNum("managementPct")/100);
+      const capex = rent * (valNum("capexPct")/100);
+      const other = valNum("otherMonthly");
+
+      const pmi = monthlyPayment(loan, rate, years);
+      const opExMonthly = taxes + ins + utils + vac + repairs + mgmt + capex + other;
+      const noiAnnual = (rent - (vac + repairs + mgmt + capex + other)) * 12 - taxes - ins - utils*12; // NOI rough
+      const cashFlow = (rent - opExMonthly) - pmi;
+
+      const capRate = price>0 ? noiAnnual / price : 0;
+      const cashInvested = dp + valNum("closingCosts");
+      const coc = cashInvested>0 ? ((cashFlow*12)/cashInvested) : 0;
+      const dscr = (pmi>0) ? ((rent - opExMonthly) / pmi) : 0;
+
+      $("kpiCashFlow").textContent = formatMoney(cashFlow);
+      $("kpiNOI").textContent = formatMoney(noiAnnual);
+      $("kpiCapRate").textContent = pct(capRate);
+      $("kpiCOC").textContent = pct(coc);
+      $("kpiDSCR").textContent = dscr.toFixed(2);
+    }
+
+    fields.forEach(id => $(id).addEventListener("input", recalc));
+    recalc();
+
+    function collectDeal(){
+      const o = {};
+      fields.forEach(id => o[id] = $(id).value);
+      // add derived outputs for convenience
+      o.metrics = {
+        cashFlowMonthly: $("kpiCashFlow").textContent,
+        NOIAnnual: $("kpiNOI").textContent,
+        capRate: $("kpiCapRate").textContent,
+        cashOnCash: $("kpiCOC").textContent,
+        dscr: $("kpiDSCR").textContent
       };
-    }
-    function hydrate(d){
-      if(!d) return;
-      const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value = v ?? ''; };
-      set('dealTitle', d.title);
-      set('price', d.price);
-      set('rent', d.rent);
-      set('propertyTax', d.propertyTax);
-      set('insurance', d.insurance);
-      set('management', d.management);
-      set('vacancy', d.vacancy);
-      set('otherExpenses', d.otherExpenses);
-      set('down', d.downPercent);
-      set('rate', d.rate);
-      if (d.term) document.getElementById('term').value = String(d.term);
-      if (d.cmhcRequired) document.getElementById('cmhcRequired').value = d.cmhcRequired;
-      recompute();
+      return o;
     }
 
-    // Local → load
-    hydrate(PCState.getDeal());
-    recompute();
-
-    // Save to Drive (with incremental consent). Also persists locally.
-    document.getElementById('saveBtn').addEventListener('click', async ()=>{
-      const data = collect();
-      if (!data.price && !data.rent){ alert('Add a price or rent first.'); return; }
-      PCState.setDeal(data);
+    // --------------- Save to Drive ---------------
+    $("saveDriveBtn").addEventListener("click", async () => {
       try{
-        const user = PCState.getUser();
-        if (user?.mode === 'google' && window.PCDrive){
-          const file = await PCDrive.saveDealToDrive(data);
-          alert('Saved to Drive: ' + (file?.name || 'Deal.json'));
-        } else {
-          alert('Saved locally. (Sign in with Google to save to Drive.)');
-        }
-      }catch(err){
-        console.warn(err);
-        alert('Saved locally. Drive error: ' + (err?.message || err));
+        const deal = collectDeal();
+        const res = await PCDrive.saveDealToDrive(deal);
+        alert("✅ Saved to Drive: " + (res?.name || "Deal JSON"));
+      }catch(e){
+        alert("❌ " + (e?.message || e));
       }
     });
 
-    // Load from Drive picker
-    document.getElementById('loadBtn').addEventListener('click', async ()=>{
-      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet. Try again.'); return; }
-      const user = PCState.getUser();
-      if (!user || user.mode !== 'google'){ alert('Sign in with Google first.'); return; }
+    // --------------- Load from Drive ---------------
+    // This uses gapi directly on this page to list and fetch files.
+    const pickerCard = $("drivePickerCard");
+    const filesSelect = $("driveFiles");
 
+    async function ensureGapiReady(){
+      // Wait for gapi to be loaded by <script> tag
+      await new Promise((resolve, reject)=>{
+        const t0 = Date.now();
+        (function poll(){
+          if (window.gapi && gapi.client) return resolve();
+          if (Date.now()-t0 > 10000) return reject(new Error("gapi not loaded"));
+          setTimeout(poll, 50);
+        })();
+      });
+      // If not inited with discovery yet, init quickly (safe if already inited)
       try{
-        // Ensure folders exist or list if they do
-        const prop = await gapi.client.drive.files.list({
-          q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false",
-          fields:"files(id,name)"
+        await gapi.client.init({
+          apiKey: (window.PC_CONFIG||{}).GOOGLE_DRIVE_API_KEY,
+          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
         });
-        const propId = (prop.result.files||[])[0]?.id;
-        if (!propId) return alert("No PropCheck folder yet.");
-        const deals = await gapi.client.drive.files.list({
-          q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false",
-          fields:"files(id,name)"
+      }catch(_){}
+    }
+
+    async function obtainTokenIfNeeded(){
+      // If drive.js already set a token, gapi keeps it. If not, ask for one.
+      const scopes = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
+      await new Promise(async (resolve, reject)=>{
+        const tc = google.accounts.oauth2.initTokenClient({
+          client_id: (window.PC_CONFIG||{}).GOOGLE_OAUTH_CLIENT_ID,
+          scope: scopes,
+          callback: (r)=> r?.access_token ? (gapi.client.setToken({access_token:r.access_token}), resolve()) : reject(new Error("No access token"))
         });
-        const dealsId = (deals.result.files||[])[0]?.id;
-        if (!dealsId) return alert("No Deals folder yet.");
+        try{ tc.requestAccessToken({prompt:""}); }catch(e){ /* ignore */ }
+        setTimeout(async ()=>{
+          // If silent failed, prompt for consent
+          try{
+            tc.requestAccessToken({prompt:"consent"});
+          }catch(e){ return reject(e); }
+          // give it time to return
+          setTimeout(()=>resolve(), 1500);
+        }, 1200);
+      });
+    }
 
-        const res = await gapi.client.drive.files.list({
-          q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false",
-          orderBy:"modifiedTime desc",
-          pageSize:100,
-          fields:"files(id,name,modifiedTime)"
+    async function getFolderIdByName(name, parentId){
+      const q =
+        "name = '" + String(name).replace(/'/g, "\\'") +
+        "' and mimeType = 'application/vnd.google-apps.folder' and '" +
+        parentId + "' in parents and trashed = false";
+      const resp = await gapi.client.drive.files.list({ q, fields: "files(id,name)"});
+      const files = resp?.result?.files || [];
+      if (files.length) return files[0].id;
+      // Create if missing
+      const created = await gapi.client.drive.files.create({
+        resource: { name, mimeType: "application/vnd.google-apps.folder", parents:[parentId]},
+        fields: "id"
+      });
+      return created?.result?.id;
+    }
+
+    async function listDeals(){
+      await ensureGapiReady();
+      await obtainTokenIfNeeded();
+
+      const propId = await getFolderIdByName("PropCheck", "root");
+      const dealsId = await getFolderIdByName("Deals", propId);
+
+      const resp = await gapi.client.drive.files.list({
+        q: `'${dealsId}' in parents and trashed = false and mimeType = 'application/json'`,
+        orderBy: "modifiedTime desc",
+        pageSize: 50,
+        fields: "files(id,name,modifiedTime)"
+      });
+      const files = resp?.result?.files || [];
+      filesSelect.innerHTML = "";
+      if (!files.length){
+        const opt = document.createElement("option");
+        opt.textContent = "No saved deals found";
+        opt.value = "";
+        filesSelect.appendChild(opt);
+      }else{
+        files.forEach(f=>{
+          const opt = document.createElement("option");
+          const dt = new Date(f.modifiedTime).toLocaleString();
+          opt.value = f.id;
+          opt.textContent = `${f.name}  —  ${dt}`;
+          filesSelect.appendChild(opt);
         });
-        const files = res.result.files||[];
-        if (!files.length) return alert("No saved deals found.");
+      }
+    }
 
-        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
-        const pick = prompt("Select a deal to load (enter number):\n\n"+list+"\n\n");
-        const idx = Number((pick||'').trim()) - 1;
-        if (!(idx>=0 && idx<files.length)) return;
+    async function loadSelectedFile(){
+      const id = filesSelect.value;
+      if (!id){ alert("No file selected."); return; }
+      // Download JSON (alt=media)
+      const resp = await gapi.client.drive.files.get({ fileId: id, alt: "media" });
+      let data = resp?.body;
+      if (!data && resp?.result) data = resp.result;
+      if (typeof data === "string"){
+        try{ data = JSON.parse(data); }catch(e){ alert("Could not parse JSON file."); return; }
+      }
+      // Apply to form
+      fields.forEach(k=>{
+        if (data[k] !== undefined) $(k).value = data[k];
+      });
+      recalc();
+      pickerCard.classList.add("hidden");
+      alert("✅ Loaded from Drive.");
+    }
 
-        const file = files[idx];
-        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
-        const deal = JSON.parse(content);
-        PCState.setDeal(deal);
-        hydrate(deal);
-        alert("Loaded: " + file.name);
-      }catch(err){
-        console.warn(err);
-        alert("Load from Drive failed: " + (err?.message || err));
+    $("loadDriveBtn").addEventListener("click", async ()=>{
+      try{
+        await listDeals();
+        pickerCard.classList.remove("hidden");
+        window.scrollTo({top: pickerCard.offsetTop - 10, behavior:"smooth"});
+      }catch(e){
+        alert("❌ " + (e?.message || e));
       }
     });
+    $("applyDriveBtn").addEventListener("click", loadSelectedFile);
+    $("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
   </script>
 </body>
 </html>
