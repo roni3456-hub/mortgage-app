@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PropCheck — Qualification</title>
 
-  <!-- Global styles and app scripts (unchanged) -->
+  <!-- Global styles and app scripts (unchanged + drive.js added) -->
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
+  <script src="assets/js/drive.js"></script>
   <script defer src="assets/js/common.js"></script>
 
   <style>
-    /* Page-scoped helpers only; respects your global theme */
     .page-wrap { max-width: 1100px; margin: 0 auto; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
@@ -22,94 +22,36 @@
     .info-banner {
       background: var(--muted-bg, #f7fafc);
       border: 1px solid var(--border, #e2e8f0);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 14px;
+      border-radius: 12px; padding: 12px 14px; font-size: 14px;
     }
-
     .rules-callout {
-      background: #fff7e6;
-      border: 1px solid #f6ad55;
-      color: #744210;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 14px;
+      background: #fff7e6; border: 1px solid #f6ad55; color: #744210;
+      border-radius: 12px; padding: 12px 14px; font-size: 14px;
     }
-    .rules-callout b { color: #5c3a0f; }
-
-    .section-title {
-      font-weight: 600;
-      margin: 8px 0 6px;
-      font-size: 16px;
-      color: var(--fg, #111827);
-    }
-
+    .section-title { font-weight: 600; margin: 8px 0 6px; font-size: 16px; color: var(--fg, #111827); }
     .form-group small { color: var(--muted); display: block; margin-top: 4px; }
+    .pill { display: inline-block; border: 1px solid var(--border, #e2e8f0); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--muted); margin-right: 8px; margin-bottom: 6px; }
 
-    .pill {
-      display: inline-block;
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      color: var(--muted);
-      margin-right: 8px;
-      margin-bottom: 6px;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      margin-bottom: 8px;
-    }
-    .table th, .table td {
-      border-bottom: 1px solid var(--border, #e2e8f0);
-      text-align: left;
-      padding: 8px 6px;
-      font-size: 14px;
-      vertical-align: middle;
-    }
+    .table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 8px; }
+    .table th, .table td { border-bottom: 1px solid var(--border, #e2e8f0); text-align: left; padding: 8px 6px; font-size: 14px; vertical-align: middle; }
     .actions-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-    .derived {
-      background: var(--muted-bg, #f7fafc);
-      border: 1px dashed var(--border, #e2e8f0);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-    }
+    .derived { background: var(--muted-bg, #f7fafc); border: 1px dashed var(--border, #e2e8f0); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 
-    .result {
-      border-radius: 12px;
-      padding: 14px;
-      margin-top: 12px;
-      border: 1px solid var(--border, #e2e8f0);
-    }
+    .result { border-radius: 12px; padding: 14px; margin-top: 12px; border: 1px solid var(--border, #e2e8f0); }
     .result.pass { background: #ecfdf5; border-color: #34d39966; }
     .result.fail { background: #fef2f2; border-color: #fca5a566; }
-    .result .headline {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      border: 1px solid var(--border, #e2e8f0);
-      background: white;
-      margin-right: 8px;
-    }
+    .result .headline { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border, #e2e8f0); background: white; margin-right: 8px; }
 
     .error-text { color: #b91c1c; font-size: 13px; margin-top: 4px; }
     .hidden { display: none !important; }
     .subtle { color: var(--muted); font-size: 13px; }
+    .save-status { font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
-  <!-- NAV (unchanged; text-only links, emoji handled by common.js on the heading) -->
+  <!-- NAV (text-only; emoji handled by common.js on the heading) -->
   <div class="nav">
     <div class="nav-container">
       <a class="logo" href="index.html">PropCheck</a>
@@ -155,7 +97,7 @@
       <!-- Rental Properties (Detailed v2) -->
       <div style="margin-top: 18px;">
         <div class="section-title">Rental Properties (Detailed)</div>
-        <div class="subtle">Add properties if you want rental income considered. We’ll add the <b>Net Used</b> sum to monthly income.</div>
+        <div class="subtle">Add properties if you want rental income considered. We add the <b>Net Used</b> sum to monthly income.</div>
         <div class="actions-row" style="margin-top: 8px;">
           <button class="btn btn-secondary" id="addRentBtn" type="button">+ Add Rental Property</button>
           <span class="pill" id="rentSummaryPill">0 properties · $0.00/mo net</span>
@@ -163,11 +105,13 @@
         <table class="table" id="rentTable">
           <thead>
             <tr>
-              <th style="width: 210px;">Property Name/Label</th>
-              <th style="width: 150px;">Gross Rent ($/mo)</th>
-              <th style="width: 130px;">Inclusion %</th>
-              <th style="width: 160px;">Expenses ($/mo)</th>
-              <th style="width: 150px;">Net Used ($/mo)</th>
+              <th style="width: 200px;">Property Name/Label</th>
+              <th style="width: 130px;">Gross Rent ($/mo)</th>
+              <th style="width: 110px;">Inclusion %</th>
+              <th style="width: 130px;">Property Tax ($/mo)</th>
+              <th style="width: 130px;">Condo/HOA ($/mo)</th>
+              <th style="width: 130px;">Heating ($/mo)</th>
+              <th style="width: 130px;">Net Used ($/mo)</th>
               <th style="width: 60px;"></th>
             </tr>
           </thead>
@@ -194,7 +138,7 @@
           </div>
         </div>
 
-        <!-- Housing Status (optional; counted only if filled) -->
+        <!-- Housing Status (optional; only counted if filled) -->
         <div style="margin-top: 10px;">
           <div class="section-title">Housing Status (Optional)</div>
           <div class="grid-3">
@@ -231,7 +175,7 @@
               <input type="number" id="hsHeat" min="0" step="0.01" placeholder="e.g. 150" />
             </div>
           </div>
-          <div class="subtle">These amounts are treated as <b>additional monthly debts</b> in TDS and are optional. Fill only those that apply.</div>
+          <div class="subtle">These are your <b>existing</b> housing costs and go to TDS. Optional—fill only what applies.</div>
         </div>
 
         <!-- Other obligations -->
@@ -259,7 +203,7 @@
           </ul>
         </div>
 
-        <!-- Dynamic LOC Table (with Account Name/Label) -->
+        <!-- LOC Table -->
         <div style="margin-top: 8px;">
           <div class="actions-row">
             <button class="btn btn-secondary" id="addLocBtn" type="button">+ Add Line of Credit</button>
@@ -323,10 +267,11 @@
         </div>
       </div>
 
-      <!-- Analyze -->
-      <div class="actions" style="margin-top: 14px;">
+      <!-- Analyze & Save -->
+      <div class="actions" style="margin-top: 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <button class="btn btn-primary" id="analyzeBtn" type="button">Analyze Qualification</button>
         <button class="btn btn-secondary" id="saveBtn" type="button">Save</button>
+        <span id="saveStatus" class="save-status"></span>
       </div>
 
       <!-- Results -->
@@ -387,33 +332,31 @@
 
   <script>
     // ---------------------------
-    // Safe persistence wrapper (Drive if available, fallback to localStorage)
+    // Persistence using PCState + optional Drive via PCDrive
     // ---------------------------
-    const QUAL_KEY = 'qualification'; // separate namespace from calculator to avoid collisions
+    const QUAL_NS = 'pc:qualification'; // local fallback key
 
-    const Persistence = {
-      async load() {
-        try {
-          if (window.PropCheck && typeof window.PropCheck.load === 'function') {
-            const data = await window.PropCheck.load(QUAL_KEY);
-            if (data) return data;
-          }
-        } catch (e) { /* non-fatal */ }
-        try {
-          const raw = localStorage.getItem(QUAL_KEY);
-          return raw ? JSON.parse(raw) : null;
-        } catch (e) { return null; }
+    const Storage = {
+      loadLocal() {
+        try { const raw = localStorage.getItem(QUAL_NS); return raw ? JSON.parse(raw) : null; } catch { return null; }
       },
-      async save(payload) {
-        const data = JSON.stringify(payload);
+      saveLocal(obj) {
+        try { localStorage.setItem(QUAL_NS, JSON.stringify(obj)); } catch {}
+      },
+      loadDeal() {
         try {
-          if (window.PropCheck && typeof window.PropCheck.save === 'function') {
-            await window.PropCheck.save(QUAL_KEY, payload);
-          }
-        } catch (e) { /* fall back below */ }
+          const deal = (window.PCState && typeof PCState.getDeal === 'function') ? PCState.getDeal() : null;
+          return (deal && deal.qualifications) ? deal.qualifications : null;
+        } catch { return null; }
+      },
+      saveDeal(qual) {
         try {
-          localStorage.setItem(QUAL_KEY, data);
-        } catch (e) { /* ignore quota errors */ }
+          const get = window.PCState && typeof PCState.getDeal === 'function' ? PCState.getDeal() : null;
+          const base = get && typeof get === 'object' ? get : {};
+          const next = Object.assign({}, base, { qualifications: qual });
+          if (window.PCState && typeof PCState.setDeal === 'function') PCState.setDeal(next);
+          return next; // return merged deal for Drive
+        } catch { return null; }
       }
     };
 
@@ -442,7 +385,7 @@
       return paymentMonthly * (f - 1) / (r * f);
     }
     function getStressRate(contractRate) {
-      const mqr = (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25;
+      const mqr = (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : (window.PC_CONFIG && PC_CONFIG.MQR) || 5.25;
       return Math.max(contractRate + 2, mqr);
     }
     function getThresholds(score) {
@@ -462,12 +405,14 @@
     }
     function summarizeLocs(locs) { return locs.reduce((a, r) => a + computeLocMonthly(r), 0); }
 
-    // RENTAL rows (detailed v2)
+    // Rentals
     function computeRentNet(row) {
       const gross = nn(parseFloat(row.gross));
-      const inclPct = nn(parseFloat(row.inclPct)) / 100; // 0-1
-      const exp = nn(parseFloat(row.exp));
-      const net = Math.max(0, gross * inclPct - exp);
+      const inclPct = nn(parseFloat(row.inclPct)) / 100; // 0..1
+      const tax = nn(parseFloat(row.tax));
+      const condo = nn(parseFloat(row.condo));
+      const heat = nn(parseFloat(row.heat));
+      const net = Math.max(0, gross * inclPct - (tax + condo + heat));
       return net;
     }
     function summarizeRentNet(rows) { return rows.reduce((a, r) => a + computeRentNet(r), 0); }
@@ -519,7 +464,7 @@
         refreshLocSummary();
       }
 
-      [sel,inLimit,inBal].forEach(el => el.addEventListener('input', refreshRow));
+      [sel,inLimit,inBal,inName].forEach(el => el.addEventListener('input', refreshRow));
       del.addEventListener('click', () => { tr.remove(); refreshLocSummary(); });
 
       refreshRow();
@@ -546,11 +491,11 @@
       $('locSum').textContent = money(sum);
     }
 
-    function newRentRow(data = { name:'', gross:'', inclPct: '80', exp:'' }) {
+    function newRentRow(data = { name:'', gross:'', inclPct:'80', tax:'', condo:'', heat:'' }) {
       const tr = document.createElement('tr');
 
       const tdName = document.createElement('td');
-      const inName = document.createElement('input'); inName.type='text'; inName.placeholder='e.g. 123 Main St Upper'; inName.value=data.name??'';
+      const inName = document.createElement('input'); inName.type='text'; inName.placeholder='e.g. 123 Main Upper'; inName.value=data.name??'';
       tdName.appendChild(inName);
 
       const tdGross = document.createElement('td');
@@ -561,9 +506,17 @@
       const inIncl = document.createElement('input'); inIncl.type='number'; inIncl.step='1'; inIncl.min='0'; inIncl.max='100'; inIncl.placeholder='e.g. 80'; inIncl.value=data.inclPct??'80';
       tdIncl.appendChild(inIncl);
 
-      const tdExp = document.createElement('td');
-      const inExp = document.createElement('input'); inExp.type='number'; inExp.step='0.01'; inExp.min='0'; inExp.placeholder='e.g. 300'; inExp.value=data.exp??'';
-      tdExp.appendChild(inExp);
+      const tdTax = document.createElement('td');
+      const inTax = document.createElement('input'); inTax.type='number'; inTax.step='0.01'; inTax.min='0'; inTax.placeholder='e.g. 250'; inTax.value=data.tax??'';
+      tdTax.appendChild(inTax);
+
+      const tdCondo = document.createElement('td');
+      const inCondo = document.createElement('input'); inCondo.type='number'; inCondo.step='0.01'; inCondo.min='0'; inCondo.placeholder='e.g. 0'; inCondo.value=data.condo??'';
+      tdCondo.appendChild(inCondo);
+
+      const tdHeat = document.createElement('td');
+      const inHeat = document.createElement('input'); inHeat.type='number'; inHeat.step='0.01'; inHeat.min='0'; inHeat.placeholder='e.g. 150'; inHeat.value=data.heat??'';
+      tdHeat.appendChild(inHeat);
 
       const tdNet = document.createElement('td');
       const outNet = document.createElement('span'); outNet.textContent='$0.00'; tdNet.appendChild(outNet);
@@ -572,14 +525,20 @@
       const del = document.createElement('button'); del.className='btn btn-secondary'; del.type='button'; del.textContent='Remove';
       tdAct.appendChild(del);
 
-      tr.append(tdName, tdGross, tdIncl, tdExp, tdNet, tdAct);
+      tr.append(tdName, tdGross, tdIncl, tdTax, tdCondo, tdHeat, tdNet, tdAct);
 
       function refreshRow() {
-        const row = { gross: parseFloat(inGross.value||0), inclPct: parseFloat(inIncl.value||0), exp: parseFloat(inExp.value||0) };
+        const row = {
+          gross: parseFloat(inGross.value||0),
+          inclPct: parseFloat(inIncl.value||0),
+          tax: parseFloat(inTax.value||0),
+          condo: parseFloat(inCondo.value||0),
+          heat: parseFloat(inHeat.value||0)
+        };
         outNet.textContent = money(computeRentNet(row));
         refreshRentSummary();
       }
-      [inGross,inIncl,inExp].forEach(el => el.addEventListener('input', refreshRow));
+      [inName,inGross,inIncl,inTax,inCondo,inHeat].forEach(el => el.addEventListener('input', refreshRow));
       del.addEventListener('click', () => { tr.remove(); refreshRentSummary(); });
 
       refreshRow();
@@ -589,12 +548,14 @@
     function getRentRowsData() {
       const rows = [];
       for (const tr of Array.from(rentBody.children)) {
-        const [tdName, tdGross, tdIncl, tdExp] = tr.children;
+        const [tdName, tdGross, tdIncl, tdTax, tdCondo, tdHeat] = tr.children;
         rows.push({
           name: tdName.querySelector('input')?.value ?? '',
           gross: parseFloat(tdGross.querySelector('input')?.value || 0),
           inclPct: parseFloat(tdIncl.querySelector('input')?.value || 0),
-          exp: parseFloat(tdExp.querySelector('input')?.value || 0)
+          tax: parseFloat(tdTax.querySelector('input')?.value || 0),
+          condo: parseFloat(tdCondo.querySelector('input')?.value || 0),
+          heat: parseFloat(tdHeat.querySelector('input')?.value || 0)
         });
       }
       return rows;
@@ -618,7 +579,7 @@
       const otherIncome = nn(toNum($('otherIncome')));
       const coIncome = nn(toNum($('coIncome')));
 
-      // Rental net used (added to monthly income)
+      // Rentals
       const rentRows = getRentRowsData();
       const rentalNetMonthly = summarizeRentNet(rentRows);
 
@@ -637,18 +598,12 @@
       const hsTax = nn(toNum($('hsTax')));
       const hsCondo = nn(toNum($('hsCondo')));
       const hsHeat = nn(toNum($('hsHeat')));
-
       let housingDebtsMonthly = 0;
-      if (hs === 'rent') {
-        housingDebtsMonthly += hsRent;
-      } else if (hs === 'mortgage') {
-        housingDebtsMonthly += hsMortPI + hsTax + hsCondo + hsHeat;
-      } else if (hs === 'freeclear') {
-        housingDebtsMonthly += hsTax + hsCondo + hsHeat;
-      }
-      // Note: These are EXISTING housing costs and belong in TDS debts (not the subject property's shelter).
+      if (hs === 'rent') { housingDebtsMonthly += hsRent; }
+      else if (hs === 'mortgage') { housingDebtsMonthly += hsMortPI + hsTax + hsCondo + hsHeat; }
+      else if (hs === 'freeclear') { housingDebtsMonthly += hsTax + hsCondo + hsHeat; }
 
-      // Subject property data (optional)
+      // Subject property / rate / shelter (optional)
       const purchasePrice = nn(toNum($('purchasePrice')));
       const downPayment = nn(toNum($('downPayment')));
       const contractRate = nn(toNum($('interestRate'))) || 0;
@@ -665,17 +620,17 @@
 
       // Derived
       const incomeMonthly = (annualIncome + otherIncome + coIncome) / 12 + rentalNetMonthly; // add rental net
-      const shelter = (taxAnnual / 12) + heating + condo; // SUBJECT property shelter
+      const shelter = (taxAnnual / 12) + heating + condo; // subject property only
       const stressRate = getStressRate(contractRate);
       const thresholds = getThresholds(creditScore);
 
-      // Allowed P&I (subject property) from GDS/TDS
+      // Allowed P&I
       const gdsAllowed = Math.max(0, incomeMonthly * thresholds.gds - shelter);
       const tdsOtherDebts = car + ccMin + student + locMonthly + otherLoans + alimony + otherObl + housingDebtsMonthly;
       const tdsAllowed = Math.max(0, incomeMonthly * thresholds.tds - shelter - tdsOtherDebts);
       const piAllowed = Math.min(gdsAllowed, tdsAllowed);
 
-      // Convert to principals (headline + comparisons)
+      // Principal conversions
       const principal30Contract = principalFromPI(piAllowed, contractRate, 30);
       const principal25Contract = principalFromPI(piAllowed, contractRate, 25);
       const principal30Stress = principalFromPI(piAllowed, stressRate, 30);
@@ -684,7 +639,7 @@
       const pmtContract = pmt(principal30Contract, contractRate, 30);
       const pmtStress = pmt(principal30Contract, stressRate, 30);
 
-      // Ratios at the allowed P&I (using stress-tested payment)
+      // Ratios
       const gdsPct = incomeMonthly > 0 ? ((pmtStress + shelter) / incomeMonthly) : 0;
       const tdsPct = incomeMonthly > 0 ? ((pmtStress + shelter + tdsOtherDebts) / incomeMonthly) : 0;
       const constraint = (gdsAllowed <= tdsAllowed) ? 'GDS' : 'TDS';
@@ -698,7 +653,7 @@
 
       const qualifies = piAllowed > 0;
 
-      // Populate UI
+      // UI
       $('results').classList.remove('hidden');
       $('results').classList.toggle('pass', qualifies);
       $('results').classList.toggle('fail', !qualifies);
@@ -741,28 +696,12 @@
       }
       $('tipsBody').innerHTML = `<ul style="margin:6px 0 0 18px;">${tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
 
-      // Save derived snapshot
-      const snapshot = currentState();
-      snapshot.rate_stress_pct = stressRate;
-      snapshot.payment_stress_monthly = pmtStress;
-      snapshot.payment_contract_monthly = pmtContract;
-      snapshot.gds_pct = parseFloat((gdsPct * 100).toFixed(1));
-      snapshot.tds_pct = parseFloat((tdsPct * 100).toFixed(1));
-      snapshot.thresholds_used = { gds: thresholds.gds * 100, tds: thresholds.tds * 100 };
-      snapshot.qualified = qualifies;
-      snapshot.program = program.toLowerCase().includes('insured') ? 'insured' : 'conventional';
-      snapshot.max_principal_30y_contract = principal30Contract;
-      snapshot.max_principal_25y_contract = principal25Contract;
-      snapshot.max_principal_30y_stress = principal30Stress;
-      snapshot.rental_net_monthly = rentalNetMonthly;
-      snapshot.housing_status = hs;
-      snapshot.housing_debts_monthly = housingDebtsMonthly;
-
-      Persistence.save(snapshot);
+      // Save snapshot automatically after analyze
+      saveSnapshot();
     }
 
     // ---------------------------
-    // State load/save of inputs
+    // Build current state payload
     // ---------------------------
     function currentState() {
       return {
@@ -771,7 +710,7 @@
         income_annual: nn(toNum($('annualIncome'))),
         income_other_annual: nn(toNum($('otherIncome'))),
         income_coborrower_annual: nn(toNum($('coIncome'))),
-        // rentals (detailed rows)
+        // rentals
         rental_items: getRentRowsData(),
         // debts
         debt_car_monthly: nn(toNum($('carPayment'))),
@@ -780,7 +719,7 @@
         debt_other_loans_monthly: nn(toNum($('otherLoans'))),
         debt_alimony_monthly: nn(toNum($('alimony'))),
         debt_other_monthly: nn(toNum($('otherObl'))),
-        // housing status (existing home/rent) — optional, treated as debts
+        // housing status (existing)
         housing_status: $('housingStatus')?.value || 'none',
         housing_rent_monthly: nn(toNum($('hsRent'))),
         housing_mort_pi_monthly: nn(toNum($('hsMortPI'))),
@@ -798,8 +737,8 @@
         condo_fees_monthly: nn(toNum($('condoMonthly'))),
         // credit
         credit_score: nn(toNum($('creditScore'))),
-        // mqr snapshot
-        mqr_pct: (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25
+        // config snapshot
+        mqr_pct: (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : (window.PC_CONFIG && PC_CONFIG.MQR) || 5.25
       };
     }
 
@@ -844,13 +783,49 @@
       $('creditScore').value = s.credit_score ?? '';
     }
 
-    // Bind analyze/save
+    // ---------------------------
+    // Save logic (Deal first, Drive if possible; else local)
+    // ---------------------------
+    const saveStatusEl = $('saveStatus');
+
+    function setSaveStatus(text) { saveStatusEl.textContent = text || ''; }
+
+    function saveSnapshot() {
+      const qual = currentState();
+      // write into Deal
+      const mergedDeal = Storage.saveDeal(qual);
+      if (mergedDeal) setSaveStatus('Saved to Deal');
+      else setSaveStatus('Saved locally');
+
+      // local fallback always
+      Storage.saveLocal(qual);
+      return { qual, mergedDeal };
+    }
+
+    async function saveAll() {
+      const { mergedDeal } = saveSnapshot();
+      // Try Drive if available and user clicks Save
+      if (mergedDeal && window.PCDrive && typeof PCDrive.saveDealToDrive === 'function') {
+        try {
+          setSaveStatus('Saving to Drive…');
+          await PCDrive.saveDealToDrive(mergedDeal); // prompts for token if needed
+          setSaveStatus('Saved to Drive');
+        } catch (e) {
+          setSaveStatus('Drive save failed — saved locally');
+          console.error('Drive save failed:', e);
+        }
+      }
+    }
+
+    // ---------------------------
+    // Bind buttons & auto-save
+    // ---------------------------
     $('analyzeBtn').addEventListener('click', analyze);
-    $('saveBtn').addEventListener('click', () => Persistence.save(currentState()));
+    $('saveBtn').addEventListener('click', saveAll);
 
     // Auto-save on input changes (debounced)
     let saveTimer=null;
-    function autoSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>Persistence.save(currentState()), 400); }
+    function autoSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ saveSnapshot(); }, 500); }
     [
       'annualIncome','otherIncome','coIncome',
       'carPayment','ccMin','studentLoan','otherLoans','alimony','otherObl',
@@ -859,13 +834,16 @@
       'creditScore'
     ].forEach(id => { const el=$(id); el && el.addEventListener('input', autoSave); });
 
-    // Initial load
-    (async function init(){
-      const s = await Persistence.load();
-      applyState(s);
+    // Initial load: prefer Deal -> then local
+    (function init(){
+      const fromDeal = Storage.loadDeal();
+      const fromLocal = Storage.loadLocal();
+      applyState(fromDeal || fromLocal);
       refreshLocSummary();
       refreshRentSummary();
+      setSaveStatus(window.PCState ? 'Deal ready (local backup enabled)' : 'Saving locally');
     })();
   </script>
 </body>
 </html>
+
