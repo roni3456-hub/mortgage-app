@@ -1,4 +1,4 @@
-// PropCheck → Google Drive uploader (robust GIS/gapi init, fetch-based multipart upload)
+// PropCheck → Google Drive uploader (GIS/gapi init + fetch multipart with Blob body)
 (function () {
   const SCOPES =
     "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
@@ -10,7 +10,6 @@
   // ---------- utils ----------
   const log = (...a) => { try { console.log("[PCDrive]", ...a); } catch {} };
   const asStr = (v) => (typeof v === "string" ? v : JSON.stringify(v));
-
   function parseGapiError(e) {
     try {
       if (!e) return "Unknown error";
@@ -29,7 +28,6 @@
       return asStr(e);
     } catch { return asStr(e); }
   }
-
   function toJson(res) {
     if (!res) return null;
     if (res.result) return res.result;
@@ -53,7 +51,6 @@
 
   async function ensureGapiInit() {
     if (gapiReady) return;
-    // wait for gapi script
     await new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
@@ -62,7 +59,6 @@
         setTimeout(poll, 50);
       })();
     });
-    // init client + Drive discovery
     await new Promise((resolve, reject) => {
       gapi.load("client", async () => {
         try {
@@ -162,26 +158,24 @@
     return created.id;
   }
 
-  function buildMultipartBody(metadataObj, jsonObj) {
-    // Build as a plain string to avoid Blob edge cases in some environments
+  function makeMultipartBlob(metadataObj, jsonObj) {
+    // Proper CRLF and trailing CRLF after the closing boundary
     const boundary = "propcheck_" + Math.random().toString(36).slice(2);
-    const delimiter = "--" + boundary + "\r\n";
-    const closeDelim = "--" + boundary + "--";
+    const pre = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`;
+    const mid = `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n`;
+    const end = `\r\n--${boundary}--\r\n`;
 
-    const metaPart =
-      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-      JSON.stringify(metadataObj) + "\r\n";
-
-    const dataPart =
-      "Content-Type: application/json\r\n\r\n" +
-      JSON.stringify(jsonObj) + "\r\n";
-
-    const body =
-      delimiter + metaPart +
-      delimiter + dataPart +
-      closeDelim;
-
-    return { body, contentType: "multipart/related; boundary=" + boundary };
+    const blob = new Blob(
+      [
+        pre,
+        JSON.stringify(metadataObj),
+        mid,
+        JSON.stringify(jsonObj),
+        end
+      ],
+      { type: "multipart/related; boundary=" + boundary }
+    );
+    return { blob, boundary };
   }
 
   async function uploadJsonToDrive(obj) {
@@ -192,18 +186,19 @@
     const dealsId = await findOrCreateFolder("Deals", propcheckId);
 
     const metadata = { name: defaultFilename(obj), mimeType: "application/json", parents: [dealsId] };
-    const { body, contentType } = buildMultipartBody(metadata, obj);
+    const { blob, boundary } = makeMultipartBlob(metadata, obj);
 
-    // Upload with fetch (most reliable for multipart)
+    // Upload with fetch using a Blob body (prevents string auto text/plain)
     const res = await fetch(
       "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
       {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + accessToken,
-          "Content-Type": contentType
+          "Content-Type": "multipart/related; boundary=" + boundary,
+          "Accept": "application/json"
         },
-        body
+        body: blob
       }
     );
 
@@ -230,11 +225,11 @@
         const res = await uploadJsonToDrive(enriched);
         return res; // { id, name, webViewLink? }
       } catch (e) {
-        // Surface detailed server response if present
         const msg = e?.message || asStr(e);
         throw new Error("Drive save failed: " + msg);
       }
     }
   };
 })();
+
 
