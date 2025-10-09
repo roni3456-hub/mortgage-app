@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PropCheck — Compare</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="assets/js/drive.js"></script>
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html">PropCheck</a>
+      <div class="nav-links">
+        <a href="calculator.html" class="nav-link">Calculator</a>
+        <a href="reports.html" class="nav-link">Report</a>
+        <a href="analysis.html" class="nav-link">Analysis</a>
+        <a href="compare.html" class="nav-link active">Compare</a>
+        <a href="market.html" class="nav-link">Market Data</a>
+        <a href="qualification.html" class="nav-link">Qualification</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="main">
+    <div class="card">
+      <h3>Compare Deals</h3>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+        <button id="loadA" class="btn btn-primary">📂 Load Deal A</button>
+        <button id="loadB" class="btn btn-secondary">📂 Load Deal B</button>
+      </div>
+
+      <div class="grid grid-2">
+        <div>
+          <h4>Deal A</h4>
+          <div id="A"></div>
+        </div>
+        <div>
+          <h4>Deal B</h4>
+          <div id="B"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const money = n => Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
+    function view(el, d){
+      if(!d){ el.innerHTML = '<p class="muted">No deal loaded.</p>'; return; }
+      el.innerHTML = `
+        <div class="pc-kpis">
+          <div class="pc-kpi"><div class="kpi-label">Name</div><div class="kpi-value">${d.title||'(unnamed)'}</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Price</div><div class="kpi-value">${money(d.price)}</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Rent</div><div class="kpi-value">${money(d.rent)}</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Vacancy</div><div class="kpi-value">${(d.vacancy||0).toFixed(1)}%</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Mgmt</div><div class="kpi-value">${(d.management||0).toFixed(1)}%</div></div>
+        </div>
+      `;
+    }
+    async function pickFromDrive(){
+      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet.'); return null; }
+      const user = PCState.getUser(); if (!user || user.mode!=='google'){ alert('Sign in with Google first.'); return null; }
+      const prop = await gapi.client.drive.files.list({ q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false", fields:"files(id,name)"});
+      const propId = (prop.result.files||[])[0]?.id; if(!propId){ alert("No PropCheck folder yet."); return null; }
+      const deals = await gapi.client.drive.files.list({ q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false", fields:"files(id,name)"});
+      const dealsId = (deals.result.files||[])[0]?.id; if(!dealsId){ alert("No Deals folder yet."); return null; }
+      const res = await gapi.client.drive.files.list({ q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false", orderBy:"modifiedTime desc", pageSize:100, fields:"files(id,name,modifiedTime)"});
+      const files = res.result.files||[]; if(!files.length){ alert("No saved deals found."); return null; }
+      const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
+      const pick = prompt("Select a deal (enter number):\n\n"+list+"\n\n");
+      const idx = Number((pick||'').trim()) - 1; if (!(idx>=0 && idx<files.length)) return null;
+      const file = files[idx];
+      const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
+      return JSON.parse(content);
+    }
+    document.getElementById('loadA').addEventListener('click', async ()=>{
+      const d = await pickFromDrive(); if(!d) return;
+      view(document.getElementById('A'), d);
+    });
+    document.getElementById('loadB').addEventListener('click', async ()=>{
+      const d = await pickFromDrive(); if(!d) return;
+      view(document.getElementById('B'), d);
+    });
+  </script>
+</body>
+</html>
