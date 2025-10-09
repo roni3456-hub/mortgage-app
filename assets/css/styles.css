@@ -155,4 +155,19 @@ body{
 /* Optional: slightly nicer hover/active for existing nav */
 .nav .nav-link.active { background:var(--brand); color:#fff; border-radius:10px; }
 .nav .nav-link { display:inline-flex; align-items:center; gap:6px; }
+/* === Consistent main heading (H1) styling === */
+main h1 {
+  font-size: 2rem;           /* large enough for prominence */
+  font-weight: 700;
+  color: var(--text, #111);
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Smaller screens */
+@media (max-width: 720px) {
+  main h1 { font-size: 1.6rem; }
+}
 
