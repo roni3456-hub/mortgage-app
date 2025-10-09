@@ -36,7 +36,7 @@
         <a class="nav-link" href="qualification.html">Qualification</a>
       </div>
 
-      <!-- Drive status chip -->
+      <!-- Drive status chip (turns green when ready) -->
       <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
     </div>
   </nav>
@@ -237,35 +237,31 @@
 
     // ---- Helpers to reuse PCDrive token and avoid popups ----
     async function ensureDriveReadyInteractive() {
-      if (PCDrive.isReady()) return true;          // already have a token
-      await PCDrive.signIn();                      // user gesture: one-time consent if needed
+      if (PCDrive.isReady()) return true;      // token already present
+      await PCDrive.signIn();                  // one-time consent if needed (user gesture)
       return PCDrive.isReady();
     }
 
-    async function ensureGapiReady(){
-      // Wait for gapi to be present
+    async function waitForDriveClient(){
+      // Ensure Drive is ready (prompts once if needed)
+      if (!PCDrive.isReady()) {
+        await PCDrive.signIn();
+      }
+      // Wait for Drive discovery to be available (drive.js loads it)
       await new Promise((resolve, reject)=>{
         const t0 = Date.now();
         (function poll(){
-          if (window.gapi && gapi.client) return resolve();
-          if (Date.now()-t0 > 10000) return reject(new Error("gapi not loaded"));
+          if (window.gapi?.client?.drive?.files) return resolve();
+          if (Date.now()-t0 > 10000) return reject(new Error("Drive client not ready"));
           setTimeout(poll, 50);
         })();
       });
-      // Load Drive discovery if not yet loaded (safe no-op if already loaded)
-      try{
-        await gapi.client.init({
-          apiKey: (window.PC_CONFIG||{}).GOOGLE_DRIVE_API_KEY,
-          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-        });
-      }catch(_){}
     }
 
     // --------------- Save to Drive ---------------
     document.getElementById("saveDriveBtn").addEventListener("click", async () => {
       try{
-        // Make sure Drive is ready (prompts once if needed)
-        const ok = await ensureDriveReadyInteractive();
+        const ok = await ensureDriveReadyInteractive();  // prompts once if needed
         if (!ok) return alert("Please sign in to Google to save.");
 
         const deal = collectDeal();
@@ -297,9 +293,7 @@
     }
 
     async function listDeals(){
-      await ensureDriveReadyInteractive();   // ensures we have a token without redundant popups
-      await ensureGapiReady();
-
+      await waitForDriveClient();  // reuse token, no re-init
       const propId = await getFolderIdByName("PropCheck", "root");
       const dealsId = await getFolderIdByName("Deals", propId);
 
