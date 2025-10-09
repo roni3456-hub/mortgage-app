@@ -15,6 +15,7 @@
 
   <!-- Config + Google Identity + GAPI + Drive helper -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
@@ -32,6 +33,7 @@
         <a class="nav-link" href="compare.html">Compare</a>
         <a class="nav-link" href="market.html">Market</a>
         <a class="nav-link" href="qualification.html">Qualification</a>
+        <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
       </div>
     </div>
   </nav>
@@ -363,6 +365,30 @@
     });
     $("applyDriveBtn").addEventListener("click", loadSelectedFile);
     $("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
+     <!-- ✅ Silent Drive re-auth + chip updater -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // silently rehydrate Drive on this page (no popup)
+      PCDrive.autoInit();
+
+      // keep the header chip updated
+      const chip = document.getElementById("driveStatus");
+      if (chip) {
+        const apply = ({ ready, user }) => {
+          chip.classList.toggle("ready", !!ready);
+          if (!ready) {
+            chip.textContent = "Guest";
+            chip.title = "Drive save: local backup only";
+            return;
+          }
+          const name = user?.displayName || user?.emailAddress || "Signed in";
+          chip.textContent = name;
+          chip.title = "Drive save: enabled";
+        };
+        apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        PCDrive.onStatus(apply);
+      }
+    });
   </script>
 </body>
 </html>
