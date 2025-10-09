@@ -36,8 +36,11 @@
         <a class="nav-link" href="qualification.html">Qualification</a>
       </div>
 
-      <!-- Drive status chip (turns green when ready) -->
-      <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
+      <!-- Right side: Drive status + Sign-in/out -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
+        <button id="driveAuthBtn" class="btn btn-secondary" type="button">Sign in</button>
+      </div>
     </div>
   </nav>
 
@@ -235,35 +238,12 @@
       return o;
     }
 
-    // ---- Helpers to reuse PCDrive token and avoid popups ----
-    async function ensureDriveReadyInteractive() {
-      if (PCDrive.isReady()) return true;      // token already present
-      await PCDrive.signIn();                  // one-time consent if needed (user gesture)
-      return PCDrive.isReady();
-    }
-
-    async function waitForDriveClient(){
-      // Ensure Drive is ready (prompts once if needed)
-      if (!PCDrive.isReady()) {
-        await PCDrive.signIn();
-      }
-      // Wait for Drive discovery to be available (drive.js loads it)
-      await new Promise((resolve, reject)=>{
-        const t0 = Date.now();
-        (function poll(){
-          if (window.gapi?.client?.drive?.files) return resolve();
-          if (Date.now()-t0 > 10000) return reject(new Error("Drive client not ready"));
-          setTimeout(poll, 50);
-        })();
-      });
-    }
+    // ---- NO automatic sign-in in handlers (no surprise popups) ----
 
     // --------------- Save to Drive ---------------
     document.getElementById("saveDriveBtn").addEventListener("click", async () => {
       try{
-        const ok = await ensureDriveReadyInteractive();  // prompts once if needed
-        if (!ok) return alert("Please sign in to Google to save.");
-
+        if (!PCDrive.isReady()) return alert("Please click ‘Sign in’ (top-right) to enable Drive, then try again.");
         const deal = collectDeal();
         const res = await PCDrive.saveDealToDrive(deal);
         alert("✅ Saved to Drive: " + (res?.name || "Deal JSON"));
@@ -292,8 +272,22 @@
       return created?.result?.id;
     }
 
+    async function waitForDriveClient(){
+      // Wait until Drive discovery is available (drive.js loads it)
+      await new Promise((resolve, reject)=>{
+        const t0 = Date.now();
+        (function poll(){
+          if (window.gapi?.client?.drive?.files) return resolve();
+          if (Date.now()-t0 > 10000) return reject(new Error("Drive client not ready"));
+          setTimeout(poll, 50);
+        })();
+      });
+    }
+
     async function listDeals(){
-      await waitForDriveClient();  // reuse token, no re-init
+      if (!PCDrive.isReady()) return alert("Please click ‘Sign in’ (top-right) to enable Drive, then try again.");
+      await waitForDriveClient();
+
       const propId = await getFolderIdByName("PropCheck", "root");
       const dealsId = await getFolderIdByName("Deals", propId);
 
@@ -324,14 +318,12 @@
     async function loadSelectedFile(){
       const id = filesSelect.value;
       if (!id){ alert("No file selected."); return; }
-      // Download JSON (alt=media)
       const resp = await gapi.client.drive.files.get({ fileId: id, alt: "media" });
       let data = resp?.body;
       if (!data && resp?.result) data = resp.result;
       if (typeof data === "string"){
         try{ data = JSON.parse(data); }catch(e){ alert("Could not parse JSON file."); return; }
       }
-      // Apply to form
       fields.forEach(k=>{
         if (data[k] !== undefined) $(k).value = data[k];
       });
@@ -353,32 +345,52 @@
     document.getElementById("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
   </script>
 
-  <!-- Silent Drive re-auth + chip updater -->
+  <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // silently rehydrate Drive on this page (no popup)
+      // try silent rehydrate (no popup). If it fails, chip stays "Guest".
       PCDrive.autoInit();
 
-      // keep the header chip updated
+      // chip + button wiring
       const chip = document.getElementById("driveStatus");
-      if (chip) {
-        const apply = ({ ready, user }) => {
+      const btn  = document.getElementById("driveAuthBtn");
+
+      const apply = ({ ready, user }) => {
+        if (chip) {
           chip.classList.toggle("ready", !!ready);
-          if (!ready) {
-            chip.textContent = "Guest";
-            chip.title = "Drive save: local backup only";
+          if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
+          else {
+            const name = user?.displayName || user?.emailAddress || "Signed in";
+            chip.textContent = name; chip.title = "Drive save: enabled";
+          }
+        }
+        if (btn) btn.textContent = ready ? "Sign out" : "Sign in";
+      };
+
+      // initial
+      apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+      PCDrive.onStatus(apply);
+
+      // explicit user-driven auth (no surprise popups elsewhere)
+      if (btn) {
+        btn.addEventListener("click", async () => {
+          if (PCDrive.isReady()) {
+            PCDrive.signOut();
+            apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
             return;
           }
-          const name = user?.displayName || user?.emailAddress || "Signed in";
-          chip.textContent = name;
-          chip.title = "Drive save: enabled";
-        };
-        apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
-        PCDrive.onStatus(apply);
+          try {
+            await PCDrive.signIn();   // one-time consent; allowed to popup here
+          } catch (e) {
+            alert("Sign-in failed: " + (e?.message || e));
+          }
+          apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        });
       }
     });
   </script>
 </body>
 </html>
+
 
 
