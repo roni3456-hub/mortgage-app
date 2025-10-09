@@ -184,5 +184,32 @@ main h2 {
 @media (max-width: 720px) {
   main h2 { font-size: 1.6rem; }
 }
+/* ===== Drive status chip ===== */
+.drive-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:var(--card-bg);
+  color:var(--muted);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  font-size:12px;
+  line-height:1;
+  white-space:nowrap;
+}
+
+/* when Drive is ready (we flip this class from JS if you want) */
+.drive-chip.ready{
+  background:rgba(46, 204, 113, 0.12);          /* brand tint */
+  color:var(--brand-dark);
+  border-color:rgba(46, 204, 113, 0.35);
+}
+
+/* responsive: keep header tidy on small screens */
+@media (max-width: 720px){
+  .drive-chip{ padding:5px 8px; font-size:11px; }
+}
 
 
