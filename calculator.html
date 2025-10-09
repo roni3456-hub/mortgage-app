@@ -4,174 +4,162 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PropCheck — Calculator</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Your original styles (inlined so this page looks identical to the old app) -->
+  <style>
+    :root{
+      --brand:#2ecc71;--brand-dark:#27ae60;--muted:#7f8c8d;--card-bg:#ffffff;
+      --page-bg-1:#667eea;--page-bg-2:#764ba2;--max-w:1200px;--danger:#e74c3c;
+      --warning:#f39c12;--info:#3498db;--success:#2ecc71;--text:#2c3e50;
+      --border:#e1e8ed;--shadow:0 6px 20px rgba(2,6,23,0.06);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+         background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
+         color:var(--text);min-height:100vh;}
+    .nav{background:#fff;padding:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+    .nav-container{max-width:var(--max-w);margin:0 auto;padding:0 20px;display:flex;
+                   justify-content:space-between;align-items:center;height:70px}
+    .logo{color:var(--brand);font-size:1.8rem;font-weight:700;text-decoration:none}
+    .nav-links{display:flex;gap:0;align-items:center}
+    .nav-link{padding:12px 20px;text-decoration:none;color:var(--text);font-weight:500;
+              border-radius:8px;transition:all 0.2s}
+    .nav-link:hover,.nav-link.active{background:var(--brand);color:#fff}
+    .main{max-width:var(--max-w);margin:0 auto;padding:24px 20px;min-height:calc(100vh - 70px)}
+    .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+    .card h3{margin:0 0 20px 0;color:var(--text);font-size:1.3rem}
+    .card h4{margin:20px 0 16px 0;color:var(--text);font-size:1.1rem}
+    .grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
+    .full{grid-column:1/-1}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-weight:600;margin-bottom:6px;color:var(--text)}
+    .form-group input,.form-group select{width:100%;padding:12px;border-radius:8px;
+                                        border:1px solid var(--border);font-size:15px}
+    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--brand)}
+    .form-group small{display:block;color:var(--muted);margin-top:4px;font-size:13px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;
+         border-radius:8px;border:0;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.2s}
+    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .result-card{background:linear-gradient(135deg,#e8f8f5 0%,#d5efdb 100%);
+                 padding:20px;border-radius:12px;margin-top:20px}
+    .metric{text-align:center;padding:16px}
+    .metric-value{font-size:1.8rem;font-weight:700;color:var(--brand)}
+    .metric-label{color:var(--muted);font-size:0.9rem;margin-top:4px}
+    .ratio-bar{height:12px;background:#f0f3f5;border-radius:999px;overflow:hidden}
+    .ratio-fill{height:100%;background:var(--info)}
+    .ratio-fill.warning{background:var(--warning)}.ratio-fill.danger{background:var(--danger)}
+    @media(max-width:768px){
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .nav-links{display:none}
+      .nav-container{padding:0 16px}
+      .main{padding:16px}
+      .card{padding:20px}
+    }
+  </style>
+
+  <!-- App config + shared state -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
+
+  <!-- Google identity + Drive client + uploader -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="assets/js/drive.js"></script>
 </head>
 <body>
-  <header class="pc-hero">
-    <nav class="pc-nav container">
-      <a class="pc-logo" href="index.html">
-        <span class="pc-logo-emoji">🏠</span>
-        <span class="pc-logo-text">PropCheck</span>
-      </a>
-      <div class="pc-links">
-        <a href="calculator.html" class="active">Calculator</a>
-        <a href="reports.html">Report</a>
-        <a href="analysis.html">Analysis</a>
+  <!-- Top nav (links back to sign-in and to other pages) -->
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html">PropCheck</a>
+      <div class="nav-links">
+        <a href="calculator.html" class="nav-link active">Calculator</a>
+        <a href="reports.html" class="nav-link">Report</a>
+        <a href="analysis.html" class="nav-link">Analysis</a>
       </div>
-    </nav>
-    <div class="pc-hero-title container">
-      <h1>Underwrite a Property</h1>
-      <p class="muted">Fast Canadian property underwriting for real estate investors</p>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-    <div class="pc-card pc-card-large">
+  <main class="main">
+    <div class="card">
+      <h3>Underwrite a Property</h3>
 
-      <!-- Property Overview -->
-      <h2 class="pc-section"><span>📋</span> Property Overview</h2>
-      <div class="grid">
-        <div class="field">
-          <label>Property Name</label>
-          <input id="dealTitle" placeholder="e.g., 123 Main St" />
+      <!-- Property Inputs -->
+      <div class="grid grid-3">
+        <div class="form-group">
+          <label>Purchase Price ($)</label>
+          <input id="price" type="number" placeholder="e.g. 750000">
         </div>
-        <div class="field">
-          <label>Purchase Price</label>
-          <input id="purchasePrice" type="number" inputmode="decimal" placeholder="500000" />
+        <div class="form-group">
+          <label>Down Payment (%)</label>
+          <input id="down" type="number" value="20" min="5" max="100">
         </div>
-        <div class="field">
-          <label>Closing Costs</label>
-          <input id="closingCosts" type="number" inputmode="decimal" placeholder="8000" />
+        <div class="form-group">
+          <label>Interest Rate (%)</label>
+          <input id="rate" type="number" value="5.5" step="0.1">
         </div>
-        <div class="field">
-          <label>Renovation Budget</label>
-          <input id="renoBudget" type="number" inputmode="decimal" placeholder="15000" />
-        </div>
-      </div>
-
-      <!-- Financing -->
-      <h2 class="pc-section"><span>🏦</span> Financing</h2>
-      <div class="grid">
-        <div class="field">
-          <label>Down Payment %</label>
-          <input id="downPct" type="number" inputmode="decimal" placeholder="20" />
-        </div>
-        <div class="field">
-          <label>Interest Rate %</label>
-          <input id="ratePct" type="number" inputmode="decimal" placeholder="5.25" />
-        </div>
-        <div class="field">
+        <div class="form-group">
           <label>Amortization (years)</label>
-          <input id="amortYears" type="number" inputmode="numeric" placeholder="25" />
+          <select id="term">
+            <option value="25">25 years</option>
+            <option value="30">30 years</option>
+            <option value="20">20 years</option>
+            <option value="15">15 years</option>
+          </select>
         </div>
-        <div class="field">
-          <label>Term (years)</label>
-          <input id="termYears" type="number" inputmode="numeric" placeholder="5" />
+        <div class="form-group">
+          <label>Monthly Rent ($)</label>
+          <input id="rent" type="number" placeholder="e.g. 2800">
+        </div>
+        <div class="form-group">
+          <label>Property Tax (annual $)</label>
+          <input id="propertyTax" type="number" placeholder="e.g. 3500">
+        </div>
+        <div class="form-group">
+          <label>Insurance (annual $)</label>
+          <input id="insurance" type="number" placeholder="e.g. 1200">
+        </div>
+        <div class="form-group">
+          <label>Management (% of rent)</label>
+          <input id="management" type="number" placeholder="e.g. 8">
+        </div>
+        <div class="form-group">
+          <label>Vacancy (%)</label>
+          <input id="vacancy" type="number" placeholder="e.g. 3">
+        </div>
+        <div class="form-group">
+          <label>Other Monthly Expenses ($)</label>
+          <input id="otherExpenses" type="number" placeholder="e.g. 150">
+        </div>
+        <div class="form-group">
+          <label>CMHC Insurance Required?</label>
+          <select id="cmhcRequired">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+          <small>Set to Yes if down payment &lt; 20% for insured mortgage.</small>
         </div>
       </div>
 
-      <!-- Income -->
-      <h2 class="pc-section"><span>💸</span> Income</h2>
-      <div class="grid">
-        <div class="field">
-          <label>Monthly Rent</label>
-          <input id="monthlyRent" type="number" inputmode="decimal" placeholder="2800" />
+      <h4>Investment Summary</h4>
+      <div class="grid grid-2">
+        <div>
+          <strong>Initial Investment:</strong><br>
+          Down Payment: <span id="downPaymentAmount">$0</span><br>
+          CMHC Insurance: <span id="cmhcAmount">$0</span><br>
+          <strong>Total: <span id="totalInitial">$0</span></strong>
         </div>
-        <div class="field">
-          <label>Other Monthly Income</label>
-          <input id="otherIncome" type="number" inputmode="decimal" placeholder="0" />
-        </div>
-        <div class="field">
-          <label>Vacancy %</label>
-          <input id="vacancyPct" type="number" inputmode="decimal" placeholder="3" />
+        <div>
+          <strong>Annual Numbers:</strong><br>
+          Gross Rent: <span id="grossRent">$0</span><br>
+          Total Expenses: <span id="totalExpenses">$0</span><br>
+          Net Operating Income: <span id="noi">$0</span>
         </div>
       </div>
 
-      <!-- Expenses -->
-      <h2 class="pc-section"><span>🧾</span> Operating Expenses</h2>
-      <div class="grid">
-        <div class="field"><label>Property Tax (annual)</label><input id="taxAnnual" type="number" inputmode="decimal" placeholder="3500" /></div>
-        <div class="field"><label>Insurance (annual)</label><input id="insAnnual" type="number" inputmode="decimal" placeholder="1200" /></div>
-        <div class="field"><label>Utilities (monthly)</label><input id="utilsMonthly" type="number" inputmode="decimal" placeholder="0" /></div>
-        <div class="field"><label>Maintenance % of Rent</label><input id="maintPct" type="number" inputmode="decimal" placeholder="5" /></div>
-        <div class="field"><label>CapEx % of Rent</label><input id="capexPct" type="number" inputmode="decimal" placeholder="5" /></div>
-        <div class="field"><label>Management % of Rent</label><input id="mgmtPct" type="number" inputmode="decimal" placeholder="8" /></div>
-      </div>
-
-      <!-- Actions -->
-      <div class="actions">
-        <button id="saveProperty" class="pc-btn pc-btn-primary">Save</button>
-        <a class="pc-btn pc-btn-outline" href="reports.html">View Report</a>
-        <a class="pc-btn pc-btn-outline" href="analysis.html">View Analysis</a>
-      </div>
-    </div>
-  </main>
-
-  <footer class="container pc-footer">v1 multipage — styled to match original PropCheck</footer>
-
-  <script>
-    // helpers
-    function n(id){ const el=document.getElementById(id); const v=(el.value||'').trim(); const x=Number(v); return Number.isFinite(x)?x:0; }
-    function collect(){
-      return {
-        title: document.getElementById('dealTitle').value.trim(),
-        // overview
-        purchasePrice: n('purchasePrice'),
-        closingCosts: n('closingCosts'),
-        renoBudget: n('renoBudget'),
-        // financing
-        downPct: n('downPct'),
-        ratePct: n('ratePct'),
-        amortYears: n('amortYears'),
-        termYears: n('termYears'),
-        // income
-        monthlyRent: n('monthlyRent'),
-        otherIncome: n('otherIncome'),
-        vacancyPct: n('vacancyPct'),
-        // expenses
-        taxAnnual: n('taxAnnual'),
-        insAnnual: n('insAnnual'),
-        utilsMonthly: n('utilsMonthly'),
-        maintPct: n('maintPct'),
-        capexPct: n('capexPct'),
-        mgmtPct: n('mgmtPct'),
-        updatedAt: new Date().toISOString()
-      };
-    }
-    function hydrate(d){
-      if(!d) return;
-      const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value = (val ?? '') };
-      set('dealTitle', d.title);
-      set('purchasePrice', d.purchasePrice);
-      set('closingCosts', d.closingCosts);
-      set('renoBudget', d.renoBudget);
-      set('downPct', d.downPct);
-      set('ratePct', d.ratePct);
-      set('amortYears', d.amortYears);
-      set('termYears', d.termYears);
-      set('monthlyRent', d.monthlyRent);
-      set('otherIncome', d.otherIncome);
-      set('vacancyPct', d.vacancyPct);
-      set('taxAnnual', d.taxAnnual);
-      set('insAnnual', d.insAnnual);
-      set('utilsMonthly', d.utilsMonthly);
-      set('maintPct', d.maintPct);
-      set('capexPct', d.capexPct);
-      set('mgmtPct', d.mgmtPct);
-    }
-
-    hydrate(PCState.getDeal());
-
-    document.getElementById('saveProperty').addEventListener('click', ()=>{
-      const d = collect();
-      if(!d.title && !d.purchasePrice){ alert('Add a name or price first.'); return; }
-      PCState.setDeal(d);
-      alert('Saved. Open Report/Analysis to see the same data.');
-    });
-  </script>
-</body>
-</html>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <
 
 
