@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PropCheck — Market Data</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="assets/js/drive.js"></script>
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html">PropCheck</a>
+      <div class="nav-links">
+        <a href="calculator.html" class="nav-link">Calculator</a>
+        <a href="reports.html" class="nav-link">Report</a>
+        <a href="analysis.html" class="nav-link">Analysis</a>
+        <a href="compare.html" class="nav-link">Compare</a>
+        <a href="market.html" class="nav-link active">Market Data</a>
+        <a href="qualification.html" class="nav-link">Qualification</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="main">
+    <div class="card">
+      <h3>Market Data</h3>
+      <div class="grid grid-3">
+        <div class="form-group">
+          <label>City</label>
+          <input id="mkCity" placeholder="e.g. Calgary">
+        </div>
+        <div class="form-group">
+          <label>Neighborhood</label>
+          <input id="mkHood" placeholder="e.g. Beltline">
+        </div>
+        <div class="form-group">
+          <label>Avg Rent (mo)</label>
+          <input id="mkAvgRent" type="number" placeholder="2200">
+        </div>
+        <div class="form-group">
+          <label>Avg Cap Rate (%)</label>
+          <input id="mkCap" type="number" placeholder="4.8">
+        </div>
+        <div class="form-group">
+          <label>YoY Rent Growth (%)</label>
+          <input id="mkRentYoY" type="number" placeholder="3.1">
+        </div>
+        <div class="form-group">
+          <label>Vacancy (%)</label>
+          <input id="mkVacancy" type="number" placeholder="2.5">
+        </div>
+      </div>
+
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="saveBtn" class="btn btn-primary">💾 Save Market Snapshot (Drive)</button>
+        <button id="loadBtn" class="btn btn-secondary">📂 Load Market Snapshot (Drive)</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function collect(){
+      return {
+        type:'market',
+        city: document.getElementById('mkCity').value.trim(),
+        hood: document.getElementById('mkHood').value.trim(),
+        avgRent: +document.getElementById('mkAvgRent').value || 0,
+        capRate: +document.getElementById('mkCap').value || 0,
+        rentYoY: +document.getElementById('mkRentYoY').value || 0,
+        vacancy: +document.getElementById('mkVacancy').value || 0,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    function hydrate(d){
+      if(!d) return;
+      const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v??''; };
+      set('mkCity', d.city); set('mkHood', d.hood);
+      set('mkAvgRent', d.avgRent); set('mkCap', d.capRate);
+      set('mkRentYoY', d.rentYoY); set('mkVacancy', d.vacancy);
+    }
+    hydrate(PCState.getDeal()); // reuse local slot if you wish
+
+    document.getElementById('saveBtn').addEventListener('click', async ()=>{
+      const data = collect(); PCState.setDeal(data);
+      try{
+        const user = PCState.getUser();
+        if (user?.mode==='google' && window.PCDrive){
+          const file = await PCDrive.saveDealToDrive(data);
+          alert('Saved to Drive: ' + (file?.name || 'Market.json'));
+        } else { alert('Saved locally. (Sign in with Google to save to Drive.)'); }
+      }catch(err){ console.warn(err); alert('Drive error: ' + (err?.message||err)); }
+    });
+
+    document.getElementById('loadBtn').addEventListener('click', async ()=>{
+      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet.'); return; }
+      const user = PCState.getUser(); if (!user || user.mode!=='google'){ alert('Sign in with Google first.'); return; }
+      try{
+        const prop = await gapi.client.drive.files.list({ q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false", fields:"files(id,name)"});
+        const propId = (prop.result.files||[])[0]?.id; if(!propId) return alert("No PropCheck folder yet.");
+        const deals = await gapi.client.drive.files.list({ q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false", fields:"files(id,name)"});
+        const dealsId = (deals.result.files||[])[0]?.id; if(!dealsId) return alert("No Deals folder yet.");
+        const res = await gapi.client.drive.files.list({ q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false", orderBy:"modifiedTime desc", pageSize:100, fields:"files(id,name,modifiedTime)"});
+        const files = (res.result.files||[]).filter(f=>/Market|market/i.test(f.name));
+        if (!files.length) return alert("No market snapshots found.");
+        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
+        const pick = prompt("Select a snapshot:\n\n"+list+"\n\n");
+        const idx = Number((pick||'').trim()) - 1; if (!(idx>=0 && idx<files.length)) return;
+        const file = files[idx];
+        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
+        const snap = JSON.parse(content);
+        PCState.setDeal(snap);
+        hydrate(snap);
+        alert("Loaded: " + file.name);
+      }catch(err){ console.warn(err); alert("Load failed: " + (err?.message||err)); }
+    });
+  </script>
+</body>
+</html>
