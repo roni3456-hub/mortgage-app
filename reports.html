@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — Report</title>
+
   <link rel="stylesheet" href="assets/css/styles.css" />
 
   <script src="assets/js/config.js"></script>
@@ -12,7 +13,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
-  <script defer src="assets/js/common.js"></script>
+
+  <!-- Load our UI helper last; use absolute path + version to bust cache -->
+  <script defer src="/assets/js/common.js?v=5"></script>
 </head>
 <body>
   <div class="nav">
