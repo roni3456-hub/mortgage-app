@@ -1,57 +1,86 @@
 // assets/js/common.js
-// Emojis appear ONLY in page H1s (auto-added per page); nav stays text-only;
-// also highlights the active nav link.
+// Nav stays text-only; active tab highlight; ensure each page's H1 starts with its emoji.
+// Robust to late DOM changes via MutationObserver.
 (function () {
-  try {
-    // figure out current route from URL
+  // --- ROUTE & CONFIG ---
+  function getRoute() {
     const path = location.pathname.replace(/\/+$/, '');
     const name = path.split('/').pop() || 'index.html';
-    const route = (name.replace('.html','') || 'index');
+    return (name.replace('.html','') || 'index');
+  }
+  const CONFIG = {
+    index:         { emoji: '🏠', label: 'home' },
+    calculator:    { emoji: '🏠', label: 'calculator' }, // you use 🏠 for Calc
+    analysis:      { emoji: '📊', label: 'analysis' },
+    compare:       { emoji: '⚖️', label: 'compare' },
+    reports:       { emoji: '📋', label: 'reports' },
+    market:        { emoji: '🏙️', label: 'market' },
+    qualification: { emoji: '🏦', label: 'qualification' }
+  };
+  const KNOWN = new Set(Object.values(CONFIG).map(c => c.emoji));
 
-    // --- 1) Active nav highlighting (no emoji injection in nav) ---
+  // --- ACTIVE NAV (no emoji injection) ---
+  function applyActiveNav(route) {
     document.querySelectorAll('.nav a').forEach(a => {
       const href = a.getAttribute('href') || '';
       const isIndex = route === 'index' && /index\.html$/i.test(href);
       const isMatch = route !== 'index' && new RegExp(route + '\\.html$', 'i').test(href);
-      const isActive = isIndex || isMatch;
-      a.classList.toggle('active', isActive);
-      if (isActive) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+      const active = isIndex || isMatch;
+      a.classList.toggle('active', active);
+      if (active) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
     });
-
-    // --- 2) Ensure H1 starts with the designated emoji (and wrap accessibly) ---
-    const CONFIG = {
-      index:         { emoji: '🏠', label: 'home' },
-      calculator:    { emoji: '🏠', label: 'calculator' }, // you’ve been using 🏠 for Calc
-      analysis:      { emoji: '📊', label: 'analysis' },
-      compare:       { emoji: '⚖️', label: 'compare' },
-      reports:       { emoji: '📋', label: 'reports' },
-      market:        { emoji: '🏙️', label: 'market' },
-      qualification: { emoji: '🏦', label: 'qualification' }
-    };
-
-    const cfg = CONFIG[route];
-    const h1 = document.querySelector('main h1, h1');
-    if (h1 && cfg) {
-      // If H1 already has our <span class="emoji">, just normalize it.
-      const existingSpan = h1.querySelector('.emoji');
-      if (existingSpan) {
-        if (existingSpan.textContent !== cfg.emoji) existingSpan.textContent = cfg.emoji;
-        existingSpan.setAttribute('aria-label', cfg.label);
-      } else {
-        // Work with text content to avoid duplicating emojis
-        const raw = (h1.textContent || '').trim();
-        const first = raw ? Array.from(raw)[0] : '';
-        const KNOWN = Object.values(CONFIG).map(c => c.emoji);
-        const beginsWithEmoji = KNOWN.includes(first);
-        const restText = beginsWithEmoji ? raw.slice(first.length).trimStart() : raw;
-
-        // Force the designated emoji for this route
-        h1.innerHTML = `<span class="emoji hpad" role="img" aria-label="${cfg.label}">${cfg.emoji}</span>${restText}`;
-      }
-    }
-  } catch (e) {
-    console.warn('common.js init error', e);
   }
+
+  // --- H1 EMOJI ENFORCER ---
+  function applyH1Emoji(route) {
+    const cfg = CONFIG[route];
+    if (!cfg) return;
+
+    // first H1 not inside header/nav
+    const candidates = Array.from(document.querySelectorAll('h1'))
+      .filter(h => !h.closest('header,.site-header,.nav'));
+    const h1 = candidates[0];
+    if (!h1) return;
+
+    // If it already has our span, normalize it and exit
+    const span = h1.querySelector('span.emoji');
+    if (span) {
+      if (span.textContent !== cfg.emoji) span.textContent = cfg.emoji;
+      span.setAttribute('aria-label', cfg.label);
+      return;
+    }
+
+    // Work off plain text to avoid duplicate emojis
+    const raw = (h1.textContent || '').trim();
+    const first = raw ? Array.from(raw)[0] : '';
+    const rest = KNOWN.has(first) ? raw.slice(first.length).trimStart() : raw;
+
+    h1.innerHTML = `<span class="emoji hpad" role="img" aria-label="${cfg.label}">${cfg.emoji}</span>${rest}`;
+  }
+
+  // --- APPLY (initial + on DOM changes) ---
+  let route = getRoute();
+  function applyAll() {
+    route = getRoute();
+    applyActiveNav(route);
+    applyH1Emoji(route);
+  }
+
+  // Run at DOM ready and after full load
+  document.addEventListener('DOMContentLoaded', applyAll);
+  window.addEventListener('load', applyAll);
+
+  // Re-apply if other scripts update the page later
+  let throttle;
+  const mo = new MutationObserver(() => {
+    clearTimeout(throttle);
+    throttle = setTimeout(applyAll, 60);
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+
+  // quick debug flag
+  window.__pc_common_js_loaded = true;
 })();
+
 
 
