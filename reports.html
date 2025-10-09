@@ -1,104 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — Report</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
+
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="assets/js/drive.js"></script>
 </head>
 <body>
-  <header class="pc-hero">
-    <nav class="pc-nav container">
-      <a class="pc-logo" href="index.html"><span class="pc-logo-emoji">🏠</span><span class="pc-logo-text">PropCheck</span></a>
-      <div class="pc-links">
-        <a href="calculator.html">Calculator</a>
-        <a href="reports.html" class="active">Report</a>
-        <a href="analysis.html">Analysis</a>
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html">PropCheck</a>
+      <div class="nav-links">
+        <a href="calculator.html" class="nav-link">Calculator</a>
+        <a href="reports.html" class="nav-link active">Report</a>
+        <a href="analysis.html" class="nav-link">Analysis</a>
+        <a href="compare.html" class="nav-link">Compare</a>
+        <a href="market.html" class="nav-link">Market Data</a>
+        <a href="qualification.html" class="nav-link">Qualification</a>
       </div>
-    </nav>
-    <div class="pc-hero-title container">
-      <h1>Property Investment Report</h1>
-      <p class="muted">Generated on <span id="genDate"></span></p>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-    <div class="pc-card pc-card-large">
-      <h2 class="pc-section"><span>🏡</span> Summary</h2>
+  <main class="main">
+    <div class="card">
+      <h3>Property Investment Report</h3>
+      <div style="margin-bottom:12px;color:var(--muted)">Generated on <span id="genDate"></span></div>
+
       <div id="summary"></div>
 
-      <h2 class="pc-section"><span>📋</span> Property Overview</h2>
+      <h4>Property Overview</h4>
       <table class="pc-table" id="tblOverview"></table>
 
-      <h2 class="pc-section"><span>🏦</span> Financing</h2>
+      <h4>Financing</h4>
       <table class="pc-table" id="tblFinance"></table>
 
-      <h2 class="pc-section"><span>💸</span> Income & Expenses</h2>
+      <h4>Income & Expenses</h4>
       <table class="pc-table" id="tblIE"></table>
 
-      <div class="actions">
-        <a class="pc-btn pc-btn-outline" href="calculator.html">Back to Calculator</a>
-        <a class="pc-btn pc-btn-primary" href="analysis.html">Go to Analysis</a>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-secondary" href="calculator.html">Back to Calculator</a>
+        <button id="loadBtn" class="btn btn-primary">📂 Load from Drive</button>
       </div>
     </div>
   </main>
 
-  <footer class="container pc-footer">Styled to match original PropCheck</footer>
-
   <script>
-    const d = PCState.getDeal();
     document.getElementById('genDate').textContent = new Date().toLocaleDateString('en-CA');
-
-    const fmtC = n => PC.money(Number(n||0));
+    const d = PCState.getDeal();
+    const money = n => Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
     const pct = n => (Number(n||0)).toFixed(2) + '%';
 
-    if (!d) {
-      document.getElementById('summary').innerHTML = '<p class="muted">No saved deal. Go to Calculator and save one.</p>';
-    } else {
-      document.getElementById('summary').innerHTML = `
-        <div class="pc-kpis">
-          <div class="pc-kpi"><div class="kpi-label">Price</div><div class="kpi-value">${fmtC(d.purchasePrice)}</div></div>
-          <div class="pc-kpi"><div class="kpi-label">Rent (mo)</div><div class="kpi-value">${fmtC(d.monthlyRent)}</div></div>
-          <div class="pc-kpi"><div class="kpi-label">Vacancy</div><div class="kpi-value">${pct(d.vacancyPct)}</div></div>
-        </div>
-      `;
-
-      const ov = [
-        ['Name', d.title || '(unnamed)'],
-        ['Purchase Price', fmtC(d.purchasePrice)],
-        ['Closing Costs', fmtC(d.closingCosts)],
-        ['Renovation Budget', fmtC(d.renoBudget)]
-      ];
-      fillTable('tblOverview', ov);
-
-      const fin = [
-        ['Down Payment %', pct(d.downPct)],
-        ['Interest Rate %', pct(d.ratePct)],
-        ['Amortization (yrs)', d.amortYears || 0],
-        ['Term (yrs)', d.termYears || 0]
-      ];
-      fillTable('tblFinance', fin);
-
-      const ie = [
-        ['Monthly Rent', fmtC(d.monthlyRent)],
-        ['Other Monthly Income', fmtC(d.otherIncome)],
-        ['Vacancy %', pct(d.vacancyPct)],
-        ['Property Tax (annual)', fmtC(d.taxAnnual)],
-        ['Insurance (annual)', fmtC(d.insAnnual)],
-        ['Utilities (monthly)', fmtC(d.utilsMonthly)],
-        ['Maintenance % of Rent', pct(d.maintPct)],
-        ['CapEx % of Rent', pct(d.capexPct)],
-        ['Management % of Rent', pct(d.mgmtPct)]
-      ];
-      fillTable('tblIE', ie);
-    }
-
     function fillTable(id, rows){
-      const el = document.getElementById(id);
+      const el=document.getElementById(id);
       el.innerHTML = rows.map(([k,v])=>`<tr><td>${k}</td><td class="val">${v}</td></tr>`).join('');
     }
+
+    function render(deal){
+      if (!deal){
+        document.getElementById('summary').innerHTML = '<p class="muted">No saved deal. Go to Calculator and save one.</p>';
+        ['tblOverview','tblFinance','tblIE'].forEach(id=>document.getElementById(id).innerHTML='');
+        return;
+      }
+      document.getElementById('summary').innerHTML = `
+        <div class="pc-kpis">
+          <div class="pc-kpi"><div class="kpi-label">Price</div><div class="kpi-value">${money(deal.price)}</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Rent (mo)</div><div class="kpi-value">${money(deal.rent)}</div></div>
+          <div class="pc-kpi"><div class="kpi-label">Vacancy</div><div class="kpi-value">${pct(deal.vacancy)}</div></div>
+        </div>
+      `;
+      fillTable('tblOverview', [
+        ['Name', deal.title || '(unnamed)'],
+        ['Purchase Price', money(deal.price)]
+      ]);
+      fillTable('tblFinance', [
+        ['Down Payment %', pct(deal.downPercent)],
+        ['Interest Rate %', pct(deal.rate)],
+        ['Amortization (yrs)', deal.term || 0],
+        ['CMHC Required', deal.cmhcRequired || 'no']
+      ]);
+      fillTable('tblIE', [
+        ['Monthly Rent', money(deal.rent)],
+        ['Property Tax (annual)', money(deal.propertyTax)],
+        ['Insurance (annual)', money(deal.insurance)],
+        ['Mgmt % of Rent', pct(deal.management)],
+        ['Vacancy %', pct(deal.vacancy)],
+        ['Other Monthly Expenses', money(deal.otherExpenses)]
+      ]);
+    }
+
+    render(d);
+
+    document.getElementById('loadBtn').addEventListener('click', async ()=>{
+      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet. Try again.'); return; }
+      const user = PCState.getUser();
+      if (!user || user.mode !== 'google'){ alert('Sign in with Google first.'); return; }
+      try{
+        const prop = await gapi.client.drive.files.list({ q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false", fields:"files(id,name)"});
+        const propId = (prop.result.files||[])[0]?.id; if(!propId) return alert("No PropCheck folder yet.");
+        const deals = await gapi.client.drive.files.list({ q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false", fields:"files(id,name)"});
+        const dealsId = (deals.result.files||[])[0]?.id; if(!dealsId) return alert("No Deals folder yet.");
+        const res = await gapi.client.drive.files.list({ q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false", orderBy:"modifiedTime desc", pageSize:100, fields:"files(id,name,modifiedTime)"});
+        const files = res.result.files||[]; if(!files.length) return alert("No saved deals found.");
+
+        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
+        const pick = prompt("Select a deal to load (enter number):\n\n"+list+"\n\n");
+        const idx = Number((pick||'').trim()) - 1; if (!(idx>=0 && idx<files.length)) return;
+
+        const file = files[idx];
+        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
+        const deal = JSON.parse(content);
+        PCState.setDeal(deal);
+        render(deal);
+        alert("Loaded: " + file.name);
+      }catch(err){
+        console.warn(err);
+        alert("Load from Drive failed: " + (err?.message || err));
+      }
+    });
   </script>
 </body>
 </html>
