@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PropCheck — Drive Debug</title>
+
+  <!-- Use your existing styles (optional) -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Your config with real IDs -->
+  <script src="assets/js/config.js"></script>
+
+  <!-- Google identity + gapi -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+
+  <style>
+    body{font-family:Inter,system-ui,Arial;margin:0;padding:24px}
+    .card{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 6px 20px rgba(2,6,23,.06)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    button{padding:10px 14px;border-radius:8px;border:1px solid #ddd;background:#2ecc71;color:#fff;font-weight:700;cursor:pointer}
+    pre{background:#0b1021;color:#cfe1ff;padding:12px;border-radius:8px;white-space:pre-wrap}
+    code{background:#f4f6fb;padding:2px 6px;border-radius:6px}
+    .muted{color:#667085}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Google Drive Debug</h2>
+    <p class="muted">Click the button to run a step-by-step test. This page will print the exact error from Google (token, origin, API key, etc.).</p>
+    <div class="row">
+      <button id="run">Run Drive Test</button>
+    </div>
+    <pre id="out">Ready.</pre>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    const log = (...a)=>{ out.textContent += '\\n' + a.join(' '); };
+    const cfg = window.PC_CONFIG || {};
+    const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
+
+    function parseErr(e){
+      try{
+        if(!e) return "Unknown error";
+        if(e.result && e.result.error){
+          const er = e.result.error;
+          return (er.code?er.code+' ':'') + (er.status?er.status+' ':'') + (er.message||JSON.stringify(er));
+        }
+        if(e.body && typeof e.body === 'string'){
+          const j = JSON.parse(e.body);
+          if (j?.error?.message) return j.error.message;
+          if (j?.error_description) return j.error_description;
+          return JSON.stringify(j);
+        }
+        if(e.message) return e.message;
+        if(e.statusText) return e.statusText;
+        return JSON.stringify(e);
+      }catch{ return String(e); }
+    }
+
+    async function waitGIS(ms=10000){
+      const t0=Date.now();
+      return new Promise((res,rej)=>{
+        (function poll(){
+          if(window.google?.accounts?.oauth2) return res();
+          if(Date.now()-t0>ms) return rej(new Error("GIS not loaded"));
+          setTimeout(poll,50);
+        })();
+      });
+    }
+    async function ensureGapi(){
+      await new Promise((res,rej)=>{
+        const t0=Date.now();
+        (function poll(){
+          if(window.gapi?.load) return res();
+          if(Date.now()-t0>10000) return rej(new Error("gapi not loaded"));
+          setTimeout(poll,50);
+        })();
+      });
+      await new Promise((res,rej)=>{
+        gapi.load('client', async ()=>{
+          try{
+            await gapi.client.init({
+              apiKey: cfg.GOOGLE_DRIVE_API_KEY,
+              discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+            });
+            res();
+          }catch(e){ rej(e); }
+        });
+      });
+    }
+
+    document.getElementById('run').addEventListener('click', async ()=>{
+      out.textContent = "Starting…";
+      try{
+        if(!cfg.GOOGLE_OAUTH_CLIENT_ID){ log("❌ Missing GOOGLE_OAUTH_CLIENT_ID in config.js"); return; }
+        if(!cfg.GOOGLE_DRIVE_API_KEY){ log("❌ Missing GOOGLE_DRIVE_API_KEY in config.js"); return; }
+
+        log("1) Waiting for GIS…");
+        await waitGIS();
+        log("✓ GIS ready");
+
+        log("2) Waiting for gapi + Drive discovery…");
+        await ensureGapi();
+        log("✓ gapi ready");
+
+        log("3) Requesting token (silent) …");
+        let accessToken = await new Promise((resolve,reject)=>{
+          const tc = google.accounts.oauth2.initTokenClient({
+            client_id: cfg.GOOGLE_OAUTH_CLIENT_ID,
+            scope: SCOPES,
+            callback: (r)=> r?.access_token ? resolve(r.access_token) : reject(new Error("No access token"))
+          });
+          try{ tc.requestAccessToken({prompt:""}); }catch(e){ reject(e); }
+          setTimeout(()=>reject(new Error("Silent token timeout")),9000);
+        }).catch(e=>{ log("   silent failed:", parseErr(e)); return null; });
+
+        if(!accessToken){
+          log("3b) Requesting token (consent) …");
+          accessToken = await new Promise((resolve,reject)=>{
+            const tc = google.accounts.oauth2.initTokenClient({
+              client_id: cfg.GOOGLE_OAUTH_CLIENT_ID,
+              scope: SCOPES,
+              callback: (r)=> r?.access_token ? resolve(r.access_token) : reject(new Error("No access token"))
+            });
+            try{ tc.requestAccessToken({prompt:"consent"}); }catch(e){ reject(e); }
+            setTimeout(()=>reject(new Error("Consent token timeout")),20000);
+          }).catch(e=>{ throw new Error("Token error: "+parseErr(e)); });
+        }
+        gapi.client.setToken({access_token: accessToken});
+        log("✓ Token acquired");
+
+        log("4) Drive quick call (list root)…");
+        const res = await gapi.client.drive.files.list({ q: "'root' in parents and trashed=false", pageSize: 1, fields:"files(id,name)" })
+          .then(r=>r.result)
+          .catch(e=>{ throw new Error("Drive list error: "+parseErr(e)); });
+        log("✓ Drive list OK:", JSON.stringify(res));
+
+        log("5) Upload sample JSON to /PropCheck/Deals …");
+        async function findOrCreate(name, parent){
+          const list = await gapi.client.drive.files.list({ q:`name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parent}' in parents and trashed=false`, fields:"files(id,name)" }).then(r=>r.result);
+          if(list.files?.length) return list.files[0].id;
+          const created = await gapi.client.drive.files.create({ resource:{ name, mimeType:"application/vnd.google-apps.folder", parents:[parent] }, fields:"id" }).then(r=>r.result);
+          return created.id;
+        }
+        const propId = await findOrCreate("PropCheck","root");
+        const dealsId = await findOrCreate("Deals", propId);
+        const blob = new Blob([JSON.stringify({test:true, when:new Date().toISOString()}, null, 2)], {type:"application/json"});
+        const boundary = "m" + Math.random().toString(36).slice(2);
+        const body = new Blob([
+          `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
+          JSON.stringify({name:"Drive Debug.json", mimeType:"application/json", parents:[dealsId]}),
+          `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n`,
+          blob,
+          `\r\n--${boundary}--`
+        ]);
+        const up = await gapi.client.request({
+          path:"/upload/drive/v3/files", method:"POST",
+          params:{ uploadType:"multipart" },
+          headers:{ "Content-Type": "multipart/related; boundary="+boundary },
+          body
+        }).then(r=>r.result).catch(e=>{ throw new Error("Upload error: "+parseErr(e)); });
+
+        log("✓ Uploaded:", JSON.stringify(up));
+        log("Done.");
+      }catch(e){
+        log("❌ " + (e?.message || e));
+      }
+    });
+  </script>
+</body>
+</html>
