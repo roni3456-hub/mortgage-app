@@ -147,4 +147,12 @@ body{
   bottom:20px; background:#111827; color:#fff;
   padding:10px 14px; border-radius:10px; box-shadow:var(--shadow);
 }
+/* === Emoji/nav polish (safe additions) === */
+.emoji { font-size:1em; line-height:1; vertical-align:middle;
+         font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif; }
+.emoji.hpad { margin-right:6px; }
+
+/* Optional: slightly nicer hover/active for existing nav */
+.nav .nav-link.active { background:var(--brand); color:#fff; border-radius:10px; }
+.nav .nav-link { display:inline-flex; align-items:center; gap:6px; }
 
