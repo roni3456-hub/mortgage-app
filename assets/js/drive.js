@@ -1,15 +1,30 @@
-// PropCheck → Google Drive uploader (resumable, then force-move into PropCheck/Deals)
+// PropCheck — Centralized Google Drive auth + resumable upload
+// v2 (Option B: silent refresh on every page)
+// - One owner for GIS/gapi + token
+// - Silent token attempt on load (no popup)
+// - Minimal API for pages: autoInit, isReady, getUser, onStatus, saveDealToDrive, signIn, signOut
+
 (function () {
   const SCOPES =
     "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
 
+  // --- internal state ---
   let gapiReady = false;
   let accessToken = null;
   let tokenClient = null;
+  let currentUser = null; // { displayName, emailAddress }
+  const listeners = new Set();
 
-  // ---------- utils ----------
+  // localStorage keys
+  const LS = {
+    SEEN_CONSENT: "pcdrive_seen_consent",     // "1" after first successful consent
+    LAST_OK: "pcdrive_last_ok",               // ISO string of last success
+  };
+
+  // --- utils ---
   const log = (...a) => { try { console.log("[PCDrive]", ...a); } catch {} };
   const asStr = (v) => (typeof v === "string" ? v : JSON.stringify(v));
+  const safeJSON = (s, f=null) => { try { return JSON.parse(s); } catch { return f; } };
   function parseGapiError(e) {
     try {
       if (!e) return "Unknown error";
@@ -36,8 +51,12 @@
     }
     return null;
   }
+  function emit() {
+    const snapshot = { ready: !!accessToken, user: currentUser };
+    listeners.forEach(cb => { try { cb(snapshot); } catch {} });
+  }
 
-  // ---------- load GIS / gapi ----------
+  // --- load GIS/gapi ---
   function waitForGIS(ms = 10000) {
     return new Promise((resolve, reject) => {
       const t0 = Date.now();
@@ -48,17 +67,19 @@
       })();
     });
   }
-
-  async function ensureGapiInit() {
-    if (gapiReady) return;
-    await new Promise((resolve, reject) => {
+  function waitForGapi(ms = 10000) {
+    return new Promise((resolve, reject) => {
       const t0 = Date.now();
       (function poll() {
         if (window.gapi?.load) return resolve();
-        if (Date.now() - t0 > 10000) return reject(new Error("Google API client not loaded"));
+        if (Date.now() - t0 > ms) return reject(new Error("Google API client not loaded"));
         setTimeout(poll, 50);
       })();
     });
+  }
+  async function ensureGapiInit() {
+    if (gapiReady) return;
+    await waitForGapi();
     await new Promise((resolve, reject) => {
       gapi.load("client", async () => {
         try {
@@ -73,7 +94,6 @@
       });
     });
   }
-
   async function ensureTokenClient() {
     await waitForGIS();
     if (tokenClient) return tokenClient;
@@ -87,50 +107,103 @@
     return tokenClient;
   }
 
-  async function obtainAccessTokenFromUserGesture() {
-    function attempt(promptValue, timeoutMs) {
-      return new Promise((resolve, reject) => {
-        let settled = false;
-        const timer = setTimeout(() => {
-          if (!settled) { settled = true; reject(new Error("Timed out waiting for token")); }
-        }, timeoutMs);
-
-        tokenClient.callback = (resp) => {
-          if (settled) return;
-          clearTimeout(timer);
-          settled = true;
-          if (resp && resp.access_token) {
-            accessToken = resp.access_token;
-            if (window.gapi && gapi.client) gapi.client.setToken({ access_token: accessToken });
-            resolve(accessToken);
-          } else {
-            reject(new Error("No access token returned"));
-          }
-        };
-
-        try { tokenClient.requestAccessToken({ prompt: promptValue }); }
-        catch (e) { clearTimeout(timer); if (!settled) { settled = true; reject(e); } }
-      });
-    }
-
-    try {
-      log("Token (silent) …");
-      return await attempt("", 9000);
-    } catch {
-      log("Silent failed → consent …");
-      return await attempt("consent", 20000);
-    }
-  }
-
-  async function ensureDriveAuthFromClick() {
-    const cfg = window.PC_CONFIG || {};
-    if (!cfg.GOOGLE_DRIVE_API_KEY) throw new Error("Missing GOOGLE_DRIVE_API_KEY");
+  // --- token acquisition ---
+  async function requestToken(promptValue, timeoutMs) {
     await ensureTokenClient();
     await ensureGapiInit();
-    if (!accessToken) await obtainAccessTokenFromUserGesture();
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) { settled = true; reject(new Error("Timed out waiting for token")); }
+      }, timeoutMs);
+
+      tokenClient.callback = (resp) => {
+        if (settled) return;
+        clearTimeout(timer);
+        settled = true;
+        if (resp && resp.access_token) {
+          accessToken = resp.access_token;
+          if (window.gapi?.client) gapi.client.setToken({ access_token: accessToken });
+          localStorage.setItem(LS.LAST_OK, new Date().toISOString());
+          resolve(accessToken);
+        } else {
+          reject(new Error("No access token returned"));
+        }
+      };
+
+      try { tokenClient.requestAccessToken({ prompt: promptValue }); }
+      catch (e) { clearTimeout(timer); if (!settled) { settled = true; reject(e); } }
+    });
   }
 
-  // ---------- Drive helpers ----------
+  async function attemptSilentToken() {
+    try {
+      log("Silent token attempt…");
+      await requestToken("", 9000);
+      localStorage.setItem(LS.SEEN_CONSENT, "1");
+      await refreshUser();
+      emit();
+      log("Silent token OK");
+      return true;
+    } catch (e) {
+      log("Silent token failed:", parseGapiError(e));
+      return false;
+    }
+  }
+
+  async function interactiveToken() {
+    log("Interactive consent…");
+    await requestToken("consent", 20000);
+    localStorage.setItem(LS.SEEN_CONSENT, "1");
+    await refreshUser();
+    emit();
+    log("Interactive token OK");
+    return true;
+  }
+
+  async function refreshUser() {
+    try {
+      if (!accessToken) { currentUser = null; return; }
+      await ensureGapiInit();
+      const about = await gapi.client.drive.about.get({ fields: "user(displayName,emailAddress)" });
+      const j = toJson(about);
+      currentUser = j?.user || null;
+    } catch (e) {
+      log("User fetch failed:", parseGapiError(e));
+      currentUser = null;
+    }
+  }
+
+  // --- public lifecycle helpers ---
+  async function ensureReady(interactive = false) {
+    if (accessToken) return true;
+    // Always try silent first (works if user has already consented on this origin)
+    const okSilent = await attemptSilentToken();
+    if (okSilent) return true;
+    if (interactive) {
+      // Needs a user gesture (click). Caller should pass interactive=true when user clicks Sign in.
+      await interactiveToken();
+      return true;
+    }
+    return false;
+  }
+
+  function isReady() { return !!accessToken; }
+  function getUser() { return currentUser; }
+  function onStatus(cb) { if (typeof cb === "function") listeners.add(cb); return () => listeners.delete(cb); }
+
+  async function signInInteractive() {
+    await interactiveToken();
+    return { ready: isReady(), user: getUser() };
+  }
+
+  function signOut() {
+    accessToken = null;
+    currentUser = null;
+    emit();
+  }
+
+  // --- folders & upload (your existing behavior, preserved) ---
   async function gapiCall(fn) {
     try { return toJson(await fn()); }
     catch (e) { throw new Error(parseGapiError(e)); }
@@ -170,10 +243,8 @@
     return `${base} - ${date}.json`;
   }
 
-  // ---------- RESUMABLE UPLOAD ----------
   async function startResumableSession(metadata, contentLength) {
     const initUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,parents,webViewLink";
-
     const res = await fetch(initUrl, {
       method: "POST",
       headers: {
@@ -184,12 +255,10 @@
       },
       body: JSON.stringify(metadata)
     });
-
     if (!res.ok) {
       const text = await res.text().catch(()=> "");
       throw new Error(`Resumable init failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
     }
-
     const sessionUrl = res.headers.get("Location");
     if (!sessionUrl) throw new Error("Resumable init failed: missing upload session URL");
     return sessionUrl;
@@ -198,38 +267,27 @@
   async function uploadJsonResumable(obj, dealsFolderId) {
     const filename = defaultFilename(obj);
     const payload = new TextEncoder().encode(JSON.stringify(obj, null, 2));
-
-    // Include intended parent in the metadata
     const metadata = { name: filename, parents: [dealsFolderId], mimeType: "application/json" };
-
     const sessionUrl = await startResumableSession(metadata, payload.byteLength);
-
     const res = await fetch(sessionUrl, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": String(payload.byteLength)
-      },
+      headers: { "Content-Type": "application/json", "Content-Length": String(payload.byteLength) },
       body: payload
     });
-
     if (!res.ok) {
       const text = await res.text().catch(()=> "");
       throw new Error(`Resumable upload failed: ${res.status} ${res.statusText || ""} ${text}`.trim());
     }
-
     return await res.json(); // { id, name, parents?, webViewLink? }
   }
 
   async function ensureInDeals(fileId, dealsId) {
-    // Get current parents
     const file = await gapiCall(() =>
       gapi.client.drive.files.get({ fileId, fields: "id,name,parents" })
     );
     const parents = file.parents || [];
     if (parents.includes(dealsId)) return file;
 
-    // Move: add dealsId, remove existing parents (if any)
     const remove = parents.length ? parents.join(",") : undefined;
     const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
     url.searchParams.set("addParents", dealsId);
@@ -252,22 +310,35 @@
   }
 
   async function uploadJsonToDrive(obj) {
-    await ensureDriveAuthFromClick();
-
-    // Ensure folders exist
+    // Ensure we’re ready; ask for interactive consent if needed (must be called from a click)
+    const ok = await ensureReady(false);
+    if (!ok) throw new Error("Not signed in to Google Drive");
     const { dealsId } = await getOrCreatePropcheckTree();
-
-    // Upload
     const uploaded = await uploadJsonResumable(obj, dealsId);
-
-    // Some environments ignore parents during upload; enforce the parent after
     const finalFile = await ensureInDeals(uploaded.id, dealsId);
-
     return finalFile;
   }
 
-  // ---------- Public API ----------
+  // --- public API ---
   window.PCDrive = {
+    // 1) call this once per page (see snippet below)
+    async autoInit() {
+      // try silent refresh; never prompts
+      await ensureReady(false);
+      await refreshUser(); // harmless if not ready
+      emit();
+    },
+
+    // 2) expose sign-in/out for any UI you add
+    async signIn() { await ensureReady(true); await refreshUser(); emit(); return { ready: isReady(), user: getUser() }; },
+    signOut() { signOut(); },
+
+    // 3) status & user
+    isReady,
+    getUser,
+    onStatus, // cb({ready:boolean, user:{displayName,emailAddress}|null}) => unsubscribe()
+
+    // 4) your existing save entrypoint
     async saveDealToDrive(deal) {
       if (!deal || typeof deal !== "object") throw new Error("No deal to save");
       const enriched = Object.assign({}, deal, { savedAt: new Date().toISOString() });
