@@ -9,36 +9,91 @@
   <script src="assets/js/state.js"></script>
 </head>
 <body>
-  <nav class="top container">
-    <a class="logo" href="index.html">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 3l9 8-1.5 1.5L18 10.2V20h-5v-5H11v5H6v-9.8L4.5 12.5 3 11z'/%3E%3C/svg%3E" alt="home"/>
-      <span>PropCheck</span>
-    </a>
-    <div class="links">
-      <a href="calculator.html">Calculator</a>
-      <a href="reports.html">Reports</a>
-      <a href="analysis.html">Analysis</a>
+  <header class="pc-hero">
+    <nav class="pc-nav container">
+      <a class="pc-logo" href="index.html"><span class="pc-logo-emoji">🏠</span><span class="pc-logo-text">PropCheck</span></a>
+      <div class="pc-links">
+        <a href="calculator.html">Calculator</a>
+        <a href="reports.html">Report</a>
+        <a href="analysis.html" class="active">Analysis</a>
+      </div>
+    </nav>
+    <div class="pc-hero-title container">
+      <h1>Deal Analysis</h1>
+      <p class="muted" id="dealName"></p>
     </div>
-  </nav>
+  </header>
 
   <main class="container">
-    <div class="card">
-      <h2>Quick Analysis</h2>
-      <div id="analysisArea"></div>
+    <div class="pc-card pc-card-large">
+      <h2 class="pc-section"><span>📈</span> Key Metrics</h2>
+      <div id="kpis" class="pc-kpis"></div>
+
+      <h2 class="pc-section"><span>🧮</span> Quick Math</h2>
+      <div id="explain" class="muted"></div>
+
+      <div class="actions">
+        <a class="pc-btn pc-btn-outline" href="calculator.html">Back to Calculator</a>
+        <a class="pc-btn pc-btn-outline" href="reports.html">View Report</a>
+      </div>
     </div>
   </main>
 
+  <footer class="container pc-footer">Styled to match original PropCheck</footer>
+
   <script>
-    const deal = PCState.getDeal();
-    const el = document.getElementById('analysisArea');
-    if (!deal) {
-      el.innerHTML = '<div class="subtitle">No saved deal yet. Go to the Calculator page and save one.</div>';
+    const d = PCState.getDeal();
+    const fmtC = n => PC.money(Number(n||0));
+    const pct = n => (Number(n||0)).toFixed(2) + '%';
+
+    if (!d) {
+      document.getElementById('dealName').textContent = 'No deal loaded';
+      document.getElementById('kpis').innerHTML = '<p class="muted">No saved deal. Go to Calculator and save one.</p>';
     } else {
-      const capRate = (deal.monthlyRent * 12) / (deal.purchasePrice || 1) * 100;
-      el.innerHTML = `
-        <p><strong>Deal:</strong> ${deal.title||'(unnamed)'}</p>
-        <p><strong>Cap Rate (rough):</strong> ${capRate.toFixed(2)}%</p>
-        <p class="subtitle">Placeholder calculations — we’ll expand these later.</p>
+      document.getElementById('dealName').textContent = d.title || '(unnamed)';
+
+      // Simple model (placeholder; we can refine)
+      const price = Number(d.purchasePrice||0);
+      const rent = Number(d.monthlyRent||0);
+      const other = Number(d.otherIncome||0);
+      const vacancy = (Number(d.vacancyPct||0))/100;
+      const annualGross = (rent + other) * 12 * (1 - vacancy);
+
+      const maint = (Number(d.maintPct||0))/100 * rent * 12;
+      const capex = (Number(d.capexPct||0))/100 * rent * 12;
+      const mgmt  = (Number(d.mgmtPct||0))/100 * rent * 12;
+      const tax   = Number(d.taxAnnual||0);
+      const ins   = Number(d.insAnnual||0);
+      const utils = Number(d.utilsMonthly||0) * 12;
+
+      const opex = maint + capex + mgmt + tax + ins + utils;
+      const noi = annualGross - opex;
+
+      const down = price * (Number(d.downPct||0) / 100);
+      const loan = Math.max(price + Number(d.closingCosts||0) + Number(d.renoBudget||0) - down, 0);
+      const r = (Number(d.ratePct||0) / 100) / 12;
+      const n = Number(d.amortYears||0) * 12;
+      const pmt = (r>0 && n>0) ? loan * (r*Math.pow(1+r,n)) / (Math.pow(1+r,n)-1) : 0;
+      const annualDebt = pmt * 12;
+
+      const cashflow = noi - annualDebt;
+      const capRate = price>0 ? (noi / price) * 100 : 0;
+      const coc = down>0 ? (cashflow / down) * 100 : 0;
+
+      document.getElementById('kpis').innerHTML = `
+        <div class="pc-kpi"><div class="kpi-label">NOI</div><div class="kpi-value">${fmtC(noi)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Annual Debt</div><div class="kpi-value">${fmtC(annualDebt)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Cash Flow</div><div class="kpi-value ${cashflow>=0?'pos':'neg'}">${fmtC(cashflow)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Cap Rate</div><div class="kpi-value">${capRate.toFixed(2)}%</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Cash-on-Cash</div><div class="kpi-value">${coc.toFixed(2)}%</div></div>
+      `;
+
+      document.getElementById('explain').innerHTML = `
+        <p><strong>Annual Gross:</strong> (Rent + Other) × 12 × (1 − Vacancy) = ${fmtC(annualGross)}</p>
+        <p><strong>Opex:</strong> Maint + CapEx + Mgmt + Tax + Insurance + Utilities = ${fmtC(opex)}</p>
+        <p><strong>NOI:</strong> Gross − Opex = ${fmtC(noi)}</p>
+        <p><strong>Debt Service:</strong> Mortgage payment × 12 = ${fmtC(annualDebt)}</p>
+        <p><strong>Cash Flow:</strong> NOI − Debt Service = ${fmtC(cashflow)}</p>
       `;
     }
   </script>
