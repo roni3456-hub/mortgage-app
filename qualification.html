@@ -14,8 +14,6 @@
   <style>
     /* Page-scoped helpers only; respects your global theme */
     .page-wrap { max-width: 1100px; margin: 0 auto; }
-    .page-header { margin-bottom: 16px; }
-    .page-subtitle { color: var(--muted); margin-top: 8px; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
     @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
@@ -59,20 +57,20 @@
       margin-bottom: 6px;
     }
 
-    .loc-table {
+    .table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 8px;
       margin-bottom: 8px;
     }
-    .loc-table th, .loc-table td {
+    .table th, .table td {
       border-bottom: 1px solid var(--border, #e2e8f0);
       text-align: left;
       padding: 8px 6px;
       font-size: 14px;
       vertical-align: middle;
     }
-    .loc-actions { display: flex; gap: 8px; align-items: center; }
+    .actions-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
     .derived {
       background: var(--muted-bg, #f7fafc);
@@ -104,10 +102,10 @@
       background: white;
       margin-right: 8px;
     }
-    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .error-text { color: #b91c1c; font-size: 13px; margin-top: 4px; }
     .hidden { display: none !important; }
+    .subtle { color: var(--muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -154,6 +152,30 @@
         </div>
       </div>
 
+      <!-- Rental Properties (Detailed v2) -->
+      <div style="margin-top: 18px;">
+        <div class="section-title">Rental Properties (Detailed)</div>
+        <div class="subtle">Add properties if you want rental income considered. We’ll add the <b>Net Used</b> sum to monthly income.</div>
+        <div class="actions-row" style="margin-top: 8px;">
+          <button class="btn btn-secondary" id="addRentBtn" type="button">+ Add Rental Property</button>
+          <span class="pill" id="rentSummaryPill">0 properties · $0.00/mo net</span>
+        </div>
+        <table class="table" id="rentTable">
+          <thead>
+            <tr>
+              <th style="width: 210px;">Property Name/Label</th>
+              <th style="width: 150px;">Gross Rent ($/mo)</th>
+              <th style="width: 130px;">Inclusion %</th>
+              <th style="width: 160px;">Expenses ($/mo)</th>
+              <th style="width: 150px;">Net Used ($/mo)</th>
+              <th style="width: 60px;"></th>
+            </tr>
+          </thead>
+          <tbody id="rentBody"></tbody>
+        </table>
+        <div id="rentError" class="error-text hidden"></div>
+      </div>
+
       <!-- Debts Section -->
       <div style="margin-top: 18px;">
         <div class="section-title">Monthly Debt Obligations</div>
@@ -172,7 +194,62 @@
           </div>
         </div>
 
-        <!-- Legacy callout title -->
+        <!-- Housing Status (optional; counted only if filled) -->
+        <div style="margin-top: 10px;">
+          <div class="section-title">Housing Status (Optional)</div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>Status</label>
+              <select id="housingStatus">
+                <option value="none">Not Applicable</option>
+                <option value="rent">Renting</option>
+                <option value="mortgage">Own with Mortgage</option>
+                <option value="freeclear">Own Free &amp; Clear</option>
+              </select>
+              <small>Leave as “Not Applicable” if these don’t apply.</small>
+            </div>
+            <div class="form-group">
+              <label>Current Rent ($/mo)</label>
+              <input type="number" id="hsRent" min="0" step="0.01" placeholder="e.g. 1800" />
+            </div>
+            <div class="form-group">
+              <label>Existing Mortgage P&amp;I ($/mo)</label>
+              <input type="number" id="hsMortPI" min="0" step="0.01" placeholder="e.g. 1600" />
+            </div>
+          </div>
+          <div class="grid-3" style="margin-top: 8px;">
+            <div class="form-group">
+              <label>Existing Property Tax ($/mo)</label>
+              <input type="number" id="hsTax" min="0" step="0.01" placeholder="e.g. 300" />
+            </div>
+            <div class="form-group">
+              <label>Existing Condo/HOA ($/mo)</label>
+              <input type="number" id="hsCondo" min="0" step="0.01" placeholder="e.g. 0" />
+            </div>
+            <div class="form-group">
+              <label>Existing Heating ($/mo)</label>
+              <input type="number" id="hsHeat" min="0" step="0.01" placeholder="e.g. 150" />
+            </div>
+          </div>
+          <div class="subtle">These amounts are treated as <b>additional monthly debts</b> in TDS and are optional. Fill only those that apply.</div>
+        </div>
+
+        <!-- Other obligations -->
+        <div class="grid-3" style="margin-top: 10px;">
+          <div class="form-group">
+            <label>Personal/Installment Loans ($/mo)</label>
+            <input type="number" id="otherLoans" min="0" step="0.01" placeholder="e.g. 200" />
+          </div>
+          <div class="form-group">
+            <label>Alimony/Child Support ($/mo)</label>
+            <input type="number" id="alimony" min="0" step="0.01" placeholder="e.g. 0" />
+          </div>
+          <div class="form-group">
+            <label>Other Obligations ($/mo)</label>
+            <input type="number" id="otherObl" min="0" step="0.01" placeholder="e.g. 0" />
+          </div>
+        </div>
+
         <div class="rules-callout" style="margin-top: 12px;">
           <b>Line of Credit Rules:</b>
           <ul style="margin: 6px 0 0 18px;">
@@ -182,25 +259,24 @@
           </ul>
         </div>
 
-        <!-- Net-new dynamic LOC Table -->
+        <!-- Dynamic LOC Table (with Account Name/Label) -->
         <div style="margin-top: 8px;">
-          <div class="loc-actions">
+          <div class="actions-row">
             <button class="btn btn-secondary" id="addLocBtn" type="button">+ Add Line of Credit</button>
             <span class="pill" id="locSummaryPill">0 LOCs · $0.00/mo derived</span>
           </div>
-          <table class="loc-table" id="locTable">
+          <table class="table" id="locTable">
             <thead>
               <tr>
+                <th style="width: 210px;">Account Name/Label</th>
                 <th style="width: 150px;">Type</th>
-                <th style="width: 170px;">Limit ($)</th>
-                <th style="width: 170px;">Balance ($)</th>
-                <th style="width: 170px;">Derived ($/mo)</th>
+                <th style="width: 150px;">Limit ($)</th>
+                <th style="width: 150px;">Balance ($)</th>
+                <th style="width: 150px;">Derived ($/mo)</th>
                 <th style="width: 60px;"></th>
               </tr>
             </thead>
-            <tbody id="locBody">
-              <!-- Rows injected here -->
-            </tbody>
+            <tbody id="locBody"></tbody>
           </table>
           <div id="locError" class="error-text hidden"></div>
         </div>
@@ -297,7 +373,7 @@
           <div id="tipsBody">Enter values and analyze to see optimization ideas.</div>
         </div>
 
-        <div class="cta-row" style="margin-top: 12px;">
+        <div class="actions-row" style="margin-top: 12px;">
           <a class="btn btn-secondary" href="calculator.html">Go to Calculator</a>
           <a class="btn btn-secondary" href="reports.html">Generate Report</a>
         </div>
@@ -345,150 +421,107 @@
     // Utilities
     // ---------------------------
     const $ = (id) => document.getElementById(id);
-    const fmtMoney = (n) => (isFinite(n) ? n : 0);
-    const money = (n) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 2 }).format(fmtMoney(n));
+    const money = (n) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 2 }).format(isFinite(n) ? n : 0);
     const pct1 = (n) => `${(isFinite(n) ? (n * 100) : 0).toFixed(1)}%`;
+    const toNum = (el) => { const v = parseFloat(el?.value ?? 0); return isFinite(v) ? v : 0; };
+    const nn = (n) => (isFinite(n) && n > 0) ? n : 0;
 
-    function toNum(input) {
-      const v = parseFloat(input?.value ?? 0);
-      return isFinite(v) ? v : 0;
-    }
-    function clampNonNeg(n) { return isFinite(n) && n > 0 ? n : 0; }
-
-    // Standard mortgage payment (monthly)
+    // Mortgage math
     function pmt(principal, annualRatePct, years) {
-      const r = clampNonNeg(annualRatePct) / 100 / 12;
+      const r = nn(annualRatePct) / 100 / 12;
       const n = years * 12;
       if (principal <= 0 || r <= 0 || n <= 0) return 0;
-      const factor = Math.pow(1 + r, n);
-      return principal * r * factor / (factor - 1);
+      const f = Math.pow(1 + r, n);
+      return principal * r * f / (f - 1);
     }
-
-    // Invert mortgage payment to principal for a target monthly P&I
     function principalFromPI(paymentMonthly, annualRatePct, years) {
-      const r = clampNonNeg(annualRatePct) / 100 / 12;
+      const r = nn(annualRatePct) / 100 / 12;
       const n = years * 12;
       if (paymentMonthly <= 0 || r <= 0 || n <= 0) return 0;
-      const factor = Math.pow(1 + r, n);
-      return paymentMonthly * (factor - 1) / (r * factor);
+      const f = Math.pow(1 + r, n);
+      return paymentMonthly * (f - 1) / (r * f);
     }
-
-    // Stress rate = max(interest rate + 2%, MQR)
     function getStressRate(contractRate) {
       const mqr = (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25;
       return Math.max(contractRate + 2, mqr);
     }
-
-    // GDS/TDS thresholds based on credit score
-    function getThresholds(creditScore) {
-      if (isFinite(creditScore) && creditScore >= 680) return { gds: 0.39, tds: 0.44 };
+    function getThresholds(score) {
+      if (isFinite(score) && score >= 680) return { gds: 0.39, tds: 0.44 };
       return { gds: 0.35, tds: 0.42 };
     }
 
-    // LOC row helpers
+    // LOC rules
     const LOC_TYPE_UNSEC = 'unsecured';
     const LOC_TYPE_SEC = 'secured';
-
     function computeLocMonthly(loc) {
-      const limit = clampNonNeg(parseFloat(loc.limit));
-      const balance = clampNonNeg(parseFloat(loc.balance));
-      if (loc.type === LOC_TYPE_SEC) {
-        return 0.03 * limit;
-      } else {
-        if (limit < 50000) return 0.03 * balance;
-        return 0.03 * limit;
-      }
+      const limit = nn(parseFloat(loc.limit));
+      const balance = nn(parseFloat(loc.balance));
+      if (loc.type === LOC_TYPE_SEC) return 0.03 * limit;
+      if (limit < 50000) return 0.03 * balance;
+      return 0.03 * limit;
     }
+    function summarizeLocs(locs) { return locs.reduce((a, r) => a + computeLocMonthly(r), 0); }
 
-    function summarizeLocs(locs) {
-      let sum = 0;
-      for (const row of locs) sum += computeLocMonthly(row);
-      return sum;
+    // RENTAL rows (detailed v2)
+    function computeRentNet(row) {
+      const gross = nn(parseFloat(row.gross));
+      const inclPct = nn(parseFloat(row.inclPct)) / 100; // 0-1
+      const exp = nn(parseFloat(row.exp));
+      const net = Math.max(0, gross * inclPct - exp);
+      return net;
     }
+    function summarizeRentNet(rows) { return rows.reduce((a, r) => a + computeRentNet(r), 0); }
 
     // ---------------------------
-    // LOC dynamic UI
+    // Dynamic tables: LOC + Rentals
     // ---------------------------
-    const locBody = $('locBody');
-    const locPill = $('locSummaryPill');
-    const locErr = $('locError');
+    const locBody = $('locBody'), locPill = $('locSummaryPill'), locErr = $('locError');
+    const rentBody = $('rentBody'), rentPill = $('rentSummaryPill'), rentErr = $('rentError');
 
-    function newLocRow(data = { type: LOC_TYPE_UNSEC, limit: '', balance: '' }) {
+    function newLocRow(data = { name: '', type: LOC_TYPE_UNSEC, limit: '', balance: '' }) {
       const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      const inName = document.createElement('input'); inName.type='text'; inName.placeholder='e.g. TD HELOC'; inName.value = data.name ?? '';
+      tdName.appendChild(inName);
 
       const tdType = document.createElement('td');
       const sel = document.createElement('select');
-      sel.innerHTML = `
-        <option value="${LOC_TYPE_UNSEC}">Unsecured</option>
-        <option value="${LOC_TYPE_SEC}">Secured (HELOC)</option>
-      `;
+      sel.innerHTML = `<option value="${LOC_TYPE_UNSEC}">Unsecured</option><option value="${LOC_TYPE_SEC}">Secured (HELOC)</option>`;
       sel.value = data.type || LOC_TYPE_UNSEC;
       tdType.appendChild(sel);
 
       const tdLimit = document.createElement('td');
-      const inputLimit = document.createElement('input');
-      inputLimit.type = 'number'; inputLimit.step = '0.01'; inputLimit.min = '0';
-      inputLimit.placeholder = 'Limit';
-      inputLimit.value = data.limit ?? '';
-      tdLimit.appendChild(inputLimit);
+      const inLimit = document.createElement('input'); inLimit.type='number'; inLimit.step='0.01'; inLimit.min='0'; inLimit.placeholder='Limit'; inLimit.value = data.limit ?? '';
+      tdLimit.appendChild(inLimit);
 
       const tdBal = document.createElement('td');
-      const inputBal = document.createElement('input');
-      inputBal.type = 'number'; inputBal.step = '0.01'; inputBal.min = '0';
-      inputBal.placeholder = 'Balance';
-      inputBal.value = data.balance ?? '';
-      tdBal.appendChild(inputBal);
+      const inBal = document.createElement('input'); inBal.type='number'; inBal.step='0.01'; inBal.min='0'; inBal.placeholder='Balance'; inBal.value = data.balance ?? '';
+      tdBal.appendChild(inBal);
 
-      const tdDerived = document.createElement('td');
-      const derivedSpan = document.createElement('span');
-      derivedSpan.textContent = '$0.00';
-      tdDerived.appendChild(derivedSpan);
+      const tdDer = document.createElement('td');
+      const out = document.createElement('span'); out.textContent = '$0.00'; tdDer.appendChild(out);
 
-      const tdActions = document.createElement('td');
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn btn-secondary'; delBtn.type = 'button';
-      delBtn.textContent = 'Remove';
-      tdActions.appendChild(delBtn);
+      const tdAct = document.createElement('td');
+      const del = document.createElement('button'); del.className='btn btn-secondary'; del.type='button'; del.textContent='Remove';
+      tdAct.appendChild(del);
 
-      tr.appendChild(tdType);
-      tr.appendChild(tdLimit);
-      tr.appendChild(tdBal);
-      tr.appendChild(tdDerived);
-      tr.appendChild(tdActions);
+      tr.append(tdName, tdType, tdLimit, tdBal, tdDer, tdAct);
 
       function refreshRow() {
         const typ = sel.value;
-        // Secured: balance disabled/cleared visually; Unsecured: enabled
-        if (typ === LOC_TYPE_SEC) {
-          inputBal.disabled = true;
-          inputBal.value = '';
-        } else {
-          inputBal.disabled = false;
-        }
-
-        const loc = { type: typ, limit: parseFloat(inputLimit.value || 0), balance: parseFloat(inputBal.value || 0) };
-        // Validation: unsecured balance cannot exceed limit
+        if (typ === LOC_TYPE_SEC) { inBal.disabled = true; inBal.value = ''; } else { inBal.disabled = false; }
+        const loc = { type: typ, limit: parseFloat(inLimit.value||0), balance: parseFloat(inBal.value||0) };
         let error = '';
-        if (typ === LOC_TYPE_UNSEC && isFinite(loc.limit) && isFinite(loc.balance) && loc.balance > loc.limit) {
-          error = 'Unsecured LOC balance cannot exceed its limit.';
-        }
-        locErr.textContent = error;
-        locErr.classList.toggle('hidden', !error);
-
-        const m = computeLocMonthly(loc);
-        derivedSpan.textContent = money(m);
+        if (typ === LOC_TYPE_UNSEC && isFinite(loc.limit) && isFinite(loc.balance) && loc.balance > loc.limit) error = 'Unsecured LOC balance cannot exceed its limit.';
+        locErr.textContent = error; locErr.classList.toggle('hidden', !error);
+        out.textContent = money(computeLocMonthly(loc));
         refreshLocSummary();
       }
 
-      sel.addEventListener('change', refreshRow);
-      inputLimit.addEventListener('input', refreshRow);
-      inputBal.addEventListener('input', refreshRow);
-      delBtn.addEventListener('click', () => {
-        tr.remove();
-        refreshLocSummary();
-      });
+      [sel,inLimit,inBal].forEach(el => el.addEventListener('input', refreshRow));
+      del.addEventListener('click', () => { tr.remove(); refreshLocSummary(); });
 
-      // initial state
       refreshRow();
       return tr;
     }
@@ -496,66 +529,150 @@
     function getLocRowsData() {
       const rows = [];
       for (const tr of Array.from(locBody.children)) {
-        const [tdType, tdLimit, tdBal] = tr.children;
-        const sel = tdType.querySelector('select');
-        const inputLimit = tdLimit.querySelector('input');
-        const inputBal = tdBal.querySelector('input');
+        const [tdName, tdType, tdLimit, tdBal] = tr.children;
         rows.push({
-          type: sel.value,
-          limit: parseFloat(inputLimit.value || 0),
-          balance: sel.value === LOC_TYPE_SEC ? 0 : parseFloat(inputBal?.value || 0)
+          name: tdName.querySelector('input')?.value ?? '',
+          type: tdType.querySelector('select')?.value ?? LOC_TYPE_UNSEC,
+          limit: parseFloat(tdLimit.querySelector('input')?.value || 0),
+          balance: (tdType.querySelector('select')?.value === LOC_TYPE_SEC) ? 0 : parseFloat(tdBal.querySelector('input')?.value || 0)
         });
       }
       return rows;
     }
-
     function refreshLocSummary() {
       const data = getLocRowsData();
       const sum = summarizeLocs(data);
-      locPill.textContent = `${data.length} LOC${data.length === 1 ? '' : 's'} · ${money(sum)}/mo derived`;
+      locPill.textContent = `${data.length} LOC${data.length===1?'':'s'} · ${money(sum)}/mo derived`;
       $('locSum').textContent = money(sum);
     }
 
-    $('addLocBtn').addEventListener('click', () => {
-      locBody.appendChild(newLocRow());
-      refreshLocSummary();
-    });
+    function newRentRow(data = { name:'', gross:'', inclPct: '80', exp:'' }) {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      const inName = document.createElement('input'); inName.type='text'; inName.placeholder='e.g. 123 Main St Upper'; inName.value=data.name??'';
+      tdName.appendChild(inName);
+
+      const tdGross = document.createElement('td');
+      const inGross = document.createElement('input'); inGross.type='number'; inGross.step='0.01'; inGross.min='0'; inGross.placeholder='e.g. 2200'; inGross.value=data.gross??'';
+      tdGross.appendChild(inGross);
+
+      const tdIncl = document.createElement('td');
+      const inIncl = document.createElement('input'); inIncl.type='number'; inIncl.step='1'; inIncl.min='0'; inIncl.max='100'; inIncl.placeholder='e.g. 80'; inIncl.value=data.inclPct??'80';
+      tdIncl.appendChild(inIncl);
+
+      const tdExp = document.createElement('td');
+      const inExp = document.createElement('input'); inExp.type='number'; inExp.step='0.01'; inExp.min='0'; inExp.placeholder='e.g. 300'; inExp.value=data.exp??'';
+      tdExp.appendChild(inExp);
+
+      const tdNet = document.createElement('td');
+      const outNet = document.createElement('span'); outNet.textContent='$0.00'; tdNet.appendChild(outNet);
+
+      const tdAct = document.createElement('td');
+      const del = document.createElement('button'); del.className='btn btn-secondary'; del.type='button'; del.textContent='Remove';
+      tdAct.appendChild(del);
+
+      tr.append(tdName, tdGross, tdIncl, tdExp, tdNet, tdAct);
+
+      function refreshRow() {
+        const row = { gross: parseFloat(inGross.value||0), inclPct: parseFloat(inIncl.value||0), exp: parseFloat(inExp.value||0) };
+        outNet.textContent = money(computeRentNet(row));
+        refreshRentSummary();
+      }
+      [inGross,inIncl,inExp].forEach(el => el.addEventListener('input', refreshRow));
+      del.addEventListener('click', () => { tr.remove(); refreshRentSummary(); });
+
+      refreshRow();
+      return tr;
+    }
+
+    function getRentRowsData() {
+      const rows = [];
+      for (const tr of Array.from(rentBody.children)) {
+        const [tdName, tdGross, tdIncl, tdExp] = tr.children;
+        rows.push({
+          name: tdName.querySelector('input')?.value ?? '',
+          gross: parseFloat(tdGross.querySelector('input')?.value || 0),
+          inclPct: parseFloat(tdIncl.querySelector('input')?.value || 0),
+          exp: parseFloat(tdExp.querySelector('input')?.value || 0)
+        });
+      }
+      return rows;
+    }
+    function refreshRentSummary() {
+      const data = getRentRowsData();
+      const sum = summarizeRentNet(data);
+      rentPill.textContent = `${data.length} propert${data.length===1?'y':'ies'} · ${money(sum)}/mo net`;
+    }
+
+    // Buttons
+    $('addLocBtn').addEventListener('click', () => { locBody.appendChild(newLocRow()); refreshLocSummary(); });
+    $('addRentBtn').addEventListener('click', () => { rentBody.appendChild(newRentRow()); refreshRentSummary(); });
 
     // ---------------------------
     // Main Analyze Logic
     // ---------------------------
     function analyze() {
-      // Inputs
-      const annualIncome = clampNonNeg(toNum($('annualIncome')));
-      const otherIncome = clampNonNeg(toNum($('otherIncome')));
-      const coIncome = clampNonNeg(toNum($('coIncome')));
+      // Incomes
+      const annualIncome = nn(toNum($('annualIncome')));
+      const otherIncome = nn(toNum($('otherIncome')));
+      const coIncome = nn(toNum($('coIncome')));
 
-      const car = clampNonNeg(toNum($('carPayment')));
-      const ccMin = clampNonNeg(toNum($('ccMin')));
-      const student = clampNonNeg(toNum($('studentLoan')));
+      // Rental net used (added to monthly income)
+      const rentRows = getRentRowsData();
+      const rentalNetMonthly = summarizeRentNet(rentRows);
 
-      const contractRate = clampNonNeg(toNum($('interestRate'))) || 0; // legacy label "Interest Rate (%)"
-      const taxAnnual = clampNonNeg(toNum($('propertyTaxAnnual')));
-      const heating = clampNonNeg(toNum($('heatingMonthly'))) || 150;
-      const condo = clampNonNeg(toNum($('condoMonthly'))) || 0;
+      // Debts
+      const car = nn(toNum($('carPayment')));
+      const ccMin = nn(toNum($('ccMin')));
+      const student = nn(toNum($('studentLoan')));
+      const otherLoans = nn(toNum($('otherLoans')));
+      const alimony = nn(toNum($('alimony')));
+      const otherObl = nn(toNum($('otherObl')));
 
-      const creditScore = clampNonNeg(toNum($('creditScore')));
-      const downPayment = clampNonNeg(toNum($('downPayment')));
-      const purchasePrice = clampNonNeg(toNum($('purchasePrice')));
+      // Housing status debts (optional)
+      const hs = $('housingStatus')?.value || 'none';
+      const hsRent = nn(toNum($('hsRent')));
+      const hsMortPI = nn(toNum($('hsMortPI')));
+      const hsTax = nn(toNum($('hsTax')));
+      const hsCondo = nn(toNum($('hsCondo')));
+      const hsHeat = nn(toNum($('hsHeat')));
 
+      let housingDebtsMonthly = 0;
+      if (hs === 'rent') {
+        housingDebtsMonthly += hsRent;
+      } else if (hs === 'mortgage') {
+        housingDebtsMonthly += hsMortPI + hsTax + hsCondo + hsHeat;
+      } else if (hs === 'freeclear') {
+        housingDebtsMonthly += hsTax + hsCondo + hsHeat;
+      }
+      // Note: These are EXISTING housing costs and belong in TDS debts (not the subject property's shelter).
+
+      // Subject property data (optional)
+      const purchasePrice = nn(toNum($('purchasePrice')));
+      const downPayment = nn(toNum($('downPayment')));
+      const contractRate = nn(toNum($('interestRate'))) || 0;
+
+      const taxAnnual = nn(toNum($('propertyTaxAnnual')));
+      const heating = nn(toNum($('heatingMonthly'))) || 150;
+      const condo = nn(toNum($('condoMonthly'))) || 0;
+
+      const creditScore = nn(toNum($('creditScore')));
+
+      // LOCs
       const locs = getLocRowsData();
       const locMonthly = summarizeLocs(locs);
 
       // Derived
-      const incomeMonthly = (annualIncome + otherIncome + coIncome) / 12;
-      const shelter = (taxAnnual / 12) + heating + condo;
-
+      const incomeMonthly = (annualIncome + otherIncome + coIncome) / 12 + rentalNetMonthly; // add rental net
+      const shelter = (taxAnnual / 12) + heating + condo; // SUBJECT property shelter
       const stressRate = getStressRate(contractRate);
       const thresholds = getThresholds(creditScore);
 
-      // Allowed P&I from GDS/TDS
+      // Allowed P&I (subject property) from GDS/TDS
       const gdsAllowed = Math.max(0, incomeMonthly * thresholds.gds - shelter);
-      const tdsAllowed = Math.max(0, incomeMonthly * thresholds.tds - shelter - (car + ccMin + student + locMonthly));
+      const tdsOtherDebts = car + ccMin + student + locMonthly + otherLoans + alimony + otherObl + housingDebtsMonthly;
+      const tdsAllowed = Math.max(0, incomeMonthly * thresholds.tds - shelter - tdsOtherDebts);
       const piAllowed = Math.min(gdsAllowed, tdsAllowed);
 
       // Convert to principals (headline + comparisons)
@@ -567,12 +684,12 @@
       const pmtContract = pmt(principal30Contract, contractRate, 30);
       const pmtStress = pmt(principal30Contract, stressRate, 30);
 
-      // Ratios at the allowed P&I
+      // Ratios at the allowed P&I (using stress-tested payment)
       const gdsPct = incomeMonthly > 0 ? ((pmtStress + shelter) / incomeMonthly) : 0;
-      const tdsPct = incomeMonthly > 0 ? ((pmtStress + shelter + car + ccMin + student + locMonthly) / incomeMonthly) : 0;
+      const tdsPct = incomeMonthly > 0 ? ((pmtStress + shelter + tdsOtherDebts) / incomeMonthly) : 0;
       const constraint = (gdsAllowed <= tdsAllowed) ? 'GDS' : 'TDS';
 
-      // Program badge logic:
+      // Program badge
       let program = 'Conventional (assumed)';
       if (purchasePrice > 0 && downPayment > 0) {
         const dpPct = downPayment / purchasePrice;
@@ -599,27 +716,28 @@
       $('tdsPct').textContent = pct1(tdsPct);
       $('constraint').textContent = constraint;
 
+      $('locSum').textContent = money(locMonthly);
       $('insuredAmt').textContent = money(principal25Contract);
       $('stressAmt').textContent = money(principal30Stress);
-      $('locSum').textContent = money(locMonthly);
 
       // Tips
       const tips = [];
       if (!qualifies) {
         const needAtLeast = (constraint === 'GDS')
           ? Math.max(0, shelter - incomeMonthly * thresholds.gds) + 1e-6
-          : Math.max(0, shelter + car + ccMin + student + locMonthly - incomeMonthly * thresholds.tds) + 1e-6;
+          : Math.max(0, shelter + tdsOtherDebts - incomeMonthly * thresholds.tds) + 1e-6;
 
         if (constraint === 'TDS') {
           tips.push(`Reduce monthly debts by about ${money(needAtLeast)} to open up qualification room.`);
           if (locMonthly > 0) tips.push(`Pay down LOCs (especially unsecured) — every $1/month reduction increases allowed P&I by $1.`);
+          if (housingDebtsMonthly > 0) tips.push(`Existing housing costs are impacting TDS; consider how they may change post-purchase.`);
         } else {
-          tips.push(`Lower shelter estimates by about ${money(needAtLeast)} (tax/heating/condo) or increase income to meet GDS.`);
+          tips.push(`Lower subject property shelter estimates by about ${money(needAtLeast)} (tax/heating/condo) or increase income to meet GDS.`);
         }
         tips.push(`Raising credit score to ≥680 uses 39/44 thresholds, which may help.`);
       } else {
         tips.push(`Your binding limit is ${constraint}. Lowering that side (debts or shelter) will raise your max mortgage.`);
-        tips.push(`Try modeling a higher interest rate to see a more conservative headline.`);
+        tips.push(`Try modeling a higher interest rate to see a conservative headline.`);
       }
       $('tipsBody').innerHTML = `<ul style="margin:6px 0 0 18px;">${tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
 
@@ -636,6 +754,10 @@
       snapshot.max_principal_30y_contract = principal30Contract;
       snapshot.max_principal_25y_contract = principal25Contract;
       snapshot.max_principal_30y_stress = principal30Stress;
+      snapshot.rental_net_monthly = rentalNetMonthly;
+      snapshot.housing_status = hs;
+      snapshot.housing_debts_monthly = housingDebtsMonthly;
+
       Persistence.save(snapshot);
     }
 
@@ -644,26 +766,38 @@
     // ---------------------------
     function currentState() {
       return {
-        version: 1,
+        version: 2,
         // incomes
-        income_annual: clampNonNeg(toNum($('annualIncome'))),
-        income_other_annual: clampNonNeg(toNum($('otherIncome'))),
-        income_coborrower_annual: clampNonNeg(toNum($('coIncome'))),
+        income_annual: nn(toNum($('annualIncome'))),
+        income_other_annual: nn(toNum($('otherIncome'))),
+        income_coborrower_annual: nn(toNum($('coIncome'))),
+        // rentals (detailed rows)
+        rental_items: getRentRowsData(),
         // debts
-        debt_car_monthly: clampNonNeg(toNum($('carPayment'))),
-        debt_cc_min_monthly: clampNonNeg(toNum($('ccMin'))),
-        debt_student_monthly: clampNonNeg(toNum($('studentLoan'))),
+        debt_car_monthly: nn(toNum($('carPayment'))),
+        debt_cc_min_monthly: nn(toNum($('ccMin'))),
+        debt_student_monthly: nn(toNum($('studentLoan'))),
+        debt_other_loans_monthly: nn(toNum($('otherLoans'))),
+        debt_alimony_monthly: nn(toNum($('alimony'))),
+        debt_other_monthly: nn(toNum($('otherObl'))),
+        // housing status (existing home/rent) — optional, treated as debts
+        housing_status: $('housingStatus')?.value || 'none',
+        housing_rent_monthly: nn(toNum($('hsRent'))),
+        housing_mort_pi_monthly: nn(toNum($('hsMortPI'))),
+        housing_tax_monthly: nn(toNum($('hsTax'))),
+        housing_condo_monthly: nn(toNum($('hsCondo'))),
+        housing_heat_monthly: nn(toNum($('hsHeat'))),
         // locs
         loc_items: getLocRowsData(),
-        // property / shelter & rates
-        purchase_price: clampNonNeg(toNum($('purchasePrice'))),
-        down_payment: clampNonNeg(toNum($('downPayment'))),
-        rate_contract_pct: clampNonNeg(toNum($('interestRate'))),     // legacy "Interest Rate (%)"
-        property_tax_annual: clampNonNeg(toNum($('propertyTaxAnnual'))),
-        heating_monthly: clampNonNeg(toNum($('heatingMonthly'))),
-        condo_fees_monthly: clampNonNeg(toNum($('condoMonthly'))),
+        // subject property / shelter & rates
+        purchase_price: nn(toNum($('purchasePrice'))),
+        down_payment: nn(toNum($('downPayment'))),
+        rate_contract_pct: nn(toNum($('interestRate'))),
+        property_tax_annual: nn(toNum($('propertyTaxAnnual'))),
+        heating_monthly: nn(toNum($('heatingMonthly'))),
+        condo_fees_monthly: nn(toNum($('condoMonthly'))),
         // credit
-        credit_score: clampNonNeg(toNum($('creditScore'))),
+        credit_score: nn(toNum($('creditScore'))),
         // mqr snapshot
         mqr_pct: (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25
       };
@@ -675,9 +809,31 @@
       $('otherIncome').value = s.income_other_annual ?? '';
       $('coIncome').value = s.income_coborrower_annual ?? '';
 
+      // rentals
+      rentBody.innerHTML = '';
+      const rents = Array.isArray(s.rental_items) ? s.rental_items : [];
+      for (const row of rents) rentBody.appendChild(newRentRow(row));
+      refreshRentSummary();
+
       $('carPayment').value = s.debt_car_monthly ?? '';
       $('ccMin').value = s.debt_cc_min_monthly ?? '';
       $('studentLoan').value = s.debt_student_monthly ?? '';
+      $('otherLoans').value = s.debt_other_loans_monthly ?? '';
+      $('alimony').value = s.debt_alimony_monthly ?? '';
+      $('otherObl').value = s.debt_other_monthly ?? '';
+
+      $('housingStatus').value = s.housing_status ?? 'none';
+      $('hsRent').value = s.housing_rent_monthly ?? '';
+      $('hsMortPI').value = s.housing_mort_pi_monthly ?? '';
+      $('hsTax').value = s.housing_tax_monthly ?? '';
+      $('hsCondo').value = s.housing_condo_monthly ?? '';
+      $('hsHeat').value = s.housing_heat_monthly ?? '';
+
+      // locs
+      locBody.innerHTML = '';
+      const locs = Array.isArray(s.loc_items) ? s.loc_items : [];
+      for (const row of locs) locBody.appendChild(newLocRow(row));
+      refreshLocSummary();
 
       $('purchasePrice').value = s.purchase_price ?? '';
       $('downPayment').value = s.down_payment ?? '';
@@ -685,43 +841,30 @@
       $('propertyTaxAnnual').value = s.property_tax_annual ?? '';
       $('heatingMonthly').value = (s.heating_monthly ?? 150);
       $('condoMonthly').value = (s.condo_fees_monthly ?? 0);
-
       $('creditScore').value = s.credit_score ?? '';
-
-      // Rebuild LOC rows
-      locBody.innerHTML = '';
-      const locs = Array.isArray(s.loc_items) ? s.loc_items : [];
-      if (locs.length > 0) {
-        for (const row of locs) locBody.appendChild(newLocRow(row));
-      }
-      refreshLocSummary();
     }
 
-    // Bind analyze/save buttons
+    // Bind analyze/save
     $('analyzeBtn').addEventListener('click', analyze);
     $('saveBtn').addEventListener('click', () => Persistence.save(currentState()));
 
-    // Auto-save on significant input changes (debounced)
-    let saveTimer = null;
-    function autoSave() {
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => Persistence.save(currentState()), 400);
-    }
-    for (const id of [
+    // Auto-save on input changes (debounced)
+    let saveTimer=null;
+    function autoSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>Persistence.save(currentState()), 400); }
+    [
       'annualIncome','otherIncome','coIncome',
-      'carPayment','ccMin','studentLoan',
+      'carPayment','ccMin','studentLoan','otherLoans','alimony','otherObl',
+      'housingStatus','hsRent','hsMortPI','hsTax','hsCondo','hsHeat',
       'purchasePrice','downPayment','interestRate','propertyTaxAnnual','heatingMonthly','condoMonthly',
       'creditScore'
-    ]) {
-      const el = $(id);
-      el && el.addEventListener('input', autoSave);
-    }
+    ].forEach(id => { const el=$(id); el && el.addEventListener('input', autoSave); });
 
     // Initial load
-    (async function init() {
+    (async function init(){
       const s = await Persistence.load();
       applyState(s);
       refreshLocSummary();
+      refreshRentSummary();
     })();
   </script>
 </body>
