@@ -1,55 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PropCheck — Qualification</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PropCheck</title>
 
-  <!-- Global styles and app scripts (unchanged + drive.js added) -->
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css"/>
+
+  <!-- Config + State + Google Identity + GAPI + Drive helper -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
   <script defer src="assets/js/common.js"></script>
-
-  <style>
-    .page-wrap { max-width: 1100px; margin: 0 auto; }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-    @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 640px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
-
-    .info-banner {
-      background: var(--muted-bg, #f7fafc);
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: 12px; padding: 12px 14px; font-size: 14px;
-    }
-    .rules-callout {
-      background: #fff7e6; border: 1px solid #f6ad55; color: #744210;
-      border-radius: 12px; padding: 12px 14px; font-size: 14px;
-    }
-    .section-title { font-weight: 600; margin: 8px 0 6px; font-size: 16px; color: var(--fg, #111827); }
-    .form-group small { color: var(--muted); display: block; margin-top: 4px; }
-    .pill { display: inline-block; border: 1px solid var(--border, #e2e8f0); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--muted); margin-right: 8px; margin-bottom: 6px; }
-
-    .table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 8px; }
-    .table th, .table td { border-bottom: 1px solid var(--border, #e2e8f0); text-align: left; padding: 8px 6px; font-size: 14px; vertical-align: middle; }
-    .actions-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-    .derived { background: var(--muted-bg, #f7fafc); border: 1px dashed var(--border, #e2e8f0); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
-
-    .result { border-radius: 12px; padding: 14px; margin-top: 12px; border: 1px solid var(--border, #e2e8f0); }
-    .result.pass { background: #ecfdf5; border-color: #34d39966; }
-    .result.fail { background: #fef2f2; border-color: #fca5a566; }
-    .result .headline { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border, #e2e8f0); background: white; margin-right: 8px; }
-
-    .error-text { color: #b91c1c; font-size: 13px; margin-top: 4px; }
-    .hidden { display: none !important; }
-    .subtle { color: var(--muted); font-size: 13px; }
-    .save-status { font-size: 12px; color: var(--muted); }
-  </style>
 </head>
+<body>
+  <!-- Header -->
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html" title="Back to Home">PropCheck</a>
+
+      <div class="nav-links">
+        <a class="nav-link" href="calculator.html">Calculator</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+        <a class="nav-link" href="analysis.html">Analysis</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="market.html">Market</a>
+        <a class="nav-link" href="qualification.html">Qualification</a>
+      </div>
+
+      <!-- Right side: Drive status + Sign-in/out -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
+        <button id="driveAuthBtn" class="btn btn-secondary" type="button">Sign in</button>
+      </div>
+    </div>
+  </div>
+
 <body>
   <!-- NAV (text-only; emoji handled by common.js on the heading) -->
   <div class="nav">
@@ -844,6 +833,49 @@
       setSaveStatus(window.PCState ? 'Deal ready (local backup enabled)' : 'Saving locally');
     })();
   </script>
+    <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // try silent rehydrate (no popup). If it fails, chip stays "Guest".
+      PCDrive.autoInit();
+
+      const chip = document.getElementById("driveStatus");
+      const btn  = document.getElementById("driveAuthBtn");
+
+      const apply = ({ ready, user }) => {
+        if (chip) {
+          chip.classList.toggle("ready", !!ready);
+          if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
+          else {
+            const name = user?.displayName || user?.emailAddress || "Signed in";
+            chip.textContent = name; chip.title = "Drive save: enabled";
+          }
+        }
+        if (btn) btn.textContent = ready ? "Sign out" : "Sign in";
+      };
+
+      // initial + subscribe
+      apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+      PCDrive.onStatus(apply);
+
+      // explicit user-driven auth (no surprise popups elsewhere)
+      if (btn) {
+        btn.addEventListener("click", async () => {
+          if (PCDrive.isReady()) {
+            PCDrive.signOut();
+            apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+            return;
+          }
+          try { await PCDrive.signIn(); }
+          catch (e) { alert("Sign-in failed: " + (e?.message || e)); }
+          apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
 </body>
 </html>
 
