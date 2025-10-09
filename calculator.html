@@ -13,7 +13,7 @@
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
 
-  <!-- Config + Google Identity + GAPI + Drive helper -->
+  <!-- Config + State + Google Identity + GAPI + Drive helper -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -26,6 +26,7 @@
   <nav class="nav">
     <div class="nav-container">
       <a href="index.html" class="logo" title="Back to Home">PropCheck</a>
+
       <div class="nav-links">
         <a class="nav-link active" href="calculator.html">Calculator</a>
         <a class="nav-link" href="reports.html">Reports</a>
@@ -33,8 +34,10 @@
         <a class="nav-link" href="compare.html">Compare</a>
         <a class="nav-link" href="market.html">Market</a>
         <a class="nav-link" href="qualification.html">Qualification</a>
-        <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
       </div>
+
+      <!-- Drive status chip -->
+      <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
     </div>
   </nav>
 
@@ -169,7 +172,7 @@
 
     function valNum(id){ return parseFloat($(id).value || "0") || 0; }
 
-    function formatMoney(n){ return n.toLocaleString(undefined,{style:"currency",currency:"USD"}); }
+    function formatMoney(n){ return Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD'}); }
     function pct(n){ return (n*100).toFixed(2) + "%"; }
 
     function monthlyPayment(principal, annualRatePct, years){
@@ -200,7 +203,7 @@
 
       const pmi = monthlyPayment(loan, rate, years);
       const opExMonthly = taxes + ins + utils + vac + repairs + mgmt + capex + other;
-      const noiAnnual = (rent - (vac + repairs + mgmt + capex + other)) * 12 - taxes - ins - utils*12; // NOI rough
+      const noiAnnual = (rent - (vac + repairs + mgmt + capex + other)) * 12 - taxes - ins - utils*12; // rough NOI
       const cashFlow = (rent - opExMonthly) - pmi;
 
       const capRate = price>0 ? noiAnnual / price : 0;
@@ -243,8 +246,7 @@
       }
     });
 
-    // --------------- Load from Drive ---------------
-    // This uses gapi directly on this page to list and fetch files.
+    // --------------- Load from Drive (simple picker) ---------------
     const pickerCard = $("drivePickerCard");
     const filesSelect = $("driveFiles");
 
@@ -365,7 +367,9 @@
     });
     $("applyDriveBtn").addEventListener("click", loadSelectedFile);
     $("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
-     <!-- ✅ Silent Drive re-auth + chip updater -->
+  </script>
+
+  <!-- Silent Drive re-auth + chip updater -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       // silently rehydrate Drive on this page (no popup)
@@ -392,4 +396,5 @@
   </script>
 </body>
 </html>
+
 
