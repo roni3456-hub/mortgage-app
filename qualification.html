@@ -4,12 +4,114 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PropCheck — Qualification</title>
+
+  <!-- Global styles and app scripts (unchanged) -->
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
   <script defer src="assets/js/common.js"></script>
+
+  <style>
+    /* Page-scoped helpers only; respects your global theme */
+    .page-wrap { max-width: 1100px; margin: 0 auto; }
+    .page-header { margin-bottom: 16px; }
+    .page-subtitle { color: var(--muted); margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+    .info-banner {
+      background: var(--muted-bg, #f7fafc);
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    .rules-callout {
+      background: #fff7e6;
+      border: 1px solid #f6ad55;
+      color: #744210;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+    .rules-callout b { color: #5c3a0f; }
+
+    .section-title {
+      font-weight: 600;
+      margin: 8px 0 6px;
+      font-size: 16px;
+      color: var(--fg, #111827);
+    }
+
+    .form-group small { color: var(--muted); display: block; margin-top: 4px; }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 8px;
+      margin-bottom: 6px;
+    }
+
+    .loc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    .loc-table th, .loc-table td {
+      border-bottom: 1px solid var(--border, #e2e8f0);
+      text-align: left;
+      padding: 8px 6px;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    .loc-actions { display: flex; gap: 8px; align-items: center; }
+
+    .derived {
+      background: var(--muted-bg, #f7fafc);
+      border: 1px dashed var(--border, #e2e8f0);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    .result {
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    .result.pass { background: #ecfdf5; border-color: #34d39966; }
+    .result.fail { background: #fef2f2; border-color: #fca5a566; }
+    .result .headline {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--border, #e2e8f0);
+      background: white;
+      margin-right: 8px;
+    }
+    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .error-text { color: #b91c1c; font-size: 13px; margin-top: 4px; }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
+  <!-- NAV (unchanged; text-only links, emoji handled by common.js on the heading) -->
   <div class="nav">
     <div class="nav-container">
       <a class="logo" href="index.html">PropCheck</a>
@@ -24,18 +126,603 @@
     </div>
   </div>
 
-  <main class="main">
+  <main class="main page-wrap">
     <div class="card">
-      <h2>Qualification</h2>
-      <div class="grid grid-3">
-        <div class="form-group"><label>Annual Income ($)</label><input id="qIncome" type="number"></div>
-        <div class="form-group"><label>Monthly Debts ($)</label><input id="qDebts" type="number"></div>
-        <div class="form-group"><label>Credit Score</label><input id="qCredit" type="number"></div>
+      <!-- Legacy page title -->
+      <h2>Mortgage Qualification Analysis</h2>
+
+      <div class="info-banner" style="margin-top: 6px;">
+        This calculator uses Canadian mortgage qualification rules including stress testing and proper treatment of lines of credit. You can use it even without a specific property to see your <b>maximum mortgage</b>.
       </div>
-      <div class="actions">
+
+      <!-- Income Section -->
+      <div style="margin-top: 18px;">
+        <div class="section-title">Income Information</div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Annual Employment Income ($)</label>
+            <input type="number" id="annualIncome" min="0" step="0.01" placeholder="e.g. 120000" />
+          </div>
+          <div class="form-group">
+            <label>Other Income ($)</label>
+            <input type="number" id="otherIncome" min="0" step="0.01" placeholder="e.g. 6000" />
+          </div>
+          <div class="form-group">
+            <label>Co-borrower Income ($)</label>
+            <input type="number" id="coIncome" min="0" step="0.01" placeholder="e.g. 90000" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Debts Section -->
+      <div style="margin-top: 18px;">
+        <div class="section-title">Monthly Debt Obligations</div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Car Payment ($)</label>
+            <input type="number" id="carPayment" min="0" step="0.01" placeholder="e.g. 450" />
+          </div>
+          <div class="form-group">
+            <label>Credit Cards Min ($)</label>
+            <input type="number" id="ccMin" min="0" step="0.01" placeholder="e.g. 75" />
+          </div>
+          <div class="form-group">
+            <label>Student Loan ($)</label>
+            <input type="number" id="studentLoan" min="0" step="0.01" placeholder="e.g. 0" />
+          </div>
+        </div>
+
+        <!-- Legacy callout title -->
+        <div class="rules-callout" style="margin-top: 12px;">
+          <b>Line of Credit Rules:</b>
+          <ul style="margin: 6px 0 0 18px;">
+            <li>Unsecured LOC with <b>limit &lt; $50,000</b>: use <b>3% of actual balance</b> (monthly).</li>
+            <li>Unsecured LOC with <b>limit ≥ $50,000</b>: use <b>3% of full limit</b> (monthly).</li>
+            <li>Secured HELOC: use <b>3% of full limit</b> (monthly), regardless of balance.</li>
+          </ul>
+        </div>
+
+        <!-- Net-new dynamic LOC Table -->
+        <div style="margin-top: 8px;">
+          <div class="loc-actions">
+            <button class="btn btn-secondary" id="addLocBtn" type="button">+ Add Line of Credit</button>
+            <span class="pill" id="locSummaryPill">0 LOCs · $0.00/mo derived</span>
+          </div>
+          <table class="loc-table" id="locTable">
+            <thead>
+              <tr>
+                <th style="width: 150px;">Type</th>
+                <th style="width: 170px;">Limit ($)</th>
+                <th style="width: 170px;">Balance ($)</th>
+                <th style="width: 170px;">Derived ($/mo)</th>
+                <th style="width: 60px;"></th>
+              </tr>
+            </thead>
+            <tbody id="locBody">
+              <!-- Rows injected here -->
+            </tbody>
+          </table>
+          <div id="locError" class="error-text hidden"></div>
+        </div>
+      </div>
+
+      <!-- Property Being Qualified (legacy section name) -->
+      <div style="margin-top: 18px;">
+        <div class="section-title">Property Being Qualified</div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Purchase Price ($)</label>
+            <input type="number" id="purchasePrice" min="0" step="0.01" placeholder="e.g. 650000" />
+          </div>
+          <div class="form-group">
+            <label>Down Payment ($)</label>
+            <input type="number" id="downPayment" min="0" step="0.01" placeholder="e.g. 120000" />
+          </div>
+          <div class="form-group">
+            <label>Interest Rate (%)</label>
+            <input type="number" id="interestRate" min="0" step="0.01" placeholder="e.g. 5.5" value="5.5" />
+          </div>
+        </div>
+        <div class="grid-3" style="margin-top: 8px;">
+          <div class="form-group">
+            <label>Property Tax (annual $)</label>
+            <input type="number" id="propertyTaxAnnual" min="0" step="0.01" placeholder="e.g. 3600" />
+          </div>
+          <div class="form-group">
+            <label>Heating (monthly $)</label>
+            <input type="number" id="heatingMonthly" min="0" step="0.01" placeholder="e.g. 150" value="150" />
+          </div>
+          <div class="form-group">
+            <label>Condo Fees (monthly $)</label>
+            <input type="number" id="condoMonthly" min="0" step="0.01" placeholder="e.g. 0" value="0" />
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 8px;">
+          <div class="form-group">
+            <label>Credit Score</label>
+            <input type="number" id="creditScore" min="0" step="1" placeholder="e.g. 720" />
+            <small>Determines whether 39/44 or 35/42 thresholds are used.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyze -->
+      <div class="actions" style="margin-top: 14px;">
+        <button class="btn btn-primary" id="analyzeBtn" type="button">Analyze Qualification</button>
+        <button class="btn btn-secondary" id="saveBtn" type="button">Save</button>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="result hidden" role="region" aria-live="polite" style="margin-top: 16px;">
+        <div class="headline" id="headline">Max Mortgage You Qualify For: $0.00</div>
+        <div style="margin-bottom: 8px;">
+          <span class="badge" id="programBadge">Conventional (assumed)</span>
+          <span class="badge" id="rateBadge">Stress rate: 0.00%</span>
+          <span class="badge" id="limitBadge">Thresholds used: 39/44</span>
+        </div>
+
+        <div class="grid-3">
+          <div class="derived">
+            <b>Max Monthly P&amp;I Allowed:</b> <span id="piAllowed">$0.00</span><br />
+            <small>(After shelter &amp; debts per GDS/TDS)</small>
+          </div>
+          <div class="derived">
+            <b>Contract Payment (FYI):</b> <span id="pmtContract">$0.00</span><br />
+            <b>Stress-Tested Payment (used in ratios):</b> <span id="pmtStress">$0.00</span>
+          </div>
+          <div class="derived">
+            <b>GDS:</b> <span id="gdsPct">0.0%</span> &nbsp; <b>TDS:</b> <span id="tdsPct">0.0%</span><br />
+            <small>Constraint: <span id="constraint">—</span></small>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 10px;">
+          <div class="derived">
+            <b>Insured (25y) Comparison:</b> <span id="insuredAmt">$0.00</span><br />
+            <small>Principal if amortization were 25 years @ contract rate.</small>
+          </div>
+          <div class="derived">
+            <b>Conservative (Stress-Rate Principal, 30y):</b> <span id="stressAmt">$0.00</span><br />
+            <small>Principal if we also priced the loan at the stress rate.</small>
+          </div>
+          <div class="derived">
+            <b>LOC Derived Monthly (sum):</b> <span id="locSum">$0.00</span><br />
+            <small>Computed using 3% rules by type/limit/balance.</small>
+          </div>
+        </div>
+
+        <div id="tips" class="derived" style="margin-top: 10px;">
+          <b>Tips:</b>
+          <div id="tipsBody">Enter values and analyze to see optimization ideas.</div>
+        </div>
+
+        <div class="cta-row" style="margin-top: 12px;">
+          <a class="btn btn-secondary" href="calculator.html">Go to Calculator</a>
+          <a class="btn btn-secondary" href="reports.html">Generate Report</a>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top: 14px;">
         <a class="btn btn-secondary" href="calculator.html">Back to Calculator</a>
       </div>
     </div>
   </main>
+
+  <script>
+    // ---------------------------
+    // Safe persistence wrapper (Drive if available, fallback to localStorage)
+    // ---------------------------
+    const QUAL_KEY = 'qualification'; // separate namespace from calculator to avoid collisions
+
+    const Persistence = {
+      async load() {
+        try {
+          if (window.PropCheck && typeof window.PropCheck.load === 'function') {
+            const data = await window.PropCheck.load(QUAL_KEY);
+            if (data) return data;
+          }
+        } catch (e) { /* non-fatal */ }
+        try {
+          const raw = localStorage.getItem(QUAL_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+      },
+      async save(payload) {
+        const data = JSON.stringify(payload);
+        try {
+          if (window.PropCheck && typeof window.PropCheck.save === 'function') {
+            await window.PropCheck.save(QUAL_KEY, payload);
+          }
+        } catch (e) { /* fall back below */ }
+        try {
+          localStorage.setItem(QUAL_KEY, data);
+        } catch (e) { /* ignore quota errors */ }
+      }
+    };
+
+    // ---------------------------
+    // Utilities
+    // ---------------------------
+    const $ = (id) => document.getElementById(id);
+    const fmtMoney = (n) => (isFinite(n) ? n : 0);
+    const money = (n) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 2 }).format(fmtMoney(n));
+    const pct1 = (n) => `${(isFinite(n) ? (n * 100) : 0).toFixed(1)}%`;
+
+    function toNum(input) {
+      const v = parseFloat(input?.value ?? 0);
+      return isFinite(v) ? v : 0;
+    }
+    function clampNonNeg(n) { return isFinite(n) && n > 0 ? n : 0; }
+
+    // Standard mortgage payment (monthly)
+    function pmt(principal, annualRatePct, years) {
+      const r = clampNonNeg(annualRatePct) / 100 / 12;
+      const n = years * 12;
+      if (principal <= 0 || r <= 0 || n <= 0) return 0;
+      const factor = Math.pow(1 + r, n);
+      return principal * r * factor / (factor - 1);
+    }
+
+    // Invert mortgage payment to principal for a target monthly P&I
+    function principalFromPI(paymentMonthly, annualRatePct, years) {
+      const r = clampNonNeg(annualRatePct) / 100 / 12;
+      const n = years * 12;
+      if (paymentMonthly <= 0 || r <= 0 || n <= 0) return 0;
+      const factor = Math.pow(1 + r, n);
+      return paymentMonthly * (factor - 1) / (r * factor);
+    }
+
+    // Stress rate = max(interest rate + 2%, MQR)
+    function getStressRate(contractRate) {
+      const mqr = (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25;
+      return Math.max(contractRate + 2, mqr);
+    }
+
+    // GDS/TDS thresholds based on credit score
+    function getThresholds(creditScore) {
+      if (isFinite(creditScore) && creditScore >= 680) return { gds: 0.39, tds: 0.44 };
+      return { gds: 0.35, tds: 0.42 };
+    }
+
+    // LOC row helpers
+    const LOC_TYPE_UNSEC = 'unsecured';
+    const LOC_TYPE_SEC = 'secured';
+
+    function computeLocMonthly(loc) {
+      const limit = clampNonNeg(parseFloat(loc.limit));
+      const balance = clampNonNeg(parseFloat(loc.balance));
+      if (loc.type === LOC_TYPE_SEC) {
+        return 0.03 * limit;
+      } else {
+        if (limit < 50000) return 0.03 * balance;
+        return 0.03 * limit;
+      }
+    }
+
+    function summarizeLocs(locs) {
+      let sum = 0;
+      for (const row of locs) sum += computeLocMonthly(row);
+      return sum;
+    }
+
+    // ---------------------------
+    // LOC dynamic UI
+    // ---------------------------
+    const locBody = $('locBody');
+    const locPill = $('locSummaryPill');
+    const locErr = $('locError');
+
+    function newLocRow(data = { type: LOC_TYPE_UNSEC, limit: '', balance: '' }) {
+      const tr = document.createElement('tr');
+
+      const tdType = document.createElement('td');
+      const sel = document.createElement('select');
+      sel.innerHTML = `
+        <option value="${LOC_TYPE_UNSEC}">Unsecured</option>
+        <option value="${LOC_TYPE_SEC}">Secured (HELOC)</option>
+      `;
+      sel.value = data.type || LOC_TYPE_UNSEC;
+      tdType.appendChild(sel);
+
+      const tdLimit = document.createElement('td');
+      const inputLimit = document.createElement('input');
+      inputLimit.type = 'number'; inputLimit.step = '0.01'; inputLimit.min = '0';
+      inputLimit.placeholder = 'Limit';
+      inputLimit.value = data.limit ?? '';
+      tdLimit.appendChild(inputLimit);
+
+      const tdBal = document.createElement('td');
+      const inputBal = document.createElement('input');
+      inputBal.type = 'number'; inputBal.step = '0.01'; inputBal.min = '0';
+      inputBal.placeholder = 'Balance';
+      inputBal.value = data.balance ?? '';
+      tdBal.appendChild(inputBal);
+
+      const tdDerived = document.createElement('td');
+      const derivedSpan = document.createElement('span');
+      derivedSpan.textContent = '$0.00';
+      tdDerived.appendChild(derivedSpan);
+
+      const tdActions = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-secondary'; delBtn.type = 'button';
+      delBtn.textContent = 'Remove';
+      tdActions.appendChild(delBtn);
+
+      tr.appendChild(tdType);
+      tr.appendChild(tdLimit);
+      tr.appendChild(tdBal);
+      tr.appendChild(tdDerived);
+      tr.appendChild(tdActions);
+
+      function refreshRow() {
+        const typ = sel.value;
+        // Secured: balance disabled/cleared visually; Unsecured: enabled
+        if (typ === LOC_TYPE_SEC) {
+          inputBal.disabled = true;
+          inputBal.value = '';
+        } else {
+          inputBal.disabled = false;
+        }
+
+        const loc = { type: typ, limit: parseFloat(inputLimit.value || 0), balance: parseFloat(inputBal.value || 0) };
+        // Validation: unsecured balance cannot exceed limit
+        let error = '';
+        if (typ === LOC_TYPE_UNSEC && isFinite(loc.limit) && isFinite(loc.balance) && loc.balance > loc.limit) {
+          error = 'Unsecured LOC balance cannot exceed its limit.';
+        }
+        locErr.textContent = error;
+        locErr.classList.toggle('hidden', !error);
+
+        const m = computeLocMonthly(loc);
+        derivedSpan.textContent = money(m);
+        refreshLocSummary();
+      }
+
+      sel.addEventListener('change', refreshRow);
+      inputLimit.addEventListener('input', refreshRow);
+      inputBal.addEventListener('input', refreshRow);
+      delBtn.addEventListener('click', () => {
+        tr.remove();
+        refreshLocSummary();
+      });
+
+      // initial state
+      refreshRow();
+      return tr;
+    }
+
+    function getLocRowsData() {
+      const rows = [];
+      for (const tr of Array.from(locBody.children)) {
+        const [tdType, tdLimit, tdBal] = tr.children;
+        const sel = tdType.querySelector('select');
+        const inputLimit = tdLimit.querySelector('input');
+        const inputBal = tdBal.querySelector('input');
+        rows.push({
+          type: sel.value,
+          limit: parseFloat(inputLimit.value || 0),
+          balance: sel.value === LOC_TYPE_SEC ? 0 : parseFloat(inputBal?.value || 0)
+        });
+      }
+      return rows;
+    }
+
+    function refreshLocSummary() {
+      const data = getLocRowsData();
+      const sum = summarizeLocs(data);
+      locPill.textContent = `${data.length} LOC${data.length === 1 ? '' : 's'} · ${money(sum)}/mo derived`;
+      $('locSum').textContent = money(sum);
+    }
+
+    $('addLocBtn').addEventListener('click', () => {
+      locBody.appendChild(newLocRow());
+      refreshLocSummary();
+    });
+
+    // ---------------------------
+    // Main Analyze Logic
+    // ---------------------------
+    function analyze() {
+      // Inputs
+      const annualIncome = clampNonNeg(toNum($('annualIncome')));
+      const otherIncome = clampNonNeg(toNum($('otherIncome')));
+      const coIncome = clampNonNeg(toNum($('coIncome')));
+
+      const car = clampNonNeg(toNum($('carPayment')));
+      const ccMin = clampNonNeg(toNum($('ccMin')));
+      const student = clampNonNeg(toNum($('studentLoan')));
+
+      const contractRate = clampNonNeg(toNum($('interestRate'))) || 0; // legacy label "Interest Rate (%)"
+      const taxAnnual = clampNonNeg(toNum($('propertyTaxAnnual')));
+      const heating = clampNonNeg(toNum($('heatingMonthly'))) || 150;
+      const condo = clampNonNeg(toNum($('condoMonthly'))) || 0;
+
+      const creditScore = clampNonNeg(toNum($('creditScore')));
+      const downPayment = clampNonNeg(toNum($('downPayment')));
+      const purchasePrice = clampNonNeg(toNum($('purchasePrice')));
+
+      const locs = getLocRowsData();
+      const locMonthly = summarizeLocs(locs);
+
+      // Derived
+      const incomeMonthly = (annualIncome + otherIncome + coIncome) / 12;
+      const shelter = (taxAnnual / 12) + heating + condo;
+
+      const stressRate = getStressRate(contractRate);
+      const thresholds = getThresholds(creditScore);
+
+      // Allowed P&I from GDS/TDS
+      const gdsAllowed = Math.max(0, incomeMonthly * thresholds.gds - shelter);
+      const tdsAllowed = Math.max(0, incomeMonthly * thresholds.tds - shelter - (car + ccMin + student + locMonthly));
+      const piAllowed = Math.min(gdsAllowed, tdsAllowed);
+
+      // Convert to principals (headline + comparisons)
+      const principal30Contract = principalFromPI(piAllowed, contractRate, 30);
+      const principal25Contract = principalFromPI(piAllowed, contractRate, 25);
+      const principal30Stress = principalFromPI(piAllowed, stressRate, 30);
+
+      // Payments at headline principal
+      const pmtContract = pmt(principal30Contract, contractRate, 30);
+      const pmtStress = pmt(principal30Contract, stressRate, 30);
+
+      // Ratios at the allowed P&I
+      const gdsPct = incomeMonthly > 0 ? ((pmtStress + shelter) / incomeMonthly) : 0;
+      const tdsPct = incomeMonthly > 0 ? ((pmtStress + shelter + car + ccMin + student + locMonthly) / incomeMonthly) : 0;
+      const constraint = (gdsAllowed <= tdsAllowed) ? 'GDS' : 'TDS';
+
+      // Program badge logic:
+      let program = 'Conventional (assumed)';
+      if (purchasePrice > 0 && downPayment > 0) {
+        const dpPct = downPayment / purchasePrice;
+        program = (dpPct < 0.20) ? 'Insured' : 'Conventional';
+      }
+
+      const qualifies = piAllowed > 0;
+
+      // Populate UI
+      $('results').classList.remove('hidden');
+      $('results').classList.toggle('pass', qualifies);
+      $('results').classList.toggle('fail', !qualifies);
+
+      $('headline').textContent = `Max Mortgage You Qualify For: ${money(principal30Contract)}`;
+      $('programBadge').textContent = program;
+      $('rateBadge').textContent = `Stress rate: ${stressRate.toFixed(2)}%`;
+      $('limitBadge').textContent = `Thresholds used: ${(thresholds.gds*100).toFixed(0)}/${(thresholds.tds*100).toFixed(0)}`;
+
+      $('piAllowed').textContent = money(piAllowed);
+      $('pmtContract').textContent = money(pmtContract);
+      $('pmtStress').textContent = money(pmtStress);
+
+      $('gdsPct').textContent = pct1(gdsPct);
+      $('tdsPct').textContent = pct1(tdsPct);
+      $('constraint').textContent = constraint;
+
+      $('insuredAmt').textContent = money(principal25Contract);
+      $('stressAmt').textContent = money(principal30Stress);
+      $('locSum').textContent = money(locMonthly);
+
+      // Tips
+      const tips = [];
+      if (!qualifies) {
+        const needAtLeast = (constraint === 'GDS')
+          ? Math.max(0, shelter - incomeMonthly * thresholds.gds) + 1e-6
+          : Math.max(0, shelter + car + ccMin + student + locMonthly - incomeMonthly * thresholds.tds) + 1e-6;
+
+        if (constraint === 'TDS') {
+          tips.push(`Reduce monthly debts by about ${money(needAtLeast)} to open up qualification room.`);
+          if (locMonthly > 0) tips.push(`Pay down LOCs (especially unsecured) — every $1/month reduction increases allowed P&I by $1.`);
+        } else {
+          tips.push(`Lower shelter estimates by about ${money(needAtLeast)} (tax/heating/condo) or increase income to meet GDS.`);
+        }
+        tips.push(`Raising credit score to ≥680 uses 39/44 thresholds, which may help.`);
+      } else {
+        tips.push(`Your binding limit is ${constraint}. Lowering that side (debts or shelter) will raise your max mortgage.`);
+        tips.push(`Try modeling a higher interest rate to see a more conservative headline.`);
+      }
+      $('tipsBody').innerHTML = `<ul style="margin:6px 0 0 18px;">${tips.map(t => `<li>${t}</li>`).join('')}</ul>`;
+
+      // Save derived snapshot
+      const snapshot = currentState();
+      snapshot.rate_stress_pct = stressRate;
+      snapshot.payment_stress_monthly = pmtStress;
+      snapshot.payment_contract_monthly = pmtContract;
+      snapshot.gds_pct = parseFloat((gdsPct * 100).toFixed(1));
+      snapshot.tds_pct = parseFloat((tdsPct * 100).toFixed(1));
+      snapshot.thresholds_used = { gds: thresholds.gds * 100, tds: thresholds.tds * 100 };
+      snapshot.qualified = qualifies;
+      snapshot.program = program.toLowerCase().includes('insured') ? 'insured' : 'conventional';
+      snapshot.max_principal_30y_contract = principal30Contract;
+      snapshot.max_principal_25y_contract = principal25Contract;
+      snapshot.max_principal_30y_stress = principal30Stress;
+      Persistence.save(snapshot);
+    }
+
+    // ---------------------------
+    // State load/save of inputs
+    // ---------------------------
+    function currentState() {
+      return {
+        version: 1,
+        // incomes
+        income_annual: clampNonNeg(toNum($('annualIncome'))),
+        income_other_annual: clampNonNeg(toNum($('otherIncome'))),
+        income_coborrower_annual: clampNonNeg(toNum($('coIncome'))),
+        // debts
+        debt_car_monthly: clampNonNeg(toNum($('carPayment'))),
+        debt_cc_min_monthly: clampNonNeg(toNum($('ccMin'))),
+        debt_student_monthly: clampNonNeg(toNum($('studentLoan'))),
+        // locs
+        loc_items: getLocRowsData(),
+        // property / shelter & rates
+        purchase_price: clampNonNeg(toNum($('purchasePrice'))),
+        down_payment: clampNonNeg(toNum($('downPayment'))),
+        rate_contract_pct: clampNonNeg(toNum($('interestRate'))),     // legacy "Interest Rate (%)"
+        property_tax_annual: clampNonNeg(toNum($('propertyTaxAnnual'))),
+        heating_monthly: clampNonNeg(toNum($('heatingMonthly'))),
+        condo_fees_monthly: clampNonNeg(toNum($('condoMonthly'))),
+        // credit
+        credit_score: clampNonNeg(toNum($('creditScore'))),
+        // mqr snapshot
+        mqr_pct: (window.CONFIG && typeof window.CONFIG.MQR === 'number') ? window.CONFIG.MQR : 5.25
+      };
+    }
+
+    function applyState(s) {
+      if (!s) return;
+      $('annualIncome').value = s.income_annual ?? '';
+      $('otherIncome').value = s.income_other_annual ?? '';
+      $('coIncome').value = s.income_coborrower_annual ?? '';
+
+      $('carPayment').value = s.debt_car_monthly ?? '';
+      $('ccMin').value = s.debt_cc_min_monthly ?? '';
+      $('studentLoan').value = s.debt_student_monthly ?? '';
+
+      $('purchasePrice').value = s.purchase_price ?? '';
+      $('downPayment').value = s.down_payment ?? '';
+      $('interestRate').value = (s.rate_contract_pct ?? 5.5);
+      $('propertyTaxAnnual').value = s.property_tax_annual ?? '';
+      $('heatingMonthly').value = (s.heating_monthly ?? 150);
+      $('condoMonthly').value = (s.condo_fees_monthly ?? 0);
+
+      $('creditScore').value = s.credit_score ?? '';
+
+      // Rebuild LOC rows
+      locBody.innerHTML = '';
+      const locs = Array.isArray(s.loc_items) ? s.loc_items : [];
+      if (locs.length > 0) {
+        for (const row of locs) locBody.appendChild(newLocRow(row));
+      }
+      refreshLocSummary();
+    }
+
+    // Bind analyze/save buttons
+    $('analyzeBtn').addEventListener('click', analyze);
+    $('saveBtn').addEventListener('click', () => Persistence.save(currentState()));
+
+    // Auto-save on significant input changes (debounced)
+    let saveTimer = null;
+    function autoSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => Persistence.save(currentState()), 400);
+    }
+    for (const id of [
+      'annualIncome','otherIncome','coIncome',
+      'carPayment','ccMin','studentLoan',
+      'purchasePrice','downPayment','interestRate','propertyTaxAnnual','heatingMonthly','condoMonthly',
+      'creditScore'
+    ]) {
+      const el = $(id);
+      el && el.addEventListener('input', autoSave);
+    }
+
+    // Initial load
+    (async function init() {
+      const s = await Persistence.load();
+      applyState(s);
+      refreshLocSummary();
+    })();
+  </script>
 </body>
 </html>
