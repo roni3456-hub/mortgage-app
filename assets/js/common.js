@@ -1,8 +1,9 @@
 // assets/js/common.js
-// Nav stays text-only; active tab highlight; ensure each page's H1 starts with its emoji.
-// Robust to late DOM changes via MutationObserver.
+// Nav stays text-only; active tab highlight; ensure the first content heading (H1/H2/H3) starts with its emoji.
+// Works even if other scripts re-render later.
+
 (function () {
-  // --- ROUTE & CONFIG ---
+  // --- ROUTE + CONFIG ---
   function getRoute() {
     const path = location.pathname.replace(/\/+$/, '');
     const name = path.split('/').pop() || 'index.html';
@@ -10,7 +11,7 @@
   }
   const CONFIG = {
     index:         { emoji: '🏠', label: 'home' },
-    calculator:    { emoji: '🏠', label: 'calculator' }, // you use 🏠 for Calc
+    calculator:    { emoji: '🏠', label: 'calculator' }, // you’ve been using 🏠 for Calc
     analysis:      { emoji: '📊', label: 'analysis' },
     compare:       { emoji: '⚖️', label: 'compare' },
     reports:       { emoji: '📋', label: 'reports' },
@@ -19,7 +20,7 @@
   };
   const KNOWN = new Set(Object.values(CONFIG).map(c => c.emoji));
 
-  // --- ACTIVE NAV (no emoji injection) ---
+  // --- ACTIVE NAV (no emoji injection in nav) ---
   function applyActiveNav(route) {
     document.querySelectorAll('.nav a').forEach(a => {
       const href = a.getAttribute('href') || '';
@@ -31,54 +32,49 @@
     });
   }
 
-  // --- H1 EMOJI ENFORCER ---
-  function applyH1Emoji(route) {
+  // --- EMOJI ENFORCER on first real page heading (H1/H2/H3 not inside header/nav) ---
+  function applyHeadingEmoji(route) {
     const cfg = CONFIG[route];
     if (!cfg) return;
 
-    // first H1 not inside header/nav
-    const candidates = Array.from(document.querySelectorAll('h1'))
-      .filter(h => !h.closest('header,.site-header,.nav'));
-    const h1 = candidates[0];
-    if (!h1) return;
+    // Prefer headings inside <main>, but fall back to the first heading in the body
+    const candidates = Array.from(
+      document.querySelectorAll('main h1, main h2, main h3, body h1, body h2, body h3')
+    ).filter(h => !h.closest('header,.site-header,.nav'));
 
-    // If it already has our span, normalize it and exit
-    const span = h1.querySelector('span.emoji');
+    const h = candidates[0];
+    if (!h) return;
+
+    const span = h.querySelector('span.emoji');
     if (span) {
       if (span.textContent !== cfg.emoji) span.textContent = cfg.emoji;
       span.setAttribute('aria-label', cfg.label);
       return;
     }
 
-    // Work off plain text to avoid duplicate emojis
-    const raw = (h1.textContent || '').trim();
+    const raw = (h.textContent || '').trim();
     const first = raw ? Array.from(raw)[0] : '';
     const rest = KNOWN.has(first) ? raw.slice(first.length).trimStart() : raw;
 
-    h1.innerHTML = `<span class="emoji hpad" role="img" aria-label="${cfg.label}">${cfg.emoji}</span>${rest}`;
+    h.innerHTML = `<span class="emoji hpad" role="img" aria-label="${cfg.label}">${cfg.emoji}</span>${rest}`;
   }
 
   // --- APPLY (initial + on DOM changes) ---
-  let route = getRoute();
   function applyAll() {
-    route = getRoute();
+    const route = getRoute();
     applyActiveNav(route);
-    applyH1Emoji(route);
+    applyHeadingEmoji(route);
   }
 
-  // Run at DOM ready and after full load
   document.addEventListener('DOMContentLoaded', applyAll);
   window.addEventListener('load', applyAll);
 
-  // Re-apply if other scripts update the page later
+  // Re-apply on dynamic changes
   let throttle;
-  const mo = new MutationObserver(() => {
-    clearTimeout(throttle);
-    throttle = setTimeout(applyAll, 60);
-  });
-  mo.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  new MutationObserver(() => { clearTimeout(throttle); throttle = setTimeout(applyAll, 60); })
+    .observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 
-  // quick debug flag
+  // simple debug flag
   window.__pc_common_js_loaded = true;
 })();
 
