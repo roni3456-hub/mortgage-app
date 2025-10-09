@@ -1,102 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PropCheck — Analysis</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
+
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="assets/js/drive.js"></script>
 </head>
 <body>
-  <header class="pc-hero">
-    <nav class="pc-nav container">
-      <a class="pc-logo" href="index.html"><span class="pc-logo-emoji">🏠</span><span class="pc-logo-text">PropCheck</span></a>
-      <div class="pc-links">
-        <a href="calculator.html">Calculator</a>
-        <a href="reports.html">Report</a>
-        <a href="analysis.html" class="active">Analysis</a>
+  <div class="nav">
+    <div class="nav-container">
+      <a class="logo" href="index.html">PropCheck</a>
+      <div class="nav-links">
+        <a href="calculator.html" class="nav-link">Calculator</a>
+        <a href="reports.html" class="nav-link">Report</a>
+        <a href="analysis.html" class="nav-link active">Analysis</a>
+        <a href="compare.html" class="nav-link">Compare</a>
+        <a href="market.html" class="nav-link">Market Data</a>
+        <a href="qualification.html" class="nav-link">Qualification</a>
       </div>
-    </nav>
-    <div class="pc-hero-title container">
-      <h1>Deal Analysis</h1>
-      <p class="muted" id="dealName"></p>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-    <div class="pc-card pc-card-large">
-      <h2 class="pc-section"><span>📈</span> Key Metrics</h2>
-      <div id="kpis" class="pc-kpis"></div>
+  <main class="main">
+    <div class="card">
+      <h3>Deal Analysis</h3>
+      <div id="dealName" class="subtitle"></div>
 
-      <h2 class="pc-section"><span>🧮</span> Quick Math</h2>
+      <div class="pc-kpis" id="kpis"></div>
+
+      <h4>Quick Math</h4>
       <div id="explain" class="muted"></div>
 
-      <div class="actions">
-        <a class="pc-btn pc-btn-outline" href="calculator.html">Back to Calculator</a>
-        <a class="pc-btn pc-btn-outline" href="reports.html">View Report</a>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-secondary" href="calculator.html">Back to Calculator</a>
+        <button id="loadBtn" class="btn btn-primary">📂 Load from Drive</button>
       </div>
     </div>
   </main>
 
-  <footer class="container pc-footer">Styled to match original PropCheck</footer>
-
   <script>
-    const d = PCState.getDeal();
-    const fmtC = n => PC.money(Number(n||0));
-    const pct = n => (Number(n||0)).toFixed(2) + '%';
+    const money = n => Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
+    function render(deal){
+      if (!deal){
+        document.getElementById('dealName').textContent = 'No deal loaded';
+        document.getElementById('kpis').innerHTML = '<p class="muted">No saved deal. Go to Calculator and save one.</p>';
+        document.getElementById('explain').textContent = '';
+        return;
+      }
+      document.getElementById('dealName').textContent = deal.title || '(unnamed)';
 
-    if (!d) {
-      document.getElementById('dealName').textContent = 'No deal loaded';
-      document.getElementById('kpis').innerHTML = '<p class="muted">No saved deal. Go to Calculator and save one.</p>';
-    } else {
-      document.getElementById('dealName').textContent = d.title || '(unnamed)';
+      const price = +deal.price||0, rent=+deal.rent||0, other=0;
+      const vacancy = (+deal.vacancy||0)/100;
+      const annualGross = (rent+other)*12*(1-vacancy);
 
-      // Simple model (placeholder; we can refine)
-      const price = Number(d.purchasePrice||0);
-      const rent = Number(d.monthlyRent||0);
-      const other = Number(d.otherIncome||0);
-      const vacancy = (Number(d.vacancyPct||0))/100;
-      const annualGross = (rent + other) * 12 * (1 - vacancy);
-
-      const maint = (Number(d.maintPct||0))/100 * rent * 12;
-      const capex = (Number(d.capexPct||0))/100 * rent * 12;
-      const mgmt  = (Number(d.mgmtPct||0))/100 * rent * 12;
-      const tax   = Number(d.taxAnnual||0);
-      const ins   = Number(d.insAnnual||0);
-      const utils = Number(d.utilsMonthly||0) * 12;
+      const maint = (+deal.management||0)/100 * rent * 12;  // using management as % for demo
+      const capex = 0; // add if you track it
+      const mgmt  = (+deal.management||0)/100 * rent * 12;
+      const tax   = +deal.propertyTax||0;
+      const ins   = +deal.insurance||0;
+      const utils = (+deal.otherExpenses||0) * 12;
 
       const opex = maint + capex + mgmt + tax + ins + utils;
       const noi = annualGross - opex;
 
-      const down = price * (Number(d.downPct||0) / 100);
-      const loan = Math.max(price + Number(d.closingCosts||0) + Number(d.renoBudget||0) - down, 0);
-      const r = (Number(d.ratePct||0) / 100) / 12;
-      const n = Number(d.amortYears||0) * 12;
-      const pmt = (r>0 && n>0) ? loan * (r*Math.pow(1+r,n)) / (Math.pow(1+r,n)-1) : 0;
-      const annualDebt = pmt * 12;
+      const down = price * ((+deal.downPercent||0)/100);
+      const loan = Math.max(price - down, 0);
+      const r = ((+deal.rate||0)/100)/12;
+      const n = (+deal.term||0)*12;
+      const pmt = (r>0 && n>0) ? loan*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1) : 0;
+      const annualDebt = pmt*12;
 
       const cashflow = noi - annualDebt;
-      const capRate = price>0 ? (noi / price) * 100 : 0;
-      const coc = down>0 ? (cashflow / down) * 100 : 0;
+      const capRate = price>0 ? (noi/price)*100 : 0;
+      const coc = down>0 ? (cashflow/down)*100 : 0;
 
       document.getElementById('kpis').innerHTML = `
-        <div class="pc-kpi"><div class="kpi-label">NOI</div><div class="kpi-value">${fmtC(noi)}</div></div>
-        <div class="pc-kpi"><div class="kpi-label">Annual Debt</div><div class="kpi-value">${fmtC(annualDebt)}</div></div>
-        <div class="pc-kpi"><div class="kpi-label">Cash Flow</div><div class="kpi-value ${cashflow>=0?'pos':'neg'}">${fmtC(cashflow)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">NOI</div><div class="kpi-value">${money(noi)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Annual Debt</div><div class="kpi-value">${money(annualDebt)}</div></div>
+        <div class="pc-kpi"><div class="kpi-label">Cash Flow</div><div class="kpi-value ${cashflow>=0?'pos':'neg'}">${money(cashflow)}</div></div>
         <div class="pc-kpi"><div class="kpi-label">Cap Rate</div><div class="kpi-value">${capRate.toFixed(2)}%</div></div>
         <div class="pc-kpi"><div class="kpi-label">Cash-on-Cash</div><div class="kpi-value">${coc.toFixed(2)}%</div></div>
       `;
-
       document.getElementById('explain').innerHTML = `
-        <p><strong>Annual Gross:</strong> (Rent + Other) × 12 × (1 − Vacancy) = ${fmtC(annualGross)}</p>
-        <p><strong>Opex:</strong> Maint + CapEx + Mgmt + Tax + Insurance + Utilities = ${fmtC(opex)}</p>
-        <p><strong>NOI:</strong> Gross − Opex = ${fmtC(noi)}</p>
-        <p><strong>Debt Service:</strong> Mortgage payment × 12 = ${fmtC(annualDebt)}</p>
-        <p><strong>Cash Flow:</strong> NOI − Debt Service = ${fmtC(cashflow)}</p>
+        <p><strong>Annual Gross:</strong> (Rent + Other) × 12 × (1 − Vacancy) = ${money(annualGross)}</p>
+        <p><strong>Opex:</strong> Maint + CapEx + Mgmt + Tax + Insurance + Utilities = ${money(opex)}</p>
+        <p><strong>NOI:</strong> Gross − Opex = ${money(noi)}</p>
+        <p><strong>Debt Service:</strong> Mortgage payment × 12 = ${money(annualDebt)}</p>
+        <p><strong>Cash Flow:</strong> NOI − Debt Service = ${money(cashflow)}</p>
       `;
     }
+    render(PCState.getDeal());
+
+    document.getElementById('loadBtn').addEventListener('click', async ()=>{
+      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet. Try again.'); return; }
+      const user = PCState.getUser(); if (!user || user.mode!=='google'){ alert('Sign in with Google first.'); return; }
+      try{
+        const prop = await gapi.client.drive.files.list({ q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false", fields:"files(id,name)"});
+        const propId = (prop.result.files||[])[0]?.id; if(!propId) return alert("No PropCheck folder yet.");
+        const deals = await gapi.client.drive.files.list({ q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false", fields:"files(id,name)"});
+        const dealsId = (deals.result.files||[])[0]?.id; if(!dealsId) return alert("No Deals folder yet.");
+        const res = await gapi.client.drive.files.list({ q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false", orderBy:"modifiedTime desc", pageSize:100, fields:"files(id,name,modifiedTime)"});
+        const files = res.result.files||[]; if(!files.length) return alert("No saved deals found.");
+        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
+        const pick = prompt("Select a deal to load (enter number):\n\n"+list+"\n\n");
+        const idx = Number((pick||'').trim()) - 1; if (!(idx>=0 && idx<files.length)) return;
+        const file = files[idx];
+        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
+        const deal = JSON.parse(content);
+        PCState.setDeal(deal);
+        render(deal);
+        alert("Loaded: " + file.name);
+      }catch(err){
+        console.warn(err);
+        alert("Load from Drive failed: " + (err?.message || err));
+      }
+    });
   </script>
 </body>
 </html>
+
 
