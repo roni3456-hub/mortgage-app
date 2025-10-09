@@ -19,7 +19,7 @@
 html,body{height:100%}
 body{
   margin:0;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji";
   background:linear-gradient(135deg,var(--page-bg-1) 0%,var(--page-bg-2) 100%);
   color:var(--text);
   min-height:100vh;
@@ -66,17 +66,22 @@ body{
   display:inline-flex; align-items:center; gap:10px;
   line-height:1;
 }
-/* House icon next to “PropCheck” (uses your new icon-192.png) */
+
+/* ✅ Old-site behavior: show the house emoji as the logo icon */
 .logo::before{
-  content:"";
+  content:"🏠";
   display:inline-block;
-  width:28px; height:28px;
-  background-image:url("../icons/icon-192.png");
-  background-size:cover; background-position:center; background-repeat:no-repeat;
-  margin-right:6px;
-  border-radius:6px;
+  font-size:1.5rem;          /* size of the emoji */
+  line-height:1;
+  margin-right:8px;
+  transform: translateY(2px);/* nudge to align optically with text */
 }
-.nav-links{ display:flex; gap:0; align-items:center; }
+
+/* (If you previously had an image logo, this disables it) */
+ /* .logo::before{ background-image:none; } */
+
+/* Nav links */
+.nav-links{ display:flex; gap:0; align-items:center; flex-wrap:wrap; }
 .nav-link{
   padding:12px 20px;
   text-decoration:none;
@@ -136,7 +141,7 @@ body{
 .right{ text-align:right; }
 .hidden{ display:none !important; }
 
-/* Toast/alerts if you have any custom ones */
+/* Toast/alerts (optional) */
 .toast{
   position:fixed; left:50%; transform:translateX(-50%);
   bottom:20px; background:#111827; color:#fff;
