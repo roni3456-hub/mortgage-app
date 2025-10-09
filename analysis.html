@@ -136,26 +136,43 @@
     });
   </script>
 
-  <!-- ✅ Silent Drive reauth + chip updater -->
+    <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // try silent rehydrate (no popup). If it fails, chip stays "Guest".
       PCDrive.autoInit();
 
       const chip = document.getElementById("driveStatus");
-      if (chip) {
-        const apply = ({ ready, user }) => {
+      const btn  = document.getElementById("driveAuthBtn");
+
+      const apply = ({ ready, user }) => {
+        if (chip) {
           chip.classList.toggle("ready", !!ready);
-          if (!ready) {
-            chip.textContent = "Guest";
-            chip.title = "Drive save: local backup only";
+          if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
+          else {
+            const name = user?.displayName || user?.emailAddress || "Signed in";
+            chip.textContent = name; chip.title = "Drive save: enabled";
+          }
+        }
+        if (btn) btn.textContent = ready ? "Sign out" : "Sign in";
+      };
+
+      // initial + subscribe
+      apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+      PCDrive.onStatus(apply);
+
+      // explicit user-driven auth (no surprise popups elsewhere)
+      if (btn) {
+        btn.addEventListener("click", async () => {
+          if (PCDrive.isReady()) {
+            PCDrive.signOut();
+            apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
             return;
           }
-          const name = user?.displayName || user?.emailAddress || "Signed in";
-          chip.textContent = name;
-          chip.title = "Drive save: enabled";
-        };
-        apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
-        PCDrive.onStatus(apply);
+          try { await PCDrive.signIn(); }
+          catch (e) { alert("Sign-in failed: " + (e?.message || e)); }
+          apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        });
       }
     });
   </script>
