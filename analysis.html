@@ -25,6 +25,8 @@
         <a href="compare.html" class="nav-link">Compare</a>
         <a href="market.html" class="nav-link">Market Data</a>
         <a href="qualification.html" class="nav-link">Qualification</a>
+         <!-- ✅ ADD THIS LINE (status chip) -->
+      <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
       </div>
     </div>
   </div>
@@ -121,6 +123,30 @@
       }catch(err){
         console.warn(err);
         alert("Load from Drive failed: " + (err?.message || err));
+      }
+    });
+    
+  <!-- ✅ ADD THIS BLOCK (silent Drive reauth + chip updates) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // silently rehydrate Drive on this page (no popup)
+      PCDrive.autoInit();
+
+      // update the header chip as Drive status changes
+      const chip = document.getElementById("driveStatus");
+      if (chip) {
+        const apply = ({ ready, user }) => {
+          if (!ready) {
+            chip.textContent = "Guest";
+            chip.title = "Drive save: local backup only";
+            return;
+          }
+          const name = user?.displayName || user?.emailAddress || "Signed in";
+          chip.textContent = name;
+          chip.title = "Drive save: enabled";
+        };
+        apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        PCDrive.onStatus(apply);
       }
     });
   </script>
