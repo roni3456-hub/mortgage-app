@@ -170,4 +170,19 @@ main h1 {
 @media (max-width: 720px) {
   main h1 { font-size: 1.6rem; }
 }
+/* Make all main h2 headings look like h1s for consistent page titles */
+main h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text, #111);
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  main h2 { font-size: 1.6rem; }
+}
+
 
