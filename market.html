@@ -1,30 +1,40 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PropCheck — Market Data</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PropCheck</title>
 
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css"/>
+
+  <!-- Config + State + Google Identity + GAPI + Drive helper -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/state.js"></script>
-
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="assets/js/drive.js"></script>
   <script defer src="assets/js/common.js"></script>
 </head>
 <body>
+  <!-- Header -->
   <div class="nav">
     <div class="nav-container">
-      <a class="logo" href="index.html">PropCheck</a>
+      <a class="logo" href="index.html" title="Back to Home">PropCheck</a>
+
       <div class="nav-links">
-        <a href="calculator.html" class="nav-link">Calculator</a>
-        <a href="reports.html" class="nav-link">Report</a>
-        <a href="analysis.html" class="nav-link">Analysis</a>
-        <a href="compare.html" class="nav-link">Compare</a>
-        <a href="market.html" class="nav-link active">Market Data</a>
-        <a href="qualification.html" class="nav-link">Qualification</a>
+        <a class="nav-link" href="calculator.html">Calculator</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+        <a class="nav-link" href="analysis.html">Analysis</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="market.html">Market</a>
+        <a class="nav-link" href="qualification.html">Qualification</a>
+      </div>
+
+      <!-- Right side: Drive status + Sign-in/out -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
+        <button id="driveAuthBtn" class="btn btn-secondary" type="button">Sign in</button>
       </div>
     </div>
   </div>
@@ -122,5 +132,47 @@
       }catch(err){ console.warn(err); alert("Load failed: " + (err?.message||err)); }
     });
   </script>
+    <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // try silent rehydrate (no popup). If it fails, chip stays "Guest".
+      PCDrive.autoInit();
+
+      const chip = document.getElementById("driveStatus");
+      const btn  = document.getElementById("driveAuthBtn");
+
+      const apply = ({ ready, user }) => {
+        if (chip) {
+          chip.classList.toggle("ready", !!ready);
+          if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
+          else {
+            const name = user?.displayName || user?.emailAddress || "Signed in";
+            chip.textContent = name; chip.title = "Drive save: enabled";
+          }
+        }
+        if (btn) btn.textContent = ready ? "Sign out" : "Sign in";
+      };
+
+      // initial + subscribe
+      apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+      PCDrive.onStatus(apply);
+
+      // explicit user-driven auth (no surprise popups elsewhere)
+      if (btn) {
+        btn.addEventListener("click", async () => {
+          if (PCDrive.isReady()) {
+            PCDrive.signOut();
+            apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+            return;
+          }
+          try { await PCDrive.signIn(); }
+          catch (e) { alert("Sign-in failed: " + (e?.message || e)); }
+          apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
 </body>
 </html>
