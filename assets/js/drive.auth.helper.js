@@ -1,32 +1,23 @@
-<!-- assets/js/drive.auth.helper.js -->
-<script>
-/**
- * PropCheck — Centralized Google Identity + gapi bootstrap
- * Goals:
- *  - No auto popups on page load
- *  - Share one access token across all pages (per tab/session)
- *  - Silent refresh if possible, interactive only on user action
- *
- * Public API:
- *   PCAuth.init() -> Promise<void>
- *   PCAuth.signIn() -> Promise<string>   // interactive popup
- *   PCAuth.ensureAuth(interactive:boolean) -> Promise<string> // gets/refreshes token
- *   PCAuth.getAccessTokenOrNull() -> string|null
- *   PCAuth.signOutLocalOnly() -> void    // clears local token (does NOT revoke Google session)
- *
- * Usage in pages:
- *   1) Include scripts (GSI + gapi) then this file.
- *   2) On Save/Load clicks, call: await PCAuth.ensureAuth(true)
- *   3) For a dedicated Sign-in button: await PCAuth.signIn()
- */
+// PropCheck — Centralized Google Identity + gapi bootstrap
+// Goals:
+//  - No auto popups on page load
+//  - Share one access token across all pages (per tab/session)
+//  - Silent refresh if possible, interactive only on user action
+//
+// Public API:
+//   PCAuth.init() -> Promise<void>
+//   PCAuth.signIn() -> Promise<string>   // interactive popup
+//   PCAuth.ensureAuth(interactive:boolean) -> Promise<string|null> // gets/refreshes token
+//   PCAuth.getAccessTokenOrNull() -> string|null
+//   PCAuth.signOutLocalOnly() -> void    // clears local token (does NOT revoke Google session)
 
 (function () {
   const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
 
   const store = {
-    get(key) { try { return sessionStorage.getItem(key); } catch { return null; } },
-    set(key, val) { try { sessionStorage.setItem(key, val); } catch {} },
-    del(key) { try { sessionStorage.removeItem(key); } catch {} },
+    get(k){ try{return sessionStorage.getItem(k);}catch{return null;} },
+    set(k,v){ try{sessionStorage.setItem(k,v);}catch{} },
+    del(k){ try{sessionStorage.removeItem(k);}catch{} },
   };
 
   const TOKEN_KEY = "pc:token";
@@ -37,64 +28,68 @@
   let tokenClient = null;
 
   function nowMs(){ return Date.now(); }
-  function isExpired() {
+  function isExpired(){
     const exp = Number(store.get(EXP_KEY) || 0);
     return !exp || nowMs() >= exp;
   }
-  function setGapiTokenIfAny() {
+  function setGapiTokenIfAny(){
     const token = store.get(TOKEN_KEY);
     if (token && window.gapi?.client) {
       gapi.client.setToken({ access_token: token });
     }
   }
 
-  async function loadGapi() {
+  async function loadGapi(){
     if (gapiReady) return;
     await new Promise((res) => {
       if (window.gapi?.load) {
         window.gapi.load("client", res);
       } else {
-        const check = setInterval(() => {
-          if (window.gapi?.load) { clearInterval(check); window.gapi.load("client", res); }
+        const iv = setInterval(() => {
+          if (window.gapi?.load) { clearInterval(iv); window.gapi.load("client", res); }
         }, 20);
       }
     });
-    await gapi.client.init({}); // no discovery here; drive.js can load discovery if it wants
+    await gapi.client.init({}); // discovery comes from drive.js
     gapiReady = true;
     setGapiTokenIfAny();
   }
 
-  async function loadGIS() {
+  async function loadGIS(){
     if (gisReady) return;
     await new Promise((res) => {
       if (window.google?.accounts?.oauth2) return res();
-      const check = setInterval(() => {
-        if (window.google?.accounts?.oauth2) { clearInterval(check); res(); }
+      const iv = setInterval(() => {
+        if (window.google?.accounts?.oauth2) { clearInterval(iv); res(); }
       }, 20);
     });
     gisReady = true;
   }
 
-  function buildTokenClient() {
-    const clientId =
-  (window.PC_CONFIG && (PC_CONFIG.GOOGLE_OAUTH_CLIENT_ID || PC_CONFIG.GOOGLE_CLIENT_ID)) ||
-  window.GOOGLE_OAUTH_CLIENT_ID || "";
+  function resolveClientId(){
+    const cfg = (window.PC_CONFIG || {});
+    return (
+      cfg.GOOGLE_OAUTH_CLIENT_ID ||
+      cfg.GOOGLE_CLIENT_ID ||
+      window.GOOGLE_OAUTH_CLIENT_ID || // fallback global if someone defines it
+      ""
+    );
+  }
 
+  function buildTokenClient(){
+    if (tokenClient) return;
+    const clientId = resolveClientId();
     if (!clientId) {
-      console.warn("[PCAuth] Missing GOOGLE_CLIENT_ID in config. Set window.PC_CONFIG.GOOGLE_CLIENT_ID.");
+      console.warn("[PCAuth] Missing Google OAuth Client ID. Set PC_CONFIG.GOOGLE_OAUTH_CLIENT_ID.");
     }
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: SCOPES,
-      // NOTE: we control prompt dynamically per request below
-      callback: (resp) => {
-        // This is overridden per-request; kept for completeness.
-      },
+      callback: () => {}, // replaced per-request
     });
   }
 
-  async function silentWarmupIfPossible() {
-    // Does NOT trigger a popup. If user has a Google session, this succeeds silently.
+  async function silentWarmup(){
     if (!tokenClient) buildTokenClient();
     return new Promise((resolve) => {
       tokenClient.callback = (resp) => {
@@ -107,11 +102,11 @@
         }
         resolve();
       };
-      tokenClient.requestAccessToken({ prompt: "" }); // silent attempt, no UI
+      tokenClient.requestAccessToken({ prompt: "" }); // no UI
     });
   }
 
-  async function interactiveSignIn() {
+  async function interactiveSignIn(){
     if (!tokenClient) buildTokenClient();
     return new Promise((resolve, reject) => {
       tokenClient.callback = (resp) => {
@@ -126,11 +121,11 @@
           reject(new Error("No access_token in response"));
         }
       };
-      tokenClient.requestAccessToken({ prompt: "consent" }); // popup only on user click
+      tokenClient.requestAccessToken({ prompt: "consent" }); // popup (user-initiated)
     });
   }
 
-  async function ensureAuth(interactive) {
+  async function ensureAuth(interactive){
     await loadGapi();
     await loadGIS();
 
@@ -140,27 +135,23 @@
       return token;
     }
 
-    // Try silent refresh first (no popup)
-    await silentWarmupIfPossible();
+    await silentWarmup();
     const afterSilent = store.get(TOKEN_KEY);
     if (afterSilent && !isExpired()) return afterSilent;
 
     if (interactive) {
-      // User triggered action → allow popup
       return await interactiveSignIn();
     }
-
-    // Non-interactive caller; return null if still not authorized
     return null;
   }
 
-  function getAccessTokenOrNull() {
+  function getAccessTokenOrNull(){
     const t = store.get(TOKEN_KEY);
     if (!t || isExpired()) return null;
     return t;
   }
 
-  function signOutLocalOnly() {
+  function signOutLocalOnly(){
     store.del(TOKEN_KEY);
     store.del(EXP_KEY);
     if (gapiReady && window.gapi?.client) {
@@ -168,14 +159,13 @@
     }
   }
 
-  // public
+  // Public API
   window.PCAuth = {
-    init: async () => { await loadGapi(); await loadGIS(); setGapiTokenIfAny(); /* no popup */ },
+    init: async () => { await loadGapi(); await loadGIS(); setGapiTokenIfAny(); },
     ensureAuth,
-    getAccessTokenOrNull,
     signIn: interactiveSignIn,
+    getAccessTokenOrNull,
     signOutLocalOnly,
   };
 })();
-</script>
 
