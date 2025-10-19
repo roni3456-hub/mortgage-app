@@ -1,38 +1,36 @@
-(function(){
-  function decodeJwt(token){
-    const parts = token.split('.'); if (parts.length !== 3) return null;
-    const payload = parts[1].replace(/-/g,'+').replace(/_/g,'/');
-    const json = decodeURIComponent(atob(payload).split('').map(c => '%' + ('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    try { return JSON.parse(json); } catch { return null; }
+// Unified home-page sign-in using PCAuth (shared Drive token)
+// Renders a button into #g_button_target and signs in only on click (no auto popups).
+
+(function () {
+  function renderButton(target) {
+    if (!target) return;
+    target.innerHTML = `
+      <button id="pcSignInBtn" class="btn btn-secondary" type="button" style="min-width:260px;">
+        Sign in with Google
+      </button>
+    `;
+    const btn = target.querySelector('#pcSignInBtn');
+    btn?.addEventListener('click', async () => {
+      try {
+        // Ensure GIS/gapi warmed up (no popup yet)
+        await (window.PCAuth?.init?.() || Promise.resolve());
+        // User-initiated → allows popup exactly once
+        const token = await window.PCAuth.signIn();
+        if (token) {
+          // Mark user mode and continue
+          window.PCState?.setUser?.({ mode: 'google' });
+          window.location.href = 'calculator.html';
+        }
+      } catch (e) {
+        alert('Sign-in failed: ' + (e?.message || e));
+      }
+    });
   }
 
-  window.PCAuth = {
-    initGoogleButton(targetEl){
-      const cfg = window.PC_CONFIG||{};
-      if (!window.google || !google.accounts || !google.accounts.id) return;
-      if (!cfg.GOOGLE_OAUTH_CLIENT_ID) {
-        targetEl.innerHTML = '<div style="color:#ef4444">Missing Google OAuth Client ID</div>';
-        return;
-      }
-      google.accounts.id.initialize({
-        client_id: cfg.GOOGLE_OAUTH_CLIENT_ID,
-        callback: (resp)=>{
-          const payload = decodeJwt(resp.credential);
-          if (!payload) { alert('Google sign-in failed.'); return; }
-          const user = { mode:'google', sub:payload.sub, name:payload.name||payload.given_name||'', email:payload.email||'' };
-          window.PCState.setUser(user);
-          window.location.href = "calculator.html";
-        },
-        ux_mode: 'popup',
-        auto_select: false,
-        itp_support: true
-      });
-      google.accounts.id.renderButton(targetEl, { theme:'outline', size:'large', shape:'pill', text:'signin_with', width:260 });
-    },
-    signOut(){
-      window.PCState.clearUser();
-      window.location.href = "index.html";
-    }
-  };
+  // Render once DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    renderButton(document.getElementById('g_button_target'));
+  });
 })();
+
 
