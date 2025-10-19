@@ -12,16 +12,21 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
+<!-- Config + State -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/state.js"></script>
 
-  <!-- Config + State + Google Identity + GAPI + Drive helper -->
-  <script src="assets/js/config.js"></script>
-  <script src="assets/js/state.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js" async defer></script>
-  <script src="assets/js/drive.js"></script>
-  <script defer src="assets/js/common.js"></script>
-  <!-- NEW: helper, after drive.js -->
+<!-- Google libraries -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+
+<!-- Auth helper (MUST be before drive.js) -->
 <script src="assets/js/drive.auth.helper.js"></script>
+
+<!-- Drive client + your common UI -->
+<script src="assets/js/drive.js"></script>
+<script defer src="assets/js/common.js"></script>
+
 </head>
 <body>
   <!-- Nav -->
