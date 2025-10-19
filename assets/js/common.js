@@ -77,6 +77,20 @@
   // simple debug flag
   window.__pc_common_js_loaded = true;
 })();
+// Unified "make sure we're signed in to Drive" helper
+window.PC = window.PC || {};
+PC.requireDrive = async function () {
+  try {
+    // Already good?
+    if (PCDrive?.isReady && PCDrive.isReady()) return true;
+
+    // Try to get/refresh a token (this is allowed because user clicked a button)
+    const token = await (window.PCAuth?.ensureAuth?.(true) || Promise.resolve(null));
+    return !!token || (PCDrive?.isReady && PCDrive.isReady());
+  } catch {
+    return false;
+  }
+};
 
 
 
