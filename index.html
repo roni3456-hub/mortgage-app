@@ -3,47 +3,86 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>PropCheck</title>
+  <title>PropCheck — Home</title>
 
-  <!-- Styles -->
+  <!-- Global styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
 
-<!-- Config + State -->
-<script src="assets/js/config.js"></script>
-<script src="assets/js/state.js"></script>
+  <!-- Page-only tweaks (keeps global CSS untouched) -->
+  <style>
+    .hero-wrap{
+      min-height: calc(100vh - 70px);
+      display: grid;
+      place-items: center;
+      padding: 24px 20px;
+    }
+    .hero {
+      max-width: 940px;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 36px 28px;
+    }
+    .hero h1{
+      margin: 0 0 10px 0;
+      font-size: 2.2rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hero .subtitle{
+      color: var(--muted);
+      margin: 0 0 22px 0;
+      font-size: 1.05rem;
+    }
+    .cta{
+      display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .cta .btn{ padding: 12px 18px; }
+    .subgrid{
+      display: grid; gap: 14px; margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    .mini{
+      background: #f7f9fc; border-radius: 12px; padding: 14px 16px;
+      border: 1px solid var(--border);
+    }
+    .mini h3{ margin: 0 0 6px 0; font-size: 1rem; }
+    .mini p{ margin: 0; color: var(--muted); font-size: .95rem; }
+    .mini a{ text-decoration: none; color: inherit; display: block; }
+    .mini a:hover h3{ text-decoration: underline; }
+  </style>
 
-<!-- Google libraries -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
+  <!-- Config + State -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
 
-<!-- Auth helper (MUST be before drive.js) -->
-<script src="assets/js/drive.auth.helper.js"></script>
+  <!-- Google libraries -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
 
-<!-- Drive client + your common UI -->
-<script src="assets/js/drive.js"></script>
-<script defer src="assets/js/common.js"></script>
+  <!-- Auth helper (MUST be before drive.js) -->
+  <script src="assets/js/drive.auth.helper.js"></script>
 
+  <!-- Drive + common UI -->
+  <script src="assets/js/drive.js"></script>
+  <script defer src="assets/js/common.js"></script>
 </head>
 <body>
   <!-- Header -->
   <div class="nav">
     <div class="nav-container">
-      <a class="logo" href="index.html" title="Back to Home">PropCheck</a>
+      <a class="logo" href="index.html" title="PropCheck Home">PropCheck</a>
 
       <div class="nav-links">
-  <a class="nav-link" href="calculator.html">Calculator</a>
-  <a class="nav-link" href="reports.html">Reports</a>
-  <a class="nav-link" href="analysis.html">Analysis</a>
-  <a class="nav-link" href="compare.html">Compare</a>
-  <a class="nav-link" href="market.html">Market</a>
-  <a class="nav-link" href="qualification.html">Qualification</a>
-  <a class="nav-link" href="checklist.html">Checklist</a>
-</div>
-
-        
+        <a class="nav-link" href="calculator.html">Calculator</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+        <a class="nav-link" href="analysis.html">Analysis</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="market.html">Market</a>
+        <a class="nav-link" href="qualification.html">Qualification</a>
+        <a class="nav-link" href="checklist.html">Checklist</a>
       </div>
 
-      <!-- Right side: Drive status + Sign-in/out -->
       <div style="display:flex; align-items:center; gap:10px;">
         <span id="driveStatus" class="drive-chip" title="Drive save: local backup only">Guest</span>
         <button id="driveAuthBtn" class="btn btn-secondary" type="button">Sign in</button>
@@ -51,77 +90,92 @@
     </div>
   </div>
 
+  <!-- Hero -->
+  <div class="hero-wrap">
+    <main class="hero">
+      <h1><span class="emoji hpad">🏠</span> PropCheck</h1>
+      <p class="subtitle">Confident, fast Canadian property underwriting for real estate investors.</p>
 
-  <main class="center-screen">
-    <div class="login-card">
-      <h1>🏠 PropCheck</h1>
-      <div class="subtitle">Fast Canadian property underwriting for real estate investors</div>
+      <div class="cta">
+        <button id="guestBtn" class="btn btn-primary" type="button">Continue as Guest</button>
+        <button id="googleBtn" class="btn btn-secondary" type="button">Sign in with Google</button>
+      </div>
 
-      <button id="guestButton" class="btn btn-primary">Continue as Guest</button>
-
-      <div style="margin:16px 0;color:var(--muted);font-size:14px;">or</div>
-
-      <!-- Google Sign-In Button target -->
-      <div id="g_button_target" style="margin-top:10px;min-height:44px;"></div>
-    </div>
-  </main>
+      <!-- Quick links / feature cards -->
+      <div class="subgrid">
+        <div class="mini"><a href="calculator.html">
+          <h3><span class="emoji hpad">🧮</span> Calculator</h3>
+          <p>Underwrite a property in minutes.</p>
+        </a></div>
+        <div class="mini"><a href="compare.html">
+          <h3><span class="emoji hpad">⚖️</span> Compare</h3>
+          <p>Side-by-side deal decisions.</p>
+        </a></div>
+        <div class="mini"><a href="reports.html">
+          <h3><span class="emoji hpad">📈</span> Reports</h3>
+          <p>Clean shareable PDFs for partners.</p>
+        </a></div>
+        <div class="mini"><a href="analysis.html">
+          <h3><span class="emoji hpad">🔎</span> Analysis</h3>
+          <p>Deep-dive sensitivity & scenarios.</p>
+        </a></div>
+        <div class="mini"><a href="qualification.html">
+          <h3><span class="emoji hpad">🏦</span> Qualification</h3>
+          <p>Max mortgage, stress rate, GDS/TDS.</p>
+        </a></div>
+        <div class="mini"><a href="checklist.html">
+          <h3><span class="emoji hpad">📋</span> Checklist</h3>
+          <p>Track pre-close and due-diligence.</p>
+        </a></div>
+      </div>
+    </main>
+  </div>
 
   <script>
-    // Render Google button once GIS is ready
-    window.addEventListener('load', ()=>{
-      if (window.google && window.PCAuth) {
-        PCAuth.initGoogleButton(document.getElementById('g_button_target'));
-      }
-    });
-    // Guest path
-    document.getElementById('guestButton').addEventListener('click', ()=>{
-      PCState.setUser({mode:'guest'});
-      window.location.href = 'calculator.html';
-    });
-  </script>
-    <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
-  <script>
+    // Keep header chip in sync and ensure no popups on load
     document.addEventListener("DOMContentLoaded", () => {
-      // try silent rehydrate (no popup). If it fails, chip stays "Guest".
       PCDrive.autoInit();
 
       const chip = document.getElementById("driveStatus");
       const btn  = document.getElementById("driveAuthBtn");
-
       const apply = ({ ready, user }) => {
-        if (chip) {
-          chip.classList.toggle("ready", !!ready);
-          if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
-          else {
-            const name = user?.displayName || user?.emailAddress || "Signed in";
-            chip.textContent = name; chip.title = "Drive save: enabled";
-          }
+        chip?.classList.toggle("ready", !!ready);
+        if (!ready) { chip.textContent = "Guest"; chip.title = "Drive save: local backup only"; }
+        else {
+          const name = user?.displayName || user?.emailAddress || "Signed in";
+          chip.textContent = name; chip.title = "Drive save: enabled";
         }
         if (btn) btn.textContent = ready ? "Sign out" : "Sign in";
       };
-
-      // initial + subscribe
       apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
       PCDrive.onStatus(apply);
 
-      // explicit user-driven auth (no surprise popups elsewhere)
-      if (btn) {
-        btn.addEventListener("click", async () => {
-          if (PCDrive.isReady()) {
-            PCDrive.signOut();
-            apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
-            return;
+      btn?.addEventListener("click", async () => {
+        if (PCDrive.isReady()) { PCDrive.signOut(); apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() }); return; }
+        try { await PCDrive.signIn(); } catch (e) { alert("Sign-in failed: " + (e?.message || e)); }
+        apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
+      });
+
+      // CTA buttons
+      document.getElementById("guestBtn")?.addEventListener("click", () => {
+        window.PCState?.setUser?.({ mode: "guest" });
+        window.location.href = "calculator.html";
+      });
+      document.getElementById("googleBtn")?.addEventListener("click", async () => {
+        try {
+          await (window.PCAuth?.init?.() || Promise.resolve());
+          const token = await window.PCAuth.signIn(); // popup only on click
+          if (token) {
+            window.PCState?.setUser?.({ mode: "google" });
+            window.location.href = "calculator.html";
           }
-          try { await PCDrive.signIn(); }
-          catch (e) { alert("Sign-in failed: " + (e?.message || e)); }
-          apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
-        });
-      }
+        } catch (e) {
+          alert("Sign-in failed: " + (e?.message || e));
+        }
+      });
     });
   </script>
 </body>
 </html>
 
-</body>
-</html>
 
