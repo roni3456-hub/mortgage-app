@@ -104,7 +104,7 @@ PC.requireDrive = async function () {
 
     const wrap = document.createElement("div");
     wrap.innerHTML = `
-      <div id="pcDrivePicker" class="card hidden" style="max-width:720px; margin:16px auto;">
+      <div id="pcDrivePicker" class="card hidden" style="margin:16px 0;">
         <h3 class="title">Load from Google Drive</h3>
         <p class="muted">Choose a saved deal from <strong>Drive → PropCheck → Deals</strong>.</p>
         <div class="form-group">
