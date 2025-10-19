@@ -76,7 +76,10 @@
   }
 
   function buildTokenClient() {
-    const clientId = (window.PC_CONFIG && window.PC_CONFIG.GOOGLE_CLIENT_ID) || window.GOOGLE_OAUTH_CLIENT_ID || "";
+    const clientId =
+  (window.PC_CONFIG && (PC_CONFIG.GOOGLE_OAUTH_CLIENT_ID || PC_CONFIG.GOOGLE_CLIENT_ID)) ||
+  window.GOOGLE_OAUTH_CLIENT_ID || "";
+
     if (!clientId) {
       console.warn("[PCAuth] Missing GOOGLE_CLIENT_ID in config. Set window.PC_CONFIG.GOOGLE_CLIENT_ID.");
     }
