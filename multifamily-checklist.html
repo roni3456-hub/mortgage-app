@@ -7,25 +7,25 @@
   <link rel="icon" href="assets/img/favicon.png"/>
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png"/>
   <link rel="stylesheet" href="assets/css/styles.css"/>
+
+  <!-- PropCheck core assets (existing in V2 baseline) -->
   <script src="assets/js/config.js"></script>
   <script src="assets/js/common.js"></script>
   <script src="assets/js/state.js"></script>
   <script src="assets/js/drive.js"></script>
-  <!-- NOTE: No Drive/OAuth required for this page; it saves to browser localStorage under key 'pc:mf_checklist' to avoid extra sign-ins. -->
+
   <style>
     :root {
-      --pc-brand: #0ea5e9; /* sky-500 */
-      --pc-muted: #475569; /* slate-600 */
-      --pc-border: #e2e8f0; /* slate-200 */
-      --pc-bg: #f8fafc;    /* slate-50 */
+      --pc-brand: #0ea5e9;   /* sky-500 */
+      --pc-muted: #475569;   /* slate-600 */
+      --pc-border: #e2e8f0;  /* slate-200 */
+      --pc-bg: #f8fafc;      /* slate-50 */
       --pc-card: #ffffff;
       --pc-accent: #22c55e; /* green-500 */
       --pc-danger: #ef4444; /* red-500 */
     }
     body { background: var(--pc-bg); }
     .wrap { max-width: 1100px; margin:0 auto; padding: 0 1rem; }
-
-    /* Page header */
     .page-hero { padding: 1.6rem 0 .6rem; }
     .page-hero h1 { margin:0 0 .25rem; }
     .page-hero p { color: var(--pc-muted); margin:.25rem 0 0; }
@@ -52,7 +52,7 @@
     .phase-sub { color: var(--pc-muted); font-size:.95rem; }
 
     .list { margin:.6rem 0 0; padding:.4rem 0 0; border-top:1px dashed var(--pc-border); }
-    .item { display:grid; grid-template-columns:auto 1fr auto; align-items:start; gap:.7rem; padding:.5rem 0; }
+    .item { display:grid; grid-template-columns:auto 1fr; align-items:start; gap:.7rem; padding:.5rem 0; }
     .item label { font-weight:600; }
     .item small { color: var(--pc-muted); display:block; margin-top:.15rem; }
     .item textarea { width:100%; min-height:54px; border:1px solid var(--pc-border); border-radius:10px; padding:.5rem .6rem; }
@@ -67,23 +67,25 @@
   </style>
 </head>
 <body>
-  <!-- Use the existing site header from Version 2 -->
+  <!-- Header uses PropCheck's standard nav classes -->
   <header class="site">
     <div class="wrap">
-      <nav class="site-nav">
-        <a href="index.html" class="brand">PropCheck</a>
-        <div class="spacer"></div>
-        <a href="calculator.html">Calculator</a>
-        <a href="qualification.html">Qualification</a>
-        <a href="report.html">Report</a>
-      </nav>
+      <div class="nav-links">
+        <a class="nav-link" href="calculator.html">Calculator</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+        <a class="nav-link" href="analysis.html">Analysis</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="market.html">Market</a>
+        <a class="nav-link" href="qualification.html">Qualification</a>
+        <a class="nav-link" href="multifamily-checklist.html">Multifamily Checklist</a>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
     <section class="page-hero">
       <h1>Multifamily Buying Checklist</h1>
-      <p>Plan, diligence, finance, and close your multifamily purchase. Checks and notes auto‑save to this browser only.</p>
+      <p>Plan, diligence, finance, and close your multifamily purchase. Checks and notes auto‑save locally; you can also save/load to a PropCheck Deal and sync to Drive on demand.</p>
       <div class="progress" aria-live="polite">
         <meter id="meter" min="0" max="100" value="0"></meter>
         <span class="pct" id="pct">0%</span>
@@ -110,28 +112,32 @@
           <span class="phase-sub"> — goals, structure, borrowing capacity</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Define investment goals</label>
               <small>Cash flow, appreciation, value‑add, tax, hold period, exit strategy.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Ownership & partners</label>
               <small>Personal, corp, LP/JV, roles and equity split, shareholder/JV agreement.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Financing readiness</label>
               <small>Pre‑approval, proof of funds, down payment source, DSCR comfort range.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Target criteria & buy box</label>
               <small>Markets, unit count/mix, zoning, condition (turnkey vs value‑add), cap/cash‑on‑cash targets.</small>
@@ -148,21 +154,24 @@
           <span class="phase-sub"> — demand, vacancy, taxes, leads</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Market fundamentals</label>
               <small>Vacancy, rent trends, employment drivers, schools, transit, regulations.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Lead channels</label>
               <small>MLS/Realtor, LoopNet, brokers, wholesalers, PMs, off‑market outreach.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Sales & rental comps</label>
               <small>Cap rates, $/door, $/sf, market rent by unit type, concessions.</small>
@@ -179,28 +188,32 @@
           <span class="phase-sub"> — rent roll, T12, NOI, cap rate</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Collect financials</label>
               <small>Rent roll, T12, utility bills, insurance, tax statements.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Underwrite quickly</label>
               <small>NOI, cap rate, DSCR, break‑even occupancy, cash flow & CoC.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Value‑add & CapEx</label>
               <small>Unit turns, exteriors, systems, safety, lease‑up assumptions, contingency.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Physical walk‑through</label>
               <small>Structure, roof, windows, plumbing/electrical, parking, amenities.</small>
@@ -217,14 +230,16 @@
           <span class="phase-sub"> — conditions, documents</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Offer terms & price</label>
               <small>Financing/inspection/environmental conditions, timelines, deposits, closing date.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Request documents</label>
               <small>Leases, estoppels, rent roll, expense backup, maintenance logs, insurance claims history.</small>
@@ -241,21 +256,24 @@
           <span class="phase-sub"> — verify everything</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Financial & legal</label>
               <small>Verify income/expenses, property taxes, zoning, permits, code compliance, rent control.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Inspections & reports</label>
               <small>Building inspector/engineer, pest/mold, appraisal, environmental (Phase I as needed).</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Insurance readiness</label>
               <small>Quotes for current and post‑renovation coverage; lender requirements.</small>
@@ -272,14 +290,16 @@
           <span class="phase-sub"> — lender package, walkthrough, utilities</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Lender selection & package</label>
               <small>Conventional/insured/private; submit financials, leases, appraisal, rent roll.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Closing checklist</label>
               <small>Final walk‑through, estoppels, insurance bound, utility transfers, closing funds/adjustments.</small>
@@ -296,21 +316,24 @@
           <span class="phase-sub"> — onboarding, bookkeeping, optimization</span>
         </summary>
         <div class="list">
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Tenant transition</label>
               <small>Notifications, payment setup, emergency contacts, maintenance requests flow.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Financial setup</label>
               <small>Dedicated account, bookkeeping, monthly reporting vs pro‑forma, CapEx tracker.</small>
               <textarea data-n placeholder="Notes…"></textarea>
             </div>
           </div>
-          <div class="item"><input type="checkbox" data-i>
+          <div class="item">
+            <input type="checkbox" data-i>
             <div>
               <label>Stabilize & improve</label>
               <small>Turnovers/renos, rent optimization, expense reductions, refi plan once stabilized.</small>
@@ -322,7 +345,10 @@
     </section>
 
     <footer class="wrap" style="margin:2rem 0 3rem; color:var(--pc-muted)">
-      <p>Heads‑up: This page stores progress only in your browser (localStorage). Clearing site data will remove it. For Drive‑based saving to a deal record, we can add optional tie‑ins to <code>PCState.getDeal()/setDeal()</code> later.</p>
+      <p>
+        Storage behavior: This page auto‑saves locally under <code>pc:mf_checklist</code>. Use <b>Save to Deal (Drive)</b> to merge into the current PropCheck Deal at
+        <code>deal.checklists.multifamily</code> and attempt a Drive sync via <code>PCDrive.saveDealToDrive()</code>. If Drive is unavailable, your data still remains locally.
+      </p>
     </footer>
   </main>
 
@@ -333,26 +359,36 @@
     const meter = document.getElementById('meter');
     const pct = document.getElementById('pct');
     const countText = document.getElementById('countText');
+    const statusEl = document.getElementById('saveStatus');
 
     function allInputs() { return Array.from(root.querySelectorAll('input[type="checkbox"][data-i]')); }
     function allNotes() { return Array.from(root.querySelectorAll('textarea[data-n]')); }
 
-    function save() {
-      const data = {
-        checks: allInputs().map(el => el.checked ? 1 : 0),
-        notes: allNotes().map(el => el.value)
+    function serialize() {
+      return {
+        checks: allInputs().map(el => (el.checked ? 1 : 0)),
+        notes: allNotes().map(el => el.value),
+        updatedAt: new Date().toISOString(),
+        version: 1
       };
-      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+    }
+    function hydrate(data) {
+      if (!data) return;
+      const checks = (data.checks || []), notes = (data.notes || []);
+      allInputs().forEach((el, i) => el.checked = !!checks[i]);
+      allNotes().forEach((el, i) => el.value = notes[i] || '');
       updateProgress();
     }
 
-    function load() {
+    function saveLocal() {
+      try { localStorage.setItem(KEY, JSON.stringify(serialize())); } catch {}
+      updateProgress();
+    }
+    function loadLocal() {
       try {
         const raw = localStorage.getItem(KEY);
         if (!raw) return;
-        const data = JSON.parse(raw);
-        allInputs().forEach((el, i) => el.checked = !!(data.checks || [])[i]);
-        allNotes().forEach((el, i) => el.value = (data.notes || [])[i] || '');
+        hydrate(JSON.parse(raw));
       } catch {}
       updateProgress();
     }
@@ -370,54 +406,12 @@
       root.querySelectorAll('details.phase').forEach(d => d.open = !!flag);
     }
 
-    // Event wiring
-    root.addEventListener('change', (e) => {
-      if (e.target.matches('input[type="checkbox"], textarea')) save();
-    });
-    document.getElementById('expandAll').addEventListener('click', () => expandAll(true));
-    document.getElementById('collapseAll').addEventListener('click', () => expandAll(false));
-    document.getElementById('printBtn').addEventListener('click', () => window.print());
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      if (!confirm('Reset all checks and notes on this device?')) return;
-      try { localStorage.removeItem(KEY); } catch {}
-      root.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
-      root.querySelectorAll('textarea').forEach(el => el.value = '');
-      updateProgress();
-    });
-    document.getElementById('exportJson').addEventListener('click', () => {
-      const blob = new Blob([localStorage.getItem(KEY) || '{}'], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'propcheck-multifamily-checklist.json';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-    });
-
     // ---- Deal integration ----
-    function serialize() {
-      return {
-        checks: allInputs().map(el => (el.checked ? 1 : 0)),
-        notes: allNotes().map(el => el.value),
-        updatedAt: new Date().toISOString(),
-        version: 1
-      };
-    }
-    function hydrate(data) {
-      if (!data) return;
-      const checks = (data.checks || []), notes = (data.notes || []);
-      allInputs().forEach((el, i) => el.checked = !!checks[i]);
-      allNotes().forEach((el, i) => el.value = notes[i] || '');
-      updateProgress();
-    }
-
     function saveToDeal() {
-      const status = document.getElementById('saveStatus');
+      const status = statusEl;
       try {
         const deal = (window.PCState && PCState.getDeal) ? PCState.getDeal() : null;
-        if (!deal || !deal.id) {
-          status.textContent = 'No active deal selected.';
-          return;
-        }
+        if (!deal || !deal.id) { status.textContent = 'No active deal selected.'; return; }
         deal.checklists = deal.checklists || {};
         deal.checklists.multifamily = serialize();
         if (window.PCState && PCState.setDeal) PCState.setDeal(deal);
@@ -435,33 +429,46 @@
     }
 
     function loadFromDeal() {
-      const status = document.getElementById('saveStatus');
+      const status = statusEl;
       try {
         const deal = (window.PCState && PCState.getDeal) ? PCState.getDeal() : null;
-        if (!deal || !deal.id) {
-          status.textContent = 'No active deal selected.';
-          return;
-        }
+        if (!deal || !deal.id) { status.textContent = 'No active deal selected.'; return; }
         const data = deal.checklists && deal.checklists.multifamily;
-        if (data) {
-          hydrate(data);
-          status.textContent = 'Loaded from current deal';
-        } else {
-          status.textContent = 'No checklist found on deal';
-        }
+        if (data) { hydrate(data); status.textContent = 'Loaded from current deal'; }
+        else { status.textContent = 'No checklist found on deal'; }
       } catch (e) {
         status.textContent = 'Load error';
       }
     }
 
-    // Wire buttons for deal actions
+    // Event wiring
+    root.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="checkbox"], textarea')) saveLocal();
+    });
+    document.getElementById('expandAll').addEventListener('click', () => expandAll(true));
+    document.getElementById('collapseAll').addEventListener('click', () => expandAll(false));
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset all checks and notes on this device?')) return;
+      try { localStorage.removeItem(KEY); } catch {}
+      root.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+      root.querySelectorAll('textarea').forEach(el => el.value = '');
+      updateProgress();
+      statusEl.textContent = '';
+    });
+    document.getElementById('exportJson').addEventListener('click', () => {
+      const blob = new Blob([localStorage.getItem(KEY) || JSON.stringify(serialize(), null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'propcheck-multifamily-checklist.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    });
     document.getElementById('saveDealBtn').addEventListener('click', saveToDeal);
     document.getElementById('loadDealBtn').addEventListener('click', loadFromDeal);
 
     // Init
-    load();
-
-    // Auto-hydrate from deal if present and has data
+    loadLocal();
     try {
       const d = (window.PCState && PCState.getDeal) ? PCState.getDeal() : null;
       if (d && d.checklists && d.checklists.multifamily) hydrate(d.checklists.multifamily);
@@ -470,3 +477,4 @@
   </script>
 </body>
 </html>
+
