@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8"/>
+<head><meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>PropCheck</title>
 
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
 <!-- Config + State -->
-<script src="assets/js/config.js"></script>
-<script src="assets/js/state.js"></script>
+
+
 
 <!-- Google libraries -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
+
+
 
 <!-- Auth helper (MUST be before drive.js) -->
-<script src="assets/js/drive.auth.helper.js"></script>
+
 
 <!-- Drive client + your common UI -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/state.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="assets/js/drive.auth.helper.js"></script>
 <script src="assets/js/drive.js"></script>
 <script defer src="assets/js/common.js"></script>
-
 </head>
 <body>
  <!-- HEADER -->
@@ -48,19 +51,7 @@
 
 <body>
   <!-- NAV (text-only; emoji handled by common.js on the heading) -->
-  <div class="nav">
-    <div class="nav-container">
-      <a class="logo" href="index.html">PropCheck</a>
-      <div class="nav-links">
-        <a href="calculator.html" class="nav-link">Calculator</a>
-        <a href="reports.html" class="nav-link">Report</a>
-        <a href="analysis.html" class="nav-link">Analysis</a>
-        <a href="compare.html" class="nav-link">Compare</a>
-        <a href="market.html" class="nav-link">Market Data</a>
-        <a href="qualification.html" class="nav-link active">Qualification</a>
-      </div>
-    </div>
-  </div>
+  
 
   <main class="main page-wrap">
     <div class="card">
