@@ -102,7 +102,10 @@
         }
         resolve();
       };
-      tokenClient.requestAccessToken({ prompt: "" }); // no UI
+    // Disabled automatic silent popup on load – now only runs on user click
+// tokenClient.requestAccessToken({ prompt: "" });
+resolve(); // do nothing until explicitly called
+
     });
   }
 
