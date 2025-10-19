@@ -92,5 +92,151 @@ PC.requireDrive = async function () {
   }
 };
 
+/* =========================
+   PCDriveUI: Global Drive Picker
+   ========================= */
+(function () {
+  if (window.PCDriveUI) return; // avoid double init
+
+  // Inject a reusable picker card into the page
+  function injectPickerDOM() {
+    if (document.getElementById("pcDrivePicker")) return;
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `
+      <div id="pcDrivePicker" class="card hidden" style="max-width:720px; margin:16px auto;">
+        <h3 class="title">Load from Google Drive</h3>
+        <p class="muted">Choose a saved deal from <strong>Drive → PropCheck → Deals</strong>.</p>
+        <div class="form-group">
+          <label for="pcDriveFiles">Saved Files</label>
+          <select id="pcDriveFiles"></select>
+        </div>
+        <div class="actions">
+          <button id="pcDriveApply" class="btn btn-primary" type="button">Load Selected</button>
+          <button id="pcDriveCancel" class="btn btn-secondary" type="button">Cancel</button>
+        </div>
+      </div>
+    `;
+    // Prefer placing inside <main>, else body
+    const host = document.querySelector("main") || document.body;
+    host.appendChild(wrap.firstElementChild);
+  }
+
+  async function waitForDriveClient(ms = 10000) {
+    const t0 = Date.now();
+    return new Promise((resolve, reject) => {
+      (function poll() {
+        if (window.gapi?.client?.drive?.files) return resolve();
+        if (Date.now() - t0 > ms) return reject(new Error("Drive client not ready"));
+        setTimeout(poll, 50);
+      })();
+    });
+  }
+
+  async function ensureFolder(name, parentId) {
+    const q =
+      "name = '" + String(name).replace(/'/g, "\\'") +
+      "' and mimeType = 'application/vnd.google-apps.folder' and '" +
+      parentId + "' in parents and trashed = false";
+    const list = await gapi.client.drive.files.list({ q, fields: "files(id,name)" });
+    const files = list?.result?.files || [];
+    if (files.length) return files[0].id;
+
+    const created = await gapi.client.drive.files.create({
+      resource: { name, mimeType: "application/vnd.google-apps.folder", parents: [parentId] },
+      fields: "id"
+    });
+    return created?.result?.id;
+  }
+
+  async function listDeals() {
+    const propId  = await ensureFolder("PropCheck", "root");
+    const dealsId = await ensureFolder("Deals", propId);
+    const resp = await gapi.client.drive.files.list({
+      q: `'${dealsId}' in parents and trashed = false and mimeType = 'application/json'`,
+      orderBy: "modifiedTime desc",
+      pageSize: 100,
+      fields: "files(id,name,modifiedTime)"
+    });
+    return resp?.result?.files || [];
+  }
+
+  async function populateSelect(sel) {
+    sel.innerHTML = "";
+    const files = await listDeals();
+    if (!files.length) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No saved deals found";
+      sel.appendChild(opt);
+      return [];
+    }
+    files.forEach(f => {
+      const opt = document.createElement("option");
+      const dt  = new Date(f.modifiedTime).toLocaleString();
+      opt.value = f.id;
+      opt.textContent = `${f.name}  —  ${dt}`;
+      sel.appendChild(opt);
+    });
+    return files;
+  }
+
+  async function openPicker(onSelect /* optional */) {
+    injectPickerDOM();
+
+    // Ensure we have/refresh a token (popup only because the user clicked)
+    const token = await (window.PCAuth?.ensureAuth?.(true) || Promise.resolve(null));
+    if (!token) throw new Error("Sign-in failed or was cancelled.");
+
+    await waitForDriveClient();
+
+    const card  = document.getElementById("pcDrivePicker");
+    const sel   = document.getElementById("pcDriveFiles");
+    const apply = document.getElementById("pcDriveApply");
+    const cancel= document.getElementById("pcDriveCancel");
+
+    const files = await populateSelect(sel);
+    card.classList.remove("hidden");
+    window.scrollTo({ top: card.offsetTop - 10, behavior: "smooth" });
+
+    return new Promise((resolve) => {
+      function cleanup() {
+        apply.removeEventListener("click", onApply);
+        cancel.removeEventListener("click", onCancel);
+        card.classList.add("hidden");
+      }
+      async function onApply() {
+        const id = sel.value;
+        if (!id) { alert("No file selected."); return; }
+        try {
+          const resp = await gapi.client.drive.files.get({ fileId: id, alt: "media" });
+          let data = resp?.body ?? resp?.result;
+          if (typeof data === "string") data = JSON.parse(data);
+          const file = files.find(f => f.id === id) || { id, name: "Deal.json" };
+
+          // Optional callback style
+          if (typeof onSelect === "function") {
+            try { await onSelect(file, data); } catch {}
+          }
+
+          cleanup();
+          resolve({ file, deal: data });
+        } catch (e) {
+          alert("Load failed: " + (e?.message || e));
+        }
+      }
+      function onCancel() {
+        cleanup();
+        resolve(null);
+      }
+      apply.addEventListener("click", onApply);
+      cancel.addEventListener("click", onCancel);
+    });
+  }
+
+  window.PCDriveUI = { openPicker };
+})();
+
+
 
 
