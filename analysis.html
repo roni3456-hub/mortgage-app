@@ -119,30 +119,58 @@
     }
     render(PCState.getDeal());
 
-    document.getElementById('loadBtn').addEventListener('click', async ()=>{
-      if (!window.gapi || !gapi.client){ alert('Drive client not ready yet. Try again.'); return; }
-      const user = PCState.getUser(); if (!user || user.mode!=='google'){ alert('Sign in with Google first.'); return; }
-      try{
-        const prop = await gapi.client.drive.files.list({ q:"name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false", fields:"files(id,name)"});
-        const propId = (prop.result.files||[])[0]?.id; if(!propId) return alert("No PropCheck folder yet.");
-        const deals = await gapi.client.drive.files.list({ q:"name='Deals' and mimeType='application/vnd.google-apps.folder' and '"+propId+"' in parents and trashed=false", fields:"files(id,name)"});
-        const dealsId = (deals.result.files||[])[0]?.id; if(!dealsId) return alert("No Deals folder yet.");
-        const res = await gapi.client.drive.files.list({ q:"'"+dealsId+"' in parents and mimeType='application/json' and trashed=false", orderBy:"modifiedTime desc", pageSize:100, fields:"files(id,name,modifiedTime)"});
-        const files = res.result.files||[]; if(!files.length) return alert("No saved deals found.");
-        const list = files.map((f,i)=>`${i+1}. ${f.name}`).join('\n');
-        const pick = prompt("Select a deal to load (enter number):\n\n"+list+"\n\n");
-        const idx = Number((pick||'').trim()) - 1; if (!(idx>=0 && idx<files.length)) return;
-        const file = files[idx];
-        const content = await gapi.client.drive.files.get({ fileId:file.id, alt:"media" }).then(r=>r.body);
-        const deal = JSON.parse(content);
-        PCState.setDeal(deal);
-        render(deal);
-        alert("Loaded: " + file.name);
-      }catch(err){
-        console.warn(err);
-        alert("Load from Drive failed: " + (err?.message || err));
-      }
+// REPLACE your current loadBtn handler with this:
+document.getElementById('loadBtn')?.addEventListener('click', async () => {
+  // 1) Make sure we have a Drive token (this is where the popup will appear IF needed)
+  const token = await (window.PCAuth?.ensureAuth?.(true) || Promise.resolve(null));
+  if (!token) { alert('Sign-in failed or was cancelled.'); return; }
+
+  // 2) Safety: gapi client should be ready now, but keep the soft check
+  if (!window.gapi || !gapi.client) { alert('Drive client not ready yet. Try again.'); return; }
+
+  try {
+    // 3) Your existing load logic (unchanged)
+    const prop = await gapi.client.drive.files.list({
+      q: "name='PropCheck' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false",
+      fields: "files(id,name)"
     });
+    const propId = (prop.result.files || [])[0]?.id;
+    if (!propId) return alert("No PropCheck folder yet.");
+
+    const deals = await gapi.client.drive.files.list({
+      q: "name='Deals' and mimeType='application/vnd.google-apps.folder' and '" + propId + "' in parents and trashed=false",
+      fields: "files(id,name)"
+    });
+    const dealsId = (deals.result.files || [])[0]?.id;
+    if (!dealsId) return alert("No Deals folder yet.");
+
+    const res = await gapi.client.drive.files.list({
+      q: "'" + dealsId + "' in parents and mimeType='application/json' and trashed=false",
+      orderBy: "modifiedTime desc",
+      pageSize: 100,
+      fields: "files(id,name,modifiedTime)"
+    });
+    const files = res.result.files || [];
+    if (!files.length) return alert("No saved deals found.");
+
+    const list = files.map((f, i) => `${i + 1}. ${f.name}`).join('\n');
+    const pick = prompt("Select a deal to load (enter number):\n\n" + list + "\n\n");
+    const idx = Number((pick || '').trim()) - 1;
+    if (!(idx >= 0 && idx < files.length)) return;
+
+    const file = files[idx];
+    const content = await gapi.client.drive.files.get({ fileId: file.id, alt: "media" }).then(r => r.body);
+    const deal = JSON.parse(content);
+
+    PCState.setDeal(deal);
+    render(deal);
+    alert("Loaded: " + file.name);
+  } catch (err) {
+    console.warn(err);
+    alert("Load from Drive failed: " + (err?.message || err));
+  }
+});
+
   </script>
 
     <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
