@@ -211,5 +211,92 @@ main h2 {
 @media (max-width: 720px){
   .drive-chip{ padding:5px 8px; font-size:11px; }
 }
+/* ===== PropCheck: Mobile Baseline (non-breaking) ===== */
+
+/* 1) Fluid container on all pages */
+.pc-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-inline: clamp(12px, 3vw, 24px);
+}
+
+/* If your main wrapper already exists, this safely enhances it */
+main, .content, .page-wrap {
+  box-sizing: border-box;
+  padding-inline: clamp(12px, 3vw, 24px);
+}
+
+/* 2) Typography that scales nicely */
+:root {
+  --pc-text: #0f172a;         /* slate-900 */
+  --pc-muted: #475569;        /* slate-600 */
+  --pc-accent: #0ea5e9;       /* sky-500 (used elsewhere) */
+}
+
+body {
+  color: var(--pc-text);
+  -webkit-text-size-adjust: 100%; /* prevent iOS zoom quirks */
+}
+
+h1 { font-size: clamp(24px, 2.8vw + 12px, 36px); line-height: 1.15; }
+h2 { font-size: clamp(20px, 2.2vw + 10px, 28px); line-height: 1.2; }
+h3 { font-size: clamp(18px, 1.6vw + 8px, 22px);  line-height: 1.3; }
+p, li, label, input, button { font-size: clamp(14px, 1.1vw + 10px, 16px); }
+
+/* 3) Forms: full-width on small screens, comfy tap targets */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
+  width: 100%;
+  min-height: 44px; /* touch-friendly */
+  box-sizing: border-box;
+}
+
+button, .btn, input[type="submit"] {
+  min-height: 44px;
+  padding: 10px 14px;
+  line-height: 1.1;
+}
+
+/* 4) Tables & wide widgets: allow horizontal scrolling on phones */
+.pc-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.pc-scroll > table {
+  min-width: 640px; /* don’t squash complex tables */
+}
+
+/* 5) Simple responsive grid utility (opt-in classes) */
+.pc-grid {
+  display: grid;
+  gap: clamp(12px, 2.5vw, 20px);
+}
+.pc-grid-2 {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .pc-grid-2 {
+    grid-template-columns: 1fr 1fr; /* auto-upgrade to two columns on tablet+ */
+  }
+}
+
+/* 6) Spacing helpers (optional, no breakage) */
+.pc-stack > * + * { margin-top: clamp(10px, 2.2vw, 16px); }
+.pc-section { margin-block: clamp(16px, 4vw, 32px); }
+
+/* 7) Images always contained */
+img, svg, canvas, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 8) iOS Safari input zoom fix when font-size < 16px */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px; }
+}
 
 
