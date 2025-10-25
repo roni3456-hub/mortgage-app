@@ -12,21 +12,21 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
-<!-- Config + State -->
-<script src="assets/js/config.js"></script>
-<script src="assets/js/state.js"></script>
 
-<!-- Google libraries -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
+  <!-- Config + State -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/state.js"></script>
 
-<!-- Auth helper (MUST be before drive.js) -->
-<script src="assets/js/drive.auth.helper.js"></script>
+  <!-- Google libraries -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
 
-<!-- Drive client + your common UI -->
-<script src="assets/js/drive.js"></script>
-<script defer src="assets/js/common.js"></script>
+  <!-- Auth helper (MUST be before drive.js) -->
+  <script src="assets/js/drive.auth.helper.js"></script>
 
+  <!-- Drive client + your common UI -->
+  <script src="assets/js/drive.js"></script>
+  <script defer src="assets/js/common.js"></script>
 </head>
 <body>
   <!-- Nav -->
@@ -41,7 +41,7 @@
         <a class="nav-link" href="compare.html">Compare</a>
         <a class="nav-link" href="market.html">Market</a>
         <a class="nav-link" href="qualification.html">Qualification</a>
-        <a class="nav-link" href="checklist.html">Checklist</a> 
+        <a class="nav-link" href="checklist.html">Checklist</a>
       </div>
 
       <!-- Right side: Drive status + Sign-in/out -->
@@ -53,6 +53,10 @@
   </nav>
 
   <main class="main">
+
+    <!-- =========================
+         CARD: Deal Setup
+    ========================== -->
     <div class="card">
       <h2 class="title">Underwriting Calculator</h2>
       <p class="subtitle">Enter assumptions below — metrics update automatically.</p>
@@ -62,10 +66,22 @@
           <label for="title">Property Name</label>
           <input id="title" type="text" placeholder="e.g., 123 Main St, Toronto"/>
         </div>
+
+        <div class="form-group">
+          <label for="units">Units</label>
+          <input id="units" type="number" min="0" step="1" value="0"/>
+        </div>
+
         <div class="form-group">
           <label for="purchasePrice">Purchase Price ($)</label>
           <input id="purchasePrice" type="number" min="0" step="1000" value="500000"/>
         </div>
+
+        <div class="form-group">
+          <label for="pricePerUnit">Price per Unit ($/unit)</label>
+          <input id="pricePerUnit" type="number" min="0" step="1000" value="0" title="Derived from Purchase ÷ Units by default; editable to drive Purchase Price"/>
+        </div>
+
         <div class="form-group">
           <label for="downPaymentPct">Down Payment (%)</label>
           <input id="downPaymentPct" type="number" min="0" max="100" step="0.1" value="20"/>
@@ -75,62 +91,311 @@
           <label for="interestRate">Interest Rate (%)</label>
           <input id="interestRate" type="number" min="0" step="0.01" value="5.50"/>
         </div>
+
         <div class="form-group">
           <label for="amortYears">Amortization (years)</label>
           <input id="amortYears" type="number" min="1" step="1" value="25"/>
         </div>
-        <div class="form-group">
-          <label for="rentMonthly">Gross Rent ($/mo)</label>
-          <input id="rentMonthly" type="number" min="0" step="50" value="2500"/>
-        </div>
 
-        <div class="form-group">
-          <label for="taxesAnnual">Taxes ($/yr)</label>
-          <input id="taxesAnnual" type="number" min="0" step="100" value="3600"/>
-        </div>
-        <div class="form-group">
-          <label for="insuranceAnnual">Insurance ($/yr)</label>
-          <input id="insuranceAnnual" type="number" min="0" step="50" value="1200"/>
-        </div>
-        <div class="form-group">
-          <label for="utilitiesMonthly">Utilities ($/mo)</label>
-          <input id="utilitiesMonthly" type="number" min="0" step="25" value="200"/>
-        </div>
-
-        <div class="form-group">
-          <label for="vacancyRate">Vacancy (%)</label>
-          <input id="vacancyRate" type="number" min="0" max="100" step="0.5" value="3"/>
-        </div>
-        <div class="form-group">
-          <label for="repairsPct">Repairs & Maintenance (% of rent)</label>
-          <input id="repairsPct" type="number" min="0" max="100" step="0.5" value="5"/>
-        </div>
-        <div class="form-group">
-          <label for="managementPct">Management (% of rent)</label>
-          <input id="managementPct" type="number" min="0" max="100" step="0.5" value="8"/>
-        </div>
-
-        <div class="form-group">
-          <label for="capexPct">CapEx (% of rent)</label>
-          <input id="capexPct" type="number" min="0" max="100" step="0.5" value="5"/>
-        </div>
-        <div class="form-group">
-          <label for="otherMonthly">Other Expenses ($/mo)</label>
-          <input id="otherMonthly" type="number" min="0" step="25" value="0"/>
-        </div>
         <div class="form-group">
           <label for="closingCosts">Closing Costs ($)</label>
           <input id="closingCosts" type="number" min="0" step="500" value="5000"/>
         </div>
       </div>
+    </div>
 
-      <div class="actions">
-        <button id="saveDriveBtn" class="btn btn-primary">💾 Save to Google Drive</button>
-        <button id="loadDriveBtn" class="btn btn-secondary">📂 Load from Google Drive</button>
+    <!-- =========================
+         CARD: Income (Detailed)
+    ========================== -->
+    <div class="card">
+      <h3 class="title">Income (Annual)</h3>
+
+      <div class="grid grid-2">
+        <!-- Residential -->
+        <div>
+          <h4 class="subtitle">Residential</h4>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="resRent">Rent ($/yr)</label>
+              <input id="resRent" type="number" min="0" step="100" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="resLaundry">Laundry ($/yr)</label>
+              <input id="resLaundry" type="number" min="0" step="50" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="resParking">Parking ($/yr)</label>
+              <input id="resParking" type="number" min="0" step="50" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="resMisc">Misc ($/yr)</label>
+              <input id="resMisc" type="number" min="0" step="50" value="0"/>
+            </div>
+          </div>
+          <p class="muted">Total Residential: <strong id="totalResidential">$0</strong></p>
+        </div>
+
+        <!-- Commercial -->
+        <div>
+          <h4 class="subtitle">Commercial</h4>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="comRent">Rent ($/yr)</label>
+              <input id="comRent" type="number" min="0" step="100" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="comParking">Parking ($/yr)</label>
+              <input id="comParking" type="number" min="0" step="50" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="comCAM">CAM ($/yr)</label>
+              <input id="comCAM" type="number" min="0" step="50" value="0"/>
+            </div>
+            <div class="form-group">
+              <label for="comMisc">Misc ($/yr)</label>
+              <input id="comMisc" type="number" min="0" step="50" value="0"/>
+            </div>
+          </div>
+          <p class="muted">Total Commercial: <strong id="totalCommercial">$0</strong></p>
+        </div>
+      </div>
+
+      <p class="muted">Gross Annual Income: <strong id="grossAnnualIncome">$0</strong></p>
+
+      <details class="muted" style="margin-top:8px;">
+        <summary><strong>Legacy income fallback</strong> — optional</summary>
+        <div class="grid grid-3" style="margin-top:10px;">
+          <div class="form-group">
+            <label for="rentMonthly">Gross Rent (legacy) ($/mo)</label>
+            <input id="rentMonthly" type="number" min="0" step="50" value="2500"/>
+          </div>
+        </div>
+        <p class="muted">If any detailed income above is entered (&gt;0), we’ll use it. If all are zero, we’ll fall back to <em>Gross Rent (legacy) × 12</em>.</p>
+      </details>
+    </div>
+
+    <!-- =========================
+         CARD: Expenses (Detailed)
+    ========================== -->
+    <div class="card">
+      <h3 class="title">Expenses</h3>
+      <p class="muted">Toggle each amount between monthly and annual to match seller data. % items are applied to gross income.</p>
+
+      <!-- Fixed lines with period toggles -->
+      <div class="grid grid-3">
+        <!-- Taxes -->
+        <div class="form-group">
+          <label>Taxes</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_taxes_amt" type="number" min="0" step="50" value="3600"/>
+            <select id="exp_taxes_period" title="Period">
+              <option value="annual" selected>Annual</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Insurance -->
+        <div class="form-group">
+          <label>Insurance</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_insurance_amt" type="number" min="0" step="25" value="1200"/>
+            <select id="exp_insurance_period">
+              <option value="annual" selected>Annual</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Hydro -->
+        <div class="form-group">
+          <label>Hydro</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_hydro_amt" type="number" min="0" step="25" value="0"/>
+            <select id="exp_hydro_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Gas / Propane / Oil -->
+        <div class="form-group">
+          <label>Gas / Propane / Oil</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_gas_amt" type="number" min="0" step="25" value="0"/>
+            <select id="exp_gas_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Water / Sewer -->
+        <div class="form-group">
+          <label>Water / Sewer</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_waterSewer_amt" type="number" min="0" step="25" value="0"/>
+            <select id="exp_waterSewer_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Hot Water Tank -->
+        <div class="form-group">
+          <label>Hot Water Tank</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_hotWater_amt" type="number" min="0" step="10" value="0"/>
+            <select id="exp_hotWater_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Snow / Yard -->
+        <div class="form-group">
+          <label>Snow / Yard</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_snowYard_amt" type="number" min="0" step="10" value="0"/>
+            <select id="exp_snowYard_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Common Utilities -->
+        <div class="form-group">
+          <label>Common Utilities (Wi-Fi / Cable / Alarm)</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_commonUtilities_amt" type="number" min="0" step="10" value="0"/>
+            <select id="exp_commonUtilities_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Misc Fixed -->
+        <div class="form-group">
+          <label>Miscellaneous (Fixed)</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_miscFixed_amt" type="number" min="0" step="10" value="0"/>
+            <select id="exp_miscFixed_period">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Legacy utilities (pre-filled from old field) -->
+        <div class="form-group">
+          <label>Utilities (legacy)</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_utilitiesLegacy_amt" type="number" min="0" step="10" value="200"/>
+            <select id="exp_utilitiesLegacy_period">
+              <option value="monthly" selected>Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Legacy other (pre-filled from old field) -->
+        <div class="form-group">
+          <label>Other (legacy)</label>
+          <div style="display:flex; gap:8px;">
+            <input id="exp_otherLegacy_amt" type="number" min="0" step="10" value="0"/>
+            <select id="exp_otherLegacy_period">
+              <option value="monthly" selected>Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Percent-based items -->
+      <div class="grid grid-3" style="margin-top:10px;">
+        <div class="form-group">
+          <label for="repairsPct">Repairs &amp; Maintenance (% of income)</label>
+          <input id="repairsPct" type="number" min="0" max="100" step="0.5" value="5"/>
+        </div>
+        <div class="form-group">
+          <label for="managementPct">Property Management (% of income)</label>
+          <input id="managementPct" type="number" min="0" max="100" step="0.5" value="8"/>
+        </div>
+        <div class="form-group">
+          <label for="capexPct">CapEx (% of rent)</label>
+          <input id="capexPct" type="number" min="0" max="100" step="0.5" value="5"/>
+        </div>
+        <div class="form-group">
+          <label for="vacancyResPct">Vacancy — Residential (%)</label>
+          <input id="vacancyResPct" type="number" min="0" max="100" step="0.5" value="3"/>
+        </div>
+        <div class="form-group">
+          <label for="vacancyComPct">Vacancy — Commercial (%)</label>
+          <input id="vacancyComPct" type="number" min="0" max="100" step="0.5" value="5"/>
+        </div>
+      </div>
+
+      <!-- Other Expenses (Repeater) -->
+      <div class="form-group" style="margin-top:16px;">
+        <label>Other Expenses</label>
+        <div class="muted" style="margin-bottom:8px;">Add any extra expense lines as needed.</div>
+        <table class="table" style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:6px 4px;">Label</th>
+              <th style="text-align:left; padding:6px 4px;">Amount</th>
+              <th style="text-align:left; padding:6px 4px;">Period</th>
+              <th style="text-align:left; padding:6px 4px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="otherExpBody"></tbody>
+        </table>
+        <button id="addOtherExpBtn" class="btn btn-secondary" type="button" style="margin-top:8px;">+ Add Expense</button>
+      </div>
+
+      <div class="muted" style="margin-top:8px;">
+        Total Fixed Expenses (Annual): <strong id="fixedExpensesAnnual">$0</strong>
+        <span class="muted"> • Monthly: <strong id="fixedExpensesMonthly">$0</strong></span>
       </div>
     </div>
 
-    <!-- KPIs -->
+    <!-- =========================
+         CARD: Debt Service
+    ========================== -->
+    <div class="card">
+      <h3 class="title">Debt Service</h3>
+      <div class="muted" style="margin-bottom:8px;">Add multiple tranches. P&amp;I uses Canadian semi-annual compounding converted to effective monthly.</div>
+
+      <table class="table" style="width:100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px 4px;">Type</th>
+            <th style="text-align:left; padding:6px 4px;">Principal ($)</th>
+            <th style="text-align:left; padding:6px 4px;">Rate (%)</th>
+            <th style="text-align:left; padding:6px 4px;">Amort (yrs)</th>
+            <th style="text-align:left; padding:6px 4px;">Monthly ($)</th>
+            <th style="text-align:left; padding:6px 4px;">Annual ($)</th>
+            <th style="text-align:left; padding:6px 4px;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="debtBody"></tbody>
+      </table>
+      <button id="addDebtRowBtn" class="btn btn-secondary" type="button" style="margin-top:8px;">+ Add Debt Row</button>
+
+      <div class="muted" style="margin-top:8px;">
+        Total Annual Debt Service: <strong id="totalDebtAnnual">$0</strong>
+        <span class="muted"> • Monthly: <strong id="totalDebtMonthly">$0</strong></span>
+      </div>
+    </div>
+
+    <!-- =========================
+         CARD: Key Metrics
+    ========================== -->
     <div class="card">
       <h3 class="title">Key Metrics</h3>
       <div class="kpi-row">
@@ -157,6 +422,17 @@
       </div>
     </div>
 
+    <!-- =========================
+         ACTIONS: Save / Load
+    ========================== -->
+    <div class="card">
+      <h3 class="title">Save / Load</h3>
+      <div class="actions">
+        <button id="saveDriveBtn" class="btn btn-primary">💾 Save to Google Drive</button>
+        <button id="loadDriveBtn" class="btn btn-secondary">📂 Load from Google Drive</button>
+      </div>
+    </div>
+
     <!-- Simple file picker for Drive loads -->
     <div id="drivePickerCard" class="card hidden">
       <h3 class="title">Load from Google Drive</h3>
@@ -172,70 +448,441 @@
     </div>
   </main>
 
+  <!-- =========================
+       SCRIPT: Calculator logic
+  ========================== -->
   <script>
-    // --------------- Calculator logic ---------------
     const $ = (id) => document.getElementById(id);
-    const fields = [
+    const fmtMoney = (n) => Number(n || 0).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' });
+    const fmtPct = (n) => (Number(n || 0) * 100).toFixed(2) + "%";
+    const toNum = (v) => parseFloat(v || "0") || 0;
+
+    /* --------------------------------
+       Legacy field list (for load/save)
+    --------------------------------- */
+    const legacyFieldIds = [
       "title","purchasePrice","downPaymentPct","interestRate","amortYears","rentMonthly",
-      "taxesAnnual","insuranceAnnual","utilitiesMonthly","vacancyRate","repairsPct",
-      "managementPct","capexPct","otherMonthly","closingCosts"
+      "repairsPct","managementPct","capexPct","closingCosts"
+    ];
+    // legacy fixed amounts (for prefill)
+    const legacyFixedIds = [
+      ["exp_taxes_amt","taxesAnnual","annual"],           // map from old 'taxesAnnual'
+      ["exp_insurance_amt","insuranceAnnual","annual"],   // map from old 'insuranceAnnual'
+      ["exp_utilitiesLegacy_amt","utilitiesMonthly","monthly"], // map from old 'utilitiesMonthly'
+      ["exp_otherLegacy_amt","otherMonthly","monthly"]    // map from old 'otherMonthly'
     ];
 
-    function valNum(id){ return parseFloat($(id).value || "0") || 0; }
+    /* --------------------------------
+       Income & Expense IDs
+    --------------------------------- */
+    const detailedIncomeIds = [
+      "resRent","resLaundry","resParking","resMisc",
+      "comRent","comParking","comCAM","comMisc"
+    ];
 
-    function formatMoney(n){ return Number(n||0).toLocaleString('en-CA',{style:'currency',currency:'CAD'}); }
-    function pct(n){ return (n*100).toFixed(2) + "%"; }
+    const fixedExpenseDefs = [
+      { id:"taxes",           amt:"exp_taxes_amt",           period:"exp_taxes_period",           label:"Taxes" },
+      { id:"insurance",       amt:"exp_insurance_amt",       period:"exp_insurance_period",       label:"Insurance" },
+      { id:"hydro",           amt:"exp_hydro_amt",           period:"exp_hydro_period",           label:"Hydro" },
+      { id:"gas",             amt:"exp_gas_amt",             period:"exp_gas_period",             label:"Gas / Propane / Oil" },
+      { id:"waterSewer",      amt:"exp_waterSewer_amt",      period:"exp_waterSewer_period",      label:"Water / Sewer" },
+      { id:"hotWater",        amt:"exp_hotWater_amt",        period:"exp_hotWater_period",        label:"Hot Water Tank" },
+      { id:"snowYard",        amt:"exp_snowYard_amt",        period:"exp_snowYard_period",        label:"Snow / Yard" },
+      { id:"commonUtilities", amt:"exp_commonUtilities_amt", period:"exp_commonUtilities_period", label:"Common Utilities" },
+      { id:"miscFixed",       amt:"exp_miscFixed_amt",       period:"exp_miscFixed_period",       label:"Miscellaneous (Fixed)" },
+      // legacy lines
+      { id:"utilitiesLegacy", amt:"exp_utilitiesLegacy_amt", period:"exp_utilitiesLegacy_period", label:"Utilities (legacy)" },
+      { id:"otherLegacy",     amt:"exp_otherLegacy_amt",     period:"exp_otherLegacy_period",     label:"Other (legacy)" }
+    ];
 
-    function monthlyPayment(principal, annualRatePct, years){
-      if (principal <= 0) return 0;
-      const r = (annualRatePct/100)/12;
-      const n = years*12;
-      if (r === 0) return principal/n;
-      return principal * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n)-1);
+    /* --------------------------------
+       Helpers
+    --------------------------------- */
+    function toAnnual(amount, period) {
+      const a = toNum(amount);
+      return (period === "monthly") ? (a * 12) : a;
+    }
+    function toMonthly(amount, period) {
+      const a = toNum(amount);
+      return (period === "annual") ? (a / 12) : a;
+    }
+    function canadianMonthlyRate(ratePct) {
+      // Convert nominal annual % with semi-annual compounding to effective monthly rate
+      const r = toNum(ratePct) / 100;
+      const r_month = Math.pow(1 + r / 2, 2 / 12) - 1;
+      return r_month;
+    }
+    function pmtPI_Canada(principal, ratePct, years) {
+      const P = toNum(principal);
+      const n = Math.max(1, Math.round(toNum(years) * 12));
+      if (P <= 0 || n <= 0) return 0;
+      const r = canadianMonthlyRate(ratePct);
+      if (r === 0) return P / n;
+      return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    }
+    function pmtIO(principal, ratePct) {
+      const P = toNum(principal);
+      const r = toNum(ratePct) / 100;
+      return P * (r / 12);
     }
 
-    function recalc(){
-      const price = valNum("purchasePrice");
-      const dpPct = valNum("downPaymentPct")/100;
-      const dp = price * dpPct;
-      const loan = Math.max(0, price - dp);
-      const rate = valNum("interestRate");
-      const years = valNum("amortYears");
+    /* --------------------------------
+       Deal Setup triad sync
+    --------------------------------- */
+    function syncTriad(from) {
+      const units = Math.max(0, Math.floor(toNum($("units").value)));
+      const price = toNum($("purchasePrice").value);
+      const ppu = toNum($("pricePerUnit").value);
 
-      const rent = valNum("rentMonthly");
-      const taxes = valNum("taxesAnnual")/12;
-      const ins = valNum("insuranceAnnual")/12;
-      const utils = valNum("utilitiesMonthly");
-      const vac = rent * (valNum("vacancyRate")/100);
-      const repairs = rent * (valNum("repairsPct")/100);
-      const mgmt = rent * (valNum("managementPct")/100);
-      const capex = rent * (valNum("capexPct")/100);
-      const other = valNum("otherMonthly");
-
-      const pmi = monthlyPayment(loan, rate, years);
-      const opExMonthly = taxes + ins + utils + vac + repairs + mgmt + capex + other;
-      const noiAnnual = (rent - (vac + repairs + mgmt + capex + other)) * 12 - taxes - ins - utils*12; // rough NOI
-      const cashFlow = (rent - opExMonthly) - pmi;
-
-      const capRate = price>0 ? noiAnnual / price : 0;
-      const cashInvested = dp + valNum("closingCosts");
-      const coc = cashInvested>0 ? ((cashFlow*12)/cashInvested) : 0;
-      const dscr = (pmi>0) ? ((rent - opExMonthly) / pmi) : 0;
-
-      $("kpiCashFlow").textContent = formatMoney(cashFlow);
-      $("kpiNOI").textContent = formatMoney(noiAnnual);
-      $("kpiCapRate").textContent = pct(capRate);
-      $("kpiCOC").textContent = pct(coc);
-      $("kpiDSCR").textContent = dscr.toFixed(2);
+      if (from === "units" || from === "purchasePrice") {
+        if (units > 0) {
+          const newPPU = price / units;
+          $("pricePerUnit").value = isFinite(newPPU) ? newPPU.toFixed(0) : 0;
+        }
+      } else if (from === "pricePerUnit") {
+        // editing PPU drives Purchase Price
+        const newPrice = units * ppu;
+        $("purchasePrice").value = isFinite(newPrice) ? newPrice.toFixed(0) : price;
+      }
     }
 
-    fields.forEach(id => $(id).addEventListener("input", recalc));
-    recalc();
+    /* --------------------------------
+       Detailed Income
+    --------------------------------- */
+    function computeIncomeAnnual() {
+      const res = toNum($("resRent").value) + toNum($("resLaundry").value) + toNum($("resParking").value) + toNum($("resMisc").value);
+      const com = toNum($("comRent").value) + toNum($("comParking").value) + toNum($("comCAM").value) + toNum($("comMisc").value);
+      const detailedAny = (res + com) > 0;
 
-    function collectDeal(){
-      const o = {};
-      fields.forEach(id => o[id] = $(id).value);
-      // add derived outputs for convenience
+      $("totalResidential").textContent = fmtMoney(res);
+      $("totalCommercial").textContent = fmtMoney(com);
+      const gross = res + com;
+
+      // Fallback to legacy rentMonthly*12 if detailed is zero
+      const legacyGross = toNum($("rentMonthly").value) * 12;
+      const grossAnnual = detailedAny ? gross : legacyGross;
+
+      $("grossAnnualIncome").textContent = fmtMoney(grossAnnual);
+
+      return {
+        detailedAny,
+        residentialAnnual: res,
+        commercialAnnual: com,
+        grossAnnual
+      };
+    }
+
+    /* --------------------------------
+       Expenses
+    --------------------------------- */
+    function readFixedExpenses() {
+      let totalAnnual = 0;
+      let totalMonthly = 0;
+      const lines = [];
+      for (const def of fixedExpenseDefs) {
+        const amt = toNum($(def.amt).value);
+        const per = ($(def.period).value || "monthly");
+        const ann = toAnnual(amt, per);
+        const mon = toMonthly(amt, per);
+        totalAnnual += ann;
+        totalMonthly += mon;
+        lines.push({ id: def.id, label: def.label, amount: amt, period: per });
+      }
+
+      // Other Expenses (repeater)
+      const rows = Array.from(document.querySelectorAll("#otherExpBody tr"));
+      for (const tr of rows) {
+        const label = tr.querySelector('[data-role="label"]').value.trim() || "Other";
+        const amt = toNum(tr.querySelector('[data-role="amount"]').value);
+        const per = tr.querySelector('[data-role="period"]').value;
+        const ann = toAnnual(amt, per);
+        const mon = toMonthly(amt, per);
+        totalAnnual += ann;
+        totalMonthly += mon;
+        lines.push({ id: undefined, label, amount: amt, period: per });
+      }
+
+      $("fixedExpensesAnnual").textContent  = fmtMoney(totalAnnual);
+      $("fixedExpensesMonthly").textContent = fmtMoney(totalMonthly);
+      return { totalAnnual, totalMonthly, lines };
+    }
+
+    function computePercentExpensesAnnual(grossAnnual, rentBaseAnnual) {
+      const repairsPct = toNum($("repairsPct").value) / 100;
+      const mgmtPct = toNum($("managementPct").value) / 100;
+      const capexPct = toNum($("capexPct").value) / 100;
+
+      const repairs = grossAnnual * repairsPct;
+      const mgmt = grossAnnual * mgmtPct;
+      const capex = rentBaseAnnual * capexPct;
+
+      return { repairs, mgmt, capex, total: repairs + mgmt + capex };
+    }
+
+    function computeVacancyAnnual(incomeInfo) {
+      const resPct = toNum($("vacancyResPct").value) / 100;
+      const comPct = toNum($("vacancyComPct").value) / 100;
+
+      if (incomeInfo.detailedAny) {
+        const vRes = incomeInfo.residentialAnnual * resPct;
+        const vCom = incomeInfo.commercialAnnual * comPct;
+        return vRes + vCom;
+      } else {
+        // legacy single vacancy (%) fallback if user only uses legacy rentMonthly
+        const legacyVacPct = toNum($("vacancyRate")?.value) / 100 || (toNum($("vacancyResPct").value) / 100); // prefer dedicated res if present
+        return incomeInfo.grossAnnual * legacyVacPct;
+      }
+    }
+
+    /* --------------------------------
+       Debt Service (multi-tranche)
+    --------------------------------- */
+    function makeDebtRow(data = {}) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="padding:6px 4px;">
+          <select data-role="type">
+            <option value="PI"${data.type === "IO" ? "" : " selected"}>P&I</option>
+            <option value="IO"${data.type === "IO" ? " selected" : ""}>Interest-Only</option>
+          </select>
+        </td>
+        <td style="padding:6px 4px;">
+          <input data-role="principal" type="number" min="0" step="1000" value="${toNum(data.principal).toFixed(0)}"/>
+        </td>
+        <td style="padding:6px 4px;">
+          <input data-role="rate" type="number" min="0" step="0.01" value="${(data.ratePct ?? toNum($("interestRate").value)).toFixed(2)}"/>
+        </td>
+        <td style="padding:6px 4px;">
+          <input data-role="amort" type="number" min="0" step="1" value="${toNum(data.amortYears ?? $("amortYears").value)}"/>
+        </td>
+        <td style="padding:6px 4px;"><span data-role="monthly">$0</span></td>
+        <td style="padding:6px 4px;"><span data-role="annual">$0</span></td>
+        <td style="padding:6px 4px;">
+          <button type="button" class="btn btn-secondary" data-role="remove">Remove</button>
+        </td>
+      `;
+      $("debtBody").appendChild(tr);
+      // Disable amort for IO
+      const typeSel = tr.querySelector('[data-role="type"]');
+      const amortInp = tr.querySelector('[data-role="amort"]');
+      function applyTypeUI() {
+        const isIO = typeSel.value === "IO";
+        amortInp.disabled = isIO;
+      }
+      typeSel.addEventListener("change", () => { applyTypeUI(); recalc(); });
+      tr.querySelector('[data-role="principal"]').addEventListener("input", recalc);
+      tr.querySelector('[data-role="rate"]').addEventListener("input", recalc);
+      amortInp.addEventListener("input", recalc);
+      tr.querySelector('[data-role="remove"]').addEventListener("click", () => {
+        tr.remove();
+        recalc();
+      });
+      applyTypeUI();
+      return tr;
+    }
+
+    function computeDebtTotals() {
+      const rows = Array.from(document.querySelectorAll("#debtBody tr"));
+      let totalMonthly = 0;
+
+      for (const tr of rows) {
+        const type = tr.querySelector('[data-role="type"]').value;
+        const principal = toNum(tr.querySelector('[data-role="principal"]').value);
+        const rate = toNum(tr.querySelector('[data-role="rate"]').value);
+        const amort = toNum(tr.querySelector('[data-role="amort"]').value);
+
+        let m = 0;
+        if (type === "IO") {
+          m = pmtIO(principal, rate);
+        } else {
+          m = pmtPI_Canada(principal, rate, amort);
+        }
+        const a = m * 12;
+        tr.querySelector('[data-role="monthly"]').textContent = fmtMoney(m);
+        tr.querySelector('[data-role="annual"]').textContent  = fmtMoney(a);
+        totalMonthly += m;
+      }
+      $("totalDebtMonthly").textContent = fmtMoney(totalMonthly);
+      $("totalDebtAnnual").textContent  = fmtMoney(totalMonthly * 12);
+      return { totalMonthly, totalAnnual: totalMonthly * 12, hasRows: rows.length > 0 };
+    }
+
+    /* --------------------------------
+       Main compute & KPI
+    --------------------------------- */
+    function monthlyPayment_legacy(principal, annualRatePct, years) {
+      const P = toNum(principal);
+      const r = (toNum(annualRatePct) / 100) / 12; // legacy approach
+      const n = Math.max(1, Math.round(toNum(years) * 12));
+      if (P <= 0 || n <= 0) return 0;
+      if (r === 0) return P / n;
+      return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    }
+
+    function recalc() {
+      // Triad sync when fields move
+      // (The caller should indicate the origin; here we recompute PPU when both units & price exist)
+      // We'll just keep PPU aligned on Units/Purchase changes:
+      // (pricePerUnit edits handled in its own input handler)
+      // Derive PPU = price / units when units or price changed recently
+      // (No-op here; handled in specific listeners)
+
+      // 1) Income
+      const income = computeIncomeAnnual();
+
+      // 2) Fixed expenses + repeater
+      const fixed = readFixedExpenses();
+
+      // 3) Percent expenses
+      const rentBaseAnnual = income.detailedAny
+        ? (toNum($("resRent").value) + toNum($("comRent").value))
+        : (toNum($("rentMonthly").value) * 12);
+
+      const pctExp = computePercentExpensesAnnual(income.grossAnnual, rentBaseAnnual);
+
+      // 4) Vacancy
+      const vacancyAnnual = computeVacancyAnnual(income);
+
+      // 5) Total expenses
+      const totalExpensesAnnual = vacancyAnnual + pctExp.total + fixed.totalAnnual;
+
+      // 6) NOI
+      const NOIAnnual = income.grossAnnual - totalExpensesAnnual;
+
+      // 7) Debt (multi-tranche or legacy fallback)
+      const debts = computeDebtTotals();
+      let debtAnnual = debts.totalAnnual;
+      if (!debts.hasRows) {
+        // fallback: single legacy loan using purchase - down payment
+        const price = toNum($("purchasePrice").value);
+        const dp = price * (toNum($("downPaymentPct").value) / 100);
+        const loan = Math.max(0, price - dp);
+        const legacyPMT = monthlyPayment_legacy(loan, $("interestRate").value, $("amortYears").value);
+        debtAnnual = legacyPMT * 12;
+      }
+
+      // 8) KPIs
+      const dscr = (debtAnnual > 0) ? (NOIAnnual / debtAnnual) : 0;
+      const cashFlowAnnual = NOIAnnual - debtAnnual;
+      const cashFlowMonthly = cashFlowAnnual / 12;
+
+      const price = toNum($("purchasePrice").value);
+      const capRate = (price > 0) ? (NOIAnnual / price) : 0;
+
+      const downPayment = price * (toNum($("downPaymentPct").value) / 100);
+      const cashInvested = downPayment + toNum($("closingCosts").value);
+      const coc = (cashInvested > 0) ? (cashFlowAnnual / cashInvested) : 0;
+
+      // 9) Render KPIs
+      $("kpiCashFlow").textContent = fmtMoney(cashFlowMonthly);
+      $("kpiNOI").textContent      = fmtMoney(NOIAnnual);
+      $("kpiCapRate").textContent  = (capRate * 100).toFixed(2) + "%";
+      $("kpiCOC").textContent      = (coc * 100).toFixed(2) + "%";
+      $("kpiDSCR").textContent     = (isFinite(dscr) ? dscr : 0).toFixed(2);
+    }
+
+    /* --------------------------------
+       Other Expenses: add/remove
+    --------------------------------- */
+    function addOtherExpenseRow(data = {}) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="padding:6px 4px;">
+          <input data-role="label" type="text" placeholder="Label" value="${(data.label || "").replace(/"/g,'&quot;')}"/>
+        </td>
+        <td style="padding:6px 4px;">
+          <input data-role="amount" type="number" min="0" step="10" value="${toNum(data.amount)}"/>
+        </td>
+        <td style="padding:6px 4px;">
+          <select data-role="period">
+            <option value="monthly"${data.period === "annual" ? "" : " selected"}>Monthly</option>
+            <option value="annual"${data.period === "annual" ? " selected" : ""}>Annual</option>
+          </select>
+        </td>
+        <td style="padding:6px 4px;">
+          <button type="button" class="btn btn-secondary" data-role="remove">Remove</button>
+        </td>
+      `;
+      $("otherExpBody").appendChild(tr);
+      tr.querySelector('[data-role="amount"]').addEventListener("input", recalc);
+      tr.querySelector('[data-role="period"]').addEventListener("change", recalc);
+      tr.querySelector('[data-role="remove"]').addEventListener("click", () => { tr.remove(); recalc(); });
+      return tr;
+    }
+
+    /* --------------------------------
+       Collect & Load (Drive)
+    --------------------------------- */
+    function collectDeal() {
+      const o = { schemaVersion: 2 };
+
+      // legacy simple fields
+      for (const id of legacyFieldIds) o[id] = $(id)?.value ?? null;
+
+      // legacy mapped fixed inputs for back-compat reflection
+      // (We still store taxesAnnual/insuranceAnnual/utilitiesMonthly/otherMonthly to keep parity)
+      o.taxesAnnual     = toNum($("exp_taxes_amt").value) * ( $("exp_taxes_period").value === "monthly" ? 12 : 1 );
+      o.insuranceAnnual = toNum($("exp_insurance_amt").value) * ( $("exp_insurance_period").value === "monthly" ? 12 : 1 );
+      o.utilitiesMonthly= $("exp_utilitiesLegacy_period").value === "annual" ? (toNum($("exp_utilitiesLegacy_amt").value)/12) : toNum($("exp_utilitiesLegacy_amt").value);
+      o.otherMonthly    = $("exp_otherLegacy_period").value === "annual" ? (toNum($("exp_otherLegacy_amt").value)/12)     : toNum($("exp_otherLegacy_amt").value);
+
+      // deal setup extended
+      o.units = toNum($("units").value);
+      o.pricePerUnit = toNum($("pricePerUnit").value);
+
+      // detailed income (annual)
+      o.incomeResidential = {
+        rent: toNum($("resRent").value),
+        laundry: toNum($("resLaundry").value),
+        parking: toNum($("resParking").value),
+        misc: toNum($("resMisc").value)
+      };
+      o.incomeCommercial = {
+        rent: toNum($("comRent").value),
+        parking: toNum($("comParking").value),
+        cam: toNum($("comCAM").value),
+        misc: toNum($("comMisc").value)
+      };
+
+      // vacancy (split)
+      o.vacancy = {
+        residentialPct: toNum($("vacancyResPct").value),
+        commercialPct: toNum($("vacancyComPct").value)
+      };
+
+      // fixed expenses with periods + repeater
+      o.expensesDetailed = [];
+      for (const def of fixedExpenseDefs) {
+        o.expensesDetailed.push({
+          id: def.id,
+          label: def.label,
+          amount: toNum($(def.amt).value),
+          period: $(def.period).value
+        });
+      }
+      const otherRows = Array.from(document.querySelectorAll("#otherExpBody tr"));
+      for (const tr of otherRows) {
+        o.expensesDetailed.push({
+          id: undefined,
+          label: tr.querySelector('[data-role="label"]').value || "Other",
+          amount: toNum(tr.querySelector('[data-role="amount"]').value),
+          period: tr.querySelector('[data-role="period"]').value
+        });
+      }
+
+      // debt rows
+      o.debts = [];
+      const debtRows = Array.from(document.querySelectorAll("#debtBody tr"));
+      for (const tr of debtRows) {
+        o.debts.push({
+          type: tr.querySelector('[data-role="type"]').value === "IO" ? "IO" : "PI",
+          principal: toNum(tr.querySelector('[data-role="principal"]').value),
+          ratePct: toNum(tr.querySelector('[data-role="rate"]').value),
+          amortYears: toNum(tr.querySelector('[data-role="amort"]').value)
+        });
+      }
+
+      // Derived metrics for convenience (as strings)
       o.metrics = {
         cashFlowMonthly: $("kpiCashFlow").textContent,
         NOIAnnual: $("kpiNOI").textContent,
@@ -243,26 +890,9 @@
         cashOnCash: $("kpiCOC").textContent,
         dscr: $("kpiDSCR").textContent
       };
+
       return o;
     }
-
-    // ---- NO automatic sign-in in handlers (no surprise popups) ----
-
-    // --------------- Save to Drive ---------------
-    document.getElementById("saveDriveBtn").addEventListener("click", async () => {
-      try{
-        if (!PCDrive.isReady()) return alert("Please click ‘Sign in’ (top-right) to enable Drive, then try again.");
-        const deal = collectDeal();
-        const res = await PCDrive.saveDealToDrive(deal);
-        alert("✅ Saved to Drive: " + (res?.name || "Deal JSON"));
-      }catch(e){
-        alert("❌ " + (e?.message || e));
-      }
-    });
-
-    // --------------- Load from Drive (simple picker) ---------------
-    const pickerCard = document.getElementById("drivePickerCard");
-    const filesSelect = document.getElementById("driveFiles");
 
     async function getFolderIdByName(name, parentId){
       const q =
@@ -272,7 +902,6 @@
       const resp = await gapi.client.drive.files.list({ q, fields: "files(id,name)"});
       const files = resp?.result?.files || [];
       if (files.length) return files[0].id;
-      // Create if missing
       const created = await gapi.client.drive.files.create({
         resource: { name, mimeType: "application/vnd.google-apps.folder", parents:[parentId]},
         fields: "id"
@@ -281,7 +910,6 @@
     }
 
     async function waitForDriveClient(){
-      // Wait until Drive discovery is available (drive.js loads it)
       await new Promise((resolve, reject)=>{
         const t0 = Date.now();
         (function poll(){
@@ -306,6 +934,7 @@
         fields: "files(id,name,modifiedTime)"
       });
       const files = resp?.result?.files || [];
+      const filesSelect = $("driveFiles");
       filesSelect.innerHTML = "";
       if (!files.length){
         const opt = document.createElement("option");
@@ -324,7 +953,7 @@
     }
 
     async function loadSelectedFile(){
-      const id = filesSelect.value;
+      const id = $("driveFiles").value;
       if (!id){ alert("No file selected."); return; }
       const resp = await gapi.client.drive.files.get({ fileId: id, alt: "media" });
       let data = resp?.body;
@@ -332,29 +961,147 @@
       if (typeof data === "string"){
         try{ data = JSON.parse(data); }catch(e){ alert("Could not parse JSON file."); return; }
       }
-      fields.forEach(k=>{
-        if (data[k] !== undefined) $(k).value = data[k];
-      });
+
+      // Load legacy basics
+      for (const id of legacyFieldIds) {
+        if (data[id] !== undefined && $(id)) $(id).value = data[id];
+      }
+
+      // Legacy mapped fixed inputs
+      if (data.taxesAnnual !== undefined) {
+        $("exp_taxes_amt").value = toNum(data.taxesAnnual);
+        $("exp_taxes_period").value = "annual";
+      }
+      if (data.insuranceAnnual !== undefined) {
+        $("exp_insurance_amt").value = toNum(data.insuranceAnnual);
+        $("exp_insurance_period").value = "annual";
+      }
+      if (data.utilitiesMonthly !== undefined) {
+        $("exp_utilitiesLegacy_amt").value = toNum(data.utilitiesMonthly);
+        $("exp_utilitiesLegacy_period").value = "monthly";
+      }
+      if (data.otherMonthly !== undefined) {
+        $("exp_otherLegacy_amt").value = toNum(data.otherMonthly);
+        $("exp_otherLegacy_period").value = "monthly";
+      }
+
+      // Extended deal setup
+      if (data.units !== undefined) $("units").value = toNum(data.units);
+      if (data.pricePerUnit !== undefined) $("pricePerUnit").value = toNum(data.pricePerUnit);
+
+      // Detailed income
+      if (data.incomeResidential) {
+        $("resRent").value    = toNum(data.incomeResidential.rent);
+        $("resLaundry").value = toNum(data.incomeResidential.laundry);
+        $("resParking").value = toNum(data.incomeResidential.parking);
+        $("resMisc").value    = toNum(data.incomeResidential.misc);
+      }
+      if (data.incomeCommercial) {
+        $("comRent").value    = toNum(data.incomeCommercial.rent);
+        $("comParking").value = toNum(data.incomeCommercial.parking);
+        $("comCAM").value     = toNum(data.incomeCommercial.cam);
+        $("comMisc").value    = toNum(data.incomeCommercial.misc);
+      }
+
+      // Vacancy split
+      if (data.vacancy) {
+        $("vacancyResPct").value = toNum(data.vacancy.residentialPct);
+        $("vacancyComPct").value = toNum(data.vacancy.commercialPct);
+      }
+
+      // Expenses detailed (fixed + repeater)
+      // First reset: fixed inputs are already in DOM; set values if matching IDs present
+      if (Array.isArray(data.expensesDetailed)) {
+        // Clear repeater rows
+        $("otherExpBody").innerHTML = "";
+        // Map to quick lookup
+        const byId = {};
+        data.expensesDetailed.forEach(x => { if (x && x.id) byId[x.id] = x; });
+
+        // Apply to fixed lines
+        for (const def of fixedExpenseDefs) {
+          const row = byId[def.id];
+          if (row) {
+            $(def.amt).value = toNum(row.amount);
+            $(def.period).value = row.period === "annual" ? "annual" : "monthly";
+          }
+        }
+        // Add any items without known IDs into repeater
+        for (const x of data.expensesDetailed) {
+          if (!x || (x.id && fixedExpenseDefs.find(d => d.id === x.id))) continue;
+          addOtherExpenseRow({ label: x.label, amount: x.amount, period: x.period });
+        }
+      }
+
+      // Debts
+      $("debtBody").innerHTML = "";
+      if (Array.isArray(data.debts) && data.debts.length) {
+        for (const d of data.debts) makeDebtRow(d);
+      } else {
+        // If none stored, we'll generate the default after we compute below
+      }
+
+      // Recalc totals and generate default debt row if needed
+      syncTriad("purchasePrice");
       recalc();
-      pickerCard.classList.add("hidden");
+      const debtRows = document.querySelectorAll("#debtBody tr");
+      if (debtRows.length === 0) seedDefaultDebtRow();
+      recalc();
+
+      $("drivePickerCard").classList.add("hidden");
       alert("✅ Loaded from Drive.");
     }
 
-    document.getElementById("loadDriveBtn").addEventListener("click", async ()=>{
-      try{
-        await listDeals();
-        pickerCard.classList.remove("hidden");
-        window.scrollTo({top: pickerCard.offsetTop - 10, behavior:"smooth"});
-      }catch(e){
-        alert("❌ " + (e?.message || e));
-      }
-    });
-    document.getElementById("applyDriveBtn").addEventListener("click", loadSelectedFile);
-    document.getElementById("cancelDriveBtn").addEventListener("click", ()=> pickerCard.classList.add("hidden"));
-  </script>
+    /* --------------------------------
+       Seed default debt row from deal
+    --------------------------------- */
+    function seedDefaultDebtRow() {
+      const price = toNum($("purchasePrice").value);
+      const dp = price * (toNum($("downPaymentPct").value) / 100);
+      const loan = Math.max(0, price - dp);
+      makeDebtRow({
+        type: "PI",
+        principal: loan,
+        ratePct: toNum($("interestRate").value),
+        amortYears: toNum($("amortYears").value)
+      });
+    }
 
-  <!-- Silent Drive re-auth + chip updater + explicit sign-in/out -->
-  <script>
+    /* --------------------------------
+       Wire up events
+    --------------------------------- */
+    function wireInputs() {
+      // Deal triad sync
+      $("units").addEventListener("input", () => { syncTriad("units"); recalc(); });
+      $("purchasePrice").addEventListener("input", () => { syncTriad("purchasePrice"); recalc(); });
+      $("pricePerUnit").addEventListener("input", () => { syncTriad("pricePerUnit"); recalc(); });
+
+      // Legacy basics that affect debt and KPIs
+      ["downPaymentPct","interestRate","amortYears","closingCosts"].forEach(id => $(id).addEventListener("input", recalc));
+
+      // Income fields
+      detailedIncomeIds.forEach(id => $(id).addEventListener("input", recalc));
+      $("rentMonthly").addEventListener("input", recalc);
+
+      // Fixed expense fields
+      fixedExpenseDefs.forEach(def => {
+        $(def.amt).addEventListener("input", recalc);
+        $(def.period).addEventListener("change", recalc);
+      });
+
+      // Percent-based and vacancy
+      ["repairsPct","managementPct","capexPct","vacancyResPct","vacancyComPct"].forEach(id => $(id).addEventListener("input", recalc));
+
+      // Other Expenses
+      $("addOtherExpBtn").addEventListener("click", () => { addOtherExpenseRow(); recalc(); });
+
+      // Debt rows
+      $("addDebtRowBtn").addEventListener("click", () => { makeDebtRow(); recalc(); });
+    }
+
+    /* --------------------------------
+       Save / Load buttons (Drive)
+    --------------------------------- */
     document.addEventListener("DOMContentLoaded", () => {
       // try silent rehydrate (no popup). If it fails, chip stays "Guest".
       PCDrive.autoInit();
@@ -395,10 +1142,47 @@
           apply({ ready: PCDrive.isReady(), user: PCDrive.getUser() });
         });
       }
+
+      // Buttons for save/load
+      $("saveDriveBtn").addEventListener("click", async () => {
+        try{
+          if (!PCDrive.isReady()) return alert("Please click ‘Sign in’ (top-right) to enable Drive, then try again.");
+          const deal = collectDeal();
+          const res = await PCDrive.saveDealToDrive(deal);
+          alert("✅ Saved to Drive: " + (res?.name || "Deal JSON"));
+        }catch(e){
+          alert("❌ " + (e?.message || e));
+        }
+      });
+
+      $("loadDriveBtn").addEventListener("click", async ()=>{
+        try{
+          await listDeals();
+          $("drivePickerCard").classList.remove("hidden");
+          window.scrollTo({top: $("drivePickerCard").offsetTop - 10, behavior:"smooth"});
+        }catch(e){
+          alert("❌ " + (e?.message || e));
+        }
+      });
+      $("applyDriveBtn").addEventListener("click", loadSelectedFile);
+      $("cancelDriveBtn").addEventListener("click", ()=> $("drivePickerCard").classList.add("hidden"));
+
+      // Initial UI wiring + defaults
+      wireInputs();
+
+      // Seed one default debt row on first load
+      seedDefaultDebtRow();
+
+      // Align PPU if units>0
+      syncTriad("purchasePrice");
+
+      // Initial calculation
+      recalc();
     });
   </script>
 </body>
 </html>
+
 
 
 
